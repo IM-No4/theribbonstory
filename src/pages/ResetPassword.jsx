@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { LogoMark } from "../components/Logo";
+import AuthShowcase from "../components/AuthShowcase";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
   const routeParams = useParams();
   const token = params.get("token") || routeParams.token || "";
-  const mode = params.get("mode") || "reset"; // 'reset' or 'set'
+  const mode = params.get("mode") || "reset";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,8 +41,8 @@ export default function ResetPassword() {
     setSubmitting(true);
     try {
       const { data } = await api.post(`/auth/reset-password/${token}`, { password });
-      toast.success(data.message || "Password updated successfully!");
-      if (data.token && data.user) {
+      toast.success(data?.message || "Password updated successfully!");
+      if (data?.token && data?.user) {
         setAuth(data.user, data.token);
       }
       setSuccess(true);
@@ -56,110 +57,108 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="container-page py-16 sm:py-20 flex justify-center">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <div className="flex justify-center mb-8">
-          <LogoMark to="/" size="compact" />
+    <div className="h-screen max-h-screen w-full bg-white grid grid-cols-1 lg:grid-cols-2 font-body antialiased overflow-hidden selection:bg-rose-100 selection:text-rose-800">
+      {/* LEFT COLUMN */}
+      <div className="flex flex-col justify-between p-4 sm:p-6 lg:p-8 xl:p-12 bg-white relative z-20 h-full max-h-screen overflow-y-auto lg:overflow-hidden">
+        <div className="flex items-center justify-between w-full">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 transition py-1 px-2.5 rounded-full hover:bg-slate-50"
+          >
+            <ArrowLeft size={14} />
+            <span>Storefront</span>
+          </Link>
         </div>
 
-        <div className="card rounded-2xl p-8 space-y-6">
+        <div className="my-auto py-2 max-w-sm mx-auto w-full">
+          <div className="flex flex-col items-center justify-center mb-6">
+            <LogoMark to="/" size="compact" className="mb-2 max-h-12" />
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {mode === "set" ? "Set Password" : "New Password"}
+            </h1>
+          </div>
+
           {!success ? (
-            <>
-              <div className="text-center space-y-1">
-                <h1 className="font-display text-2xl font-bold text-burgundy-900">
-                  {mode === "set" ? "Set Your Password" : "Create New Password"}
-                </h1>
-                <p className="text-xs text-espresso-400">
-                  {mode === "set"
-                    ? "Welcome to The Ribbon Story! Choose a secure password for your account."
-                    : "Please enter and confirm your new password below."}
-                </p>
-              </div>
-
-              <form onSubmit={submit} className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-espresso-600 block mb-1.5">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-espresso-400" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      minLength={6}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input-field pl-10 pr-10"
-                      placeholder="At least 6 characters"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-espresso-400 hover:text-burgundy-900 transition"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-espresso-600 block mb-1.5">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-espresso-400" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      minLength={6}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="input-field pl-10 pr-10"
-                      placeholder="Re-enter password"
-                    />
-                  </div>
-                </div>
-
+            <form onSubmit={submit} className="space-y-3">
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-xl bg-[#F4F5F8] border border-transparent pl-3.5 pr-10 py-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-ribbon-500 focus:ring-2 focus:ring-rose-100 focus:outline-hidden transition-all duration-200"
+                  placeholder="New Password (min 6 chars)"
+                />
                 <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary w-full justify-center py-3 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer p-1"
                 >
-                  {submitting ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : mode === "set" ? (
-                    "Save & Log In"
-                  ) : (
-                    "Reset Password"
-                  )}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
-              </form>
-            </>
-          ) : (
-            <div className="text-center space-y-4 py-4">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-                <CheckCircle2 size={30} />
               </div>
+
               <div>
-                <h2 className="font-display text-xl font-bold text-burgundy-900">
-                  Password Updated!
-                </h2>
-                <p className="text-xs text-espresso-500 mt-1">
-                  Your password has been successfully updated. Redirecting you to your account...
-                </p>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={6}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-xl bg-[#F4F5F8] border border-transparent px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-ribbon-500 focus:ring-2 focus:ring-rose-100 focus:outline-hidden transition-all duration-200"
+                  placeholder="Confirm New Password"
+                />
               </div>
-              <Link to="/account" className="btn-primary inline-flex justify-center text-xs">
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-xl bg-ribbon-500 hover:bg-ribbon-600 active:scale-[0.99] text-white font-bold text-xs sm:text-sm tracking-wide py-3 px-4 shadow-md shadow-rose-500/20 hover:shadow-rose-500/30 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-1"
+              >
+                {submitting ? (
+                  <Loader2 size={16} className="animate-spin text-white" />
+                ) : mode === "set" ? (
+                  "Save & Login"
+                ) : (
+                  "Update Password"
+                )}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-2.5 py-2 text-center">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+                <CheckCircle2 size={22} />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900">Password Updated!</h3>
+              <p className="text-xs text-slate-500">
+                Redirecting to your account...
+              </p>
+              <Link
+                to="/account"
+                className="inline-flex rounded-xl bg-ribbon-500 hover:bg-ribbon-600 text-white px-4 py-2 text-xs font-bold"
+              >
                 Go to Account
               </Link>
             </div>
           )}
+
+          <p className="mt-5 text-center text-xs text-slate-500">
+            <Link to="/login" className="text-ribbon-600 font-bold hover:underline">
+              Return to Login
+            </Link>
+          </p>
         </div>
-      </motion.div>
+
+        <div className="text-center text-[10px] sm:text-[11px] text-slate-400 pt-2">
+          © 2026 The Ribbon Story. All rights reserved.
+        </div>
+      </div>
+
+      {/* RIGHT COLUMN */}
+      <div className="hidden lg:flex w-full h-full max-h-screen bg-white relative overflow-hidden border-l border-slate-100/80">
+        <AuthShowcase />
+      </div>
     </div>
   );
 }

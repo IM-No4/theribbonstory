@@ -248,8 +248,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-cream-300/60">
           <div className="flex items-center gap-2">
             <Lock size={13} className="text-emerald-400" />
-            <span>100% Safe &amp; Secure Checkout. Verified Payment Options:</span>
-            <span className="font-semibold text-cream-200">UPI, RuPay, Visa, Mastercard, NetBanking, COD</span>
+            <span>100% Safe &amp; Secure Checkout.</span>
           </div>
 
           <div className="flex items-center gap-4 text-[11px]">
@@ -258,8 +257,6 @@ export default function Footer() {
             <Link to="/contact" className="hover:text-cream-50">Privacy Policy</Link>
             <span>•</span>
             <Link to="/contact" className="hover:text-cream-50">Terms of Service</Link>
-            <span>•</span>
-            <Link to="/admin" className="text-blush-300 hover:text-white font-semibold">Admin Portal</Link>
             <span>•</span>
             <span>© 2026 The Ribbon Story India</span>
           </div>

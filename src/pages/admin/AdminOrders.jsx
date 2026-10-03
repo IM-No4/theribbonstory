@@ -18,6 +18,9 @@ import {
   RotateCcw,
   AlertTriangle,
   CreditCard,
+  Box,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
@@ -48,6 +51,30 @@ export default function AdminOrders() {
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("Customer requested cancellation");
   const [refunding, setRefunding] = useState(false);
+
+  // 3D Reference Generation State
+  const [generating3D, setGenerating3D] = useState(false);
+
+  const handleGenerate3DForOrder = async (orderId) => {
+    setGenerating3D(true);
+    try {
+      toast.loading("Gemini AI: Synthesizing 4-view 3D references for Meshy/Tripo...", { id: "3d-gen" });
+      const { data } = await api.post(`/3d-agent/order/${orderId}/generate`);
+      if (data.success) {
+        toast.success(data.message || "3D References generated!", { id: "3d-gen" });
+        await fetchOrders();
+        // Update currently selected order view if open
+        if (selectedOrder && selectedOrder._id === orderId) {
+          const { data: updatedOrderData } = await api.get(`/orders/${orderId}`);
+          if (updatedOrderData) setSelectedOrder(updatedOrderData);
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to generate 3D references", { id: "3d-gen" });
+    } finally {
+      setGenerating3D(false);
+    }
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -573,28 +600,152 @@ export default function AdminOrders() {
                         </div>
                       </div>
 
-                      {/* Customer Photo & Custom Note */}
-                      <div className="border-t sm:border-t-0 sm:border-l border-slate-800 pt-3 sm:pt-0 sm:pl-4 min-w-[200px] space-y-2">
+                      {/* Customer Photo, Custom Note & 3D Reference Agent */}
+                      <div className="border-t sm:border-t-0 sm:border-l border-slate-800 pt-3 sm:pt-0 sm:pl-4 min-w-[240px] space-y-3">
                         {item.customization?.photoUrl ? (
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-semibold uppercase text-rose-400 block">
-                              Uploaded Photo:
-                            </span>
-                            <a
-                              href={assetUrl(item.customization.photoUrl)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 p-1.5 bg-slate-950 rounded-xl border border-rose-900/40 hover:border-rose-500 transition group"
-                            >
-                              <img
-                                src={assetUrl(item.customization.photoUrl)}
-                                alt="Custom photo"
-                                className="w-10 h-10 rounded-lg object-cover"
-                              />
-                              <span className="text-[11px] text-rose-300 group-hover:underline flex items-center gap-1">
-                                View Full <ExternalLink size={11} />
+                          <div className="space-y-2">
+                            <div>
+                              <span className="text-[10px] font-semibold uppercase text-rose-400 block mb-1">
+                                Uploaded Customer Photo:
                               </span>
-                            </a>
+                              <a
+                                href={assetUrl(item.customization.photoUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 p-1.5 bg-slate-950 rounded-xl border border-rose-900/40 hover:border-rose-500 transition group"
+                              >
+                                <img
+                                  src={assetUrl(item.customization.photoUrl)}
+                                  alt="Custom photo"
+                                  className="w-12 h-12 rounded-lg object-cover"
+                                />
+                                <span className="text-[11px] text-rose-300 group-hover:underline flex items-center gap-1">
+                                  View Original <ExternalLink size={11} />
+                                </span>
+                              </a>
+                            </div>
+
+                            {/* 3D Reference Generation Status & Controls */}
+                            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1">
+                                  <Box size={12} />
+                                  <span>Meshy / Tripo 3D Views</span>
+                                </span>
+                                {item.customization?.reference3D?.status === "completed" ? (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[9px] font-bold border border-emerald-800">
+                                    4 Views Ready
+                                  </span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 text-[9px] font-bold border border-amber-800">
+                                    Not Generated
+                                  </span>
+                                )}
+                              </div>
+
+                              {item.customization?.reference3D?.status === "completed" ? (
+                                <div className="space-y-2">
+                                  {/* 4 Mini Angle Thumbnails */}
+                                  <div className="grid grid-cols-4 gap-1">
+                                    <a
+                                      href={assetUrl(item.customization.reference3D.front)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title="Front (0°)"
+                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
+                                    >
+                                      <img
+                                        src={assetUrl(item.customization.reference3D.front)}
+                                        alt="Front"
+                                        className="h-9 w-full object-contain"
+                                      />
+                                      <span className="text-[8px] text-center block text-slate-400 font-mono">0°</span>
+                                    </a>
+                                    <a
+                                      href={assetUrl(item.customization.reference3D.left)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title="Left (+45°)"
+                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
+                                    >
+                                      <img
+                                        src={assetUrl(item.customization.reference3D.left)}
+                                        alt="Left"
+                                        className="h-9 w-full object-contain"
+                                      />
+                                      <span className="text-[8px] text-center block text-slate-400 font-mono">+45°</span>
+                                    </a>
+                                    <a
+                                      href={assetUrl(item.customization.reference3D.right)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title="Right (-45°)"
+                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
+                                    >
+                                      <img
+                                        src={assetUrl(item.customization.reference3D.right)}
+                                        alt="Right"
+                                        className="h-9 w-full object-contain"
+                                      />
+                                      <span className="text-[8px] text-center block text-slate-400 font-mono">-45°</span>
+                                    </a>
+                                    <a
+                                      href={assetUrl(item.customization.reference3D.back)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title="Back (180°)"
+                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
+                                    >
+                                      <img
+                                        src={assetUrl(item.customization.reference3D.back)}
+                                        alt="Back"
+                                        className="h-9 w-full object-contain"
+                                      />
+                                      <span className="text-[8px] text-center block text-slate-400 font-mono">180°</span>
+                                    </a>
+                                  </div>
+
+                                  {/* Download & Regenerate Action Buttons */}
+                                  <div className="flex items-center gap-1.5">
+                                    <a
+                                      href={assetUrl(item.customization.reference3D.zipUrl)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="flex-1 py-1 px-2 rounded-lg bg-rose-900/60 hover:bg-rose-900 text-rose-200 border border-rose-700/60 text-[10px] font-bold text-center flex items-center justify-center gap-1 transition"
+                                    >
+                                      <Download size={11} />
+                                      <span>Download ZIP</span>
+                                    </a>
+                                    <button
+                                      onClick={() => handleGenerate3DForOrder(selectedOrder._id)}
+                                      disabled={generating3D}
+                                      title="Re-generate 3D references"
+                                      className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition"
+                                    >
+                                      <RefreshCw size={11} className={generating3D ? "animate-spin" : ""} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleGenerate3DForOrder(selectedOrder._id)}
+                                  disabled={generating3D}
+                                  className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-rose-600 to-ribbon-700 hover:from-rose-500 hover:to-ribbon-600 disabled:opacity-50 text-white text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-md shadow-rose-950/40 transition"
+                                >
+                                  {generating3D ? (
+                                    <>
+                                      <RefreshCw size={11} className="animate-spin" />
+                                      <span>Generating 4 Views...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles size={11} />
+                                      <span>Generate 4-View 3D References</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <span className="text-[11px] text-slate-500 italic block">

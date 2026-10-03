@@ -29,7 +29,6 @@ import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
-import { useLocationStore } from "../store/locationStore";
 
 // 1. HERO CAROUSEL SLIDES (IGP Style)
 const HERO_SLIDES = [
@@ -246,8 +245,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-
-  const { location, openModal: openLocationModal } = useLocationStore();
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
@@ -383,18 +380,11 @@ export default function Home() {
                     </Link>
                   </div>
 
-                  {/* Delivery Pincode Reassurance in Hero */}
+                  {/* Delivery Assurance in Hero */}
                   <div className="pt-4 border-t border-slate-200/80 flex items-center gap-2 text-xs font-semibold text-slate-700">
-                    <Truck size={16} className="text-emerald-600" />
+                    <Truck size={16} className="text-emerald-600 shrink-0" />
                     <span>
-                      Delivering to:{" "}
-                      <button
-                        onClick={openLocationModal}
-                        className="underline decoration-dotted text-slate-900 hover:text-ribbon-600 font-bold"
-                      >
-                        {location ? `${location.city || location.name} (${location.pincode})` : "Select Location"}
-                      </button>{" "}
-                      — Earliest delivery: <strong className="text-emerald-700">Tomorrow</strong>
+                      🚚 Pan-India Express Delivery <span className="text-slate-500 font-normal">(29,000+ Pincodes)</span> — Earliest delivery: <strong className="text-emerald-700 font-bold">Tomorrow</strong>
                     </span>
                   </div>
                 </div>

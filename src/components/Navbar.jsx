@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
   X,
@@ -23,7 +23,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LogoMark } from "./Logo";
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
-import { useLocationStore } from "../store/locationStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import SearchModal from "./SearchModal";
 import MegaMenu, { MENU_CATEGORIES } from "./MegaMenu";
@@ -39,9 +38,11 @@ export default function Navbar() {
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const menuTimeoutRef = useRef(null);
 
+  const routerLocation = useLocation();
+  const isDashboard = routerLocation.pathname.startsWith("/account");
+
   const { totalItems, subtotal, openCart } = useCartStore();
   const { items: wishlistItems, openDrawer: openWishlist } = useWishlistStore();
-  const { location, openModal: openLocationModal } = useLocationStore();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -73,25 +74,17 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full bg-white transition-shadow duration-300 shadow-sm border-b border-slate-100">
-        {/* 1. TOP ANNOUNCEMENT & LOCATION UTILITY BAR (IGP Style) */}
+        {/* 1. TOP ANNOUNCEMENT & UTILITY BAR */}
         <div className="bg-slate-50 border-b border-slate-200/70 text-slate-600 text-[11px] font-medium py-1.5 px-4 sm:px-6 lg:px-10">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            {/* Left: Location & Delivery Pin Selector */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={openLocationModal}
-                className="flex items-center gap-1.5 text-slate-800 hover:text-ribbon-500 font-semibold transition-colors group"
-                title="Change delivery location"
-              >
-                <MapPin size={13} className="text-ribbon-500 group-hover:animate-bounce" />
+            {/* Left: Nationwide Express Delivery Info */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-slate-800 font-semibold">
+                <Truck size={13} className="text-ribbon-500 shrink-0" />
                 <span>
-                  Deliver to:{" "}
-                  <span className="underline decoration-dotted font-bold text-slate-900">
-                    {location ? `${location.city || location.name} (${location.pincode})` : "Select City / Pincode"}
-                  </span>
+                  Pan-India Express Delivery <span className="font-normal text-slate-500">(29,000+ Pincodes Covered)</span>
                 </span>
-                <ChevronDown size={11} className="text-slate-400" />
-              </button>
+              </div>
 
               <span className="hidden sm:inline-block text-slate-300">|</span>
 
@@ -175,23 +168,25 @@ export default function Navbar() {
               <Search size={20} />
             </button>
 
-            {/* Wishlist Button */}
-            <button
-              onClick={openWishlist}
-              aria-label="Wishlist"
-              className="relative p-2 rounded-full text-slate-600 hover:bg-rose-50 hover:text-ribbon-500 transition-colors flex items-center gap-1.5"
-              title="My Wishlist"
-            >
-              <div className="relative">
-                <Heart size={20} className={wishlistItems.length > 0 ? "text-ribbon-500 fill-ribbon-500" : ""} />
-                {wishlistItems.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ribbon-500 px-1 text-[10px] font-bold text-white shadow-xs">
-                    {wishlistItems.length}
-                  </span>
-                )}
-              </div>
-              <span className="hidden xl:inline-block text-xs font-semibold text-slate-700">Wishlist</span>
-            </button>
+            {/* Wishlist Button (Hidden when viewing user dashboard to prevent redundancy) */}
+            {!isDashboard && (
+              <button
+                onClick={openWishlist}
+                aria-label="My Wishlist"
+                className="relative p-2 rounded-full text-slate-600 hover:bg-rose-50 hover:text-ribbon-500 transition-colors flex items-center gap-1.5"
+                title="My Wishlist"
+              >
+                <div className="relative">
+                  <Heart size={20} className={wishlistItems.length > 0 ? "text-ribbon-500 fill-ribbon-500" : ""} />
+                  {wishlistItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ribbon-500 px-1 text-[10px] font-bold text-white shadow-xs">
+                      {wishlistItems.length}
+                    </span>
+                  )}
+                </div>
+                <span className="hidden xl:inline-block text-xs font-semibold text-slate-700">My Wishlist</span>
+              </button>
+            )}
 
             {/* Account / User Menu - Prominent and Clear */}
             <div className="relative">
@@ -247,6 +242,18 @@ export default function Navbar() {
                           className="block px-4 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-ribbon-500"
                         >
                           My Profile &amp; Orders
+                        </Link>
+                        <Link
+                          to="/account?tab=wishlist"
+                          onClick={() => setAccountDropdownOpen(false)}
+                          className="flex items-center justify-between px-4 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-ribbon-500"
+                        >
+                          <span>My Wishlist</span>
+                          {wishlistItems.length > 0 && (
+                            <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-ribbon-600 font-bold text-[10px]">
+                              {wishlistItems.length}
+                            </span>
+                          )}
                         </Link>
                         <button
                           onClick={() => {
@@ -433,21 +440,12 @@ export default function Navbar() {
                     </button>
                   </div>
 
-                  {/* Delivery Location Selector in Mobile */}
-                  <div className="p-4 bg-blush-50 border-b border-blush-200">
-                    <button
-                      onClick={() => {
-                        setMobileOpen(false);
-                        openLocationModal();
-                      }}
-                      className="w-full flex items-center justify-between text-xs text-burgundy-900 font-semibold"
-                    >
-                      <div className="flex items-center gap-2">
-                        <MapPin size={15} className="text-ribbon-500" />
-                        <span>Deliver to: {location?.city || "Select Pincode"}</span>
-                      </div>
-                      <span className="text-ribbon-600 text-[11px] underline">Change</span>
-                    </button>
+                  {/* Delivery Location Indicator in Mobile */}
+                  <div className="p-3.5 bg-rose-50/70 border-b border-slate-200">
+                    <div className="flex items-center gap-2 text-xs text-slate-800 font-semibold">
+                      <Truck size={15} className="text-ribbon-500" />
+                      <span>🚚 Pan-India Delivery (29,000+ Pincodes)</span>
+                    </div>
                   </div>
 
                   {/* Mobile Nav Links */}

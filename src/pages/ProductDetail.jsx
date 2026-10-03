@@ -96,12 +96,12 @@ export default function ProductDetail() {
         setPincodeStatus({
           pincode: clean,
           dateFormatted: data.formattedEDD,
-          courier: data.recommendedCourier?.courier_name || "BlueDart Air Express (Shiprocket)",
+          courier: data.recommendedCourier?.courier_name || "Express Air Courier",
           rate: data.recommendedCourier?.rate,
-          message: `Delivery available by ${data.formattedEDD} via ${data.recommendedCourier?.courier_name || "BlueDart Express"}`,
+          message: `Delivery available by ${data.formattedEDD} via ${data.recommendedCourier?.courier_name || "Express Air Courier"}`,
           availableCouriers: data.availableCouriers || [],
         });
-        toast.success(`Shiprocket Express Delivery available for ${clean}!`);
+        toast.success(`Express Delivery available for PIN ${clean}!`);
       } else {
         toast.error("Pincode currently not serviceable");
       }

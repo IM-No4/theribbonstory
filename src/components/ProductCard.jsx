@@ -2,14 +2,12 @@ import { Link } from "react-router-dom";
 import { Sparkles, Eye, ArrowRight, Heart, Star, Zap, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useWishlistStore } from "../store/wishlistStore";
-import { useLocationStore } from "../store/locationStore";
 import toast from "react-hot-toast";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function ProductCard({ product, index = 0, onQuickView, onPersonalize }) {
   const { isInWishlist, toggleWishlist } = useWishlistStore();
-  const { location } = useLocationStore();
 
   const isLiked = isInWishlist(product._id || product.id);
 

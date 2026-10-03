@@ -110,38 +110,36 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Local preview immediately
+    // Show local preview immediately with customer's actual uploaded photo
     const reader = new FileReader();
     reader.onload = () => {
       setUploadedPhoto(reader.result);
-      generate3DPreview(reader.result);
+      setModelPreview(reader.result);
     };
     reader.readAsDataURL(file);
 
-    // Upload to server
+    // Upload & trigger 3D reference agent
     const form = new FormData();
     form.append("photo", file);
     setUploading(true);
+    setIsGenerating(true);
     try {
-      const { data } = await api.post("/upload", form);
-      setUploadedPhoto(data.url);
+      const { data } = await api.post("/3d-agent/generate", form);
+      if (data.success && data.session?.views?.front?.url) {
+        setUploadedPhoto(assetUrl(data.session.originalImage?.url));
+        setModelPreview(assetUrl(data.session.views.front.url));
+        toast.success("3D Model Generated from your photo!");
+      } else {
+        const { data: uploadData } = await api.post("/upload", form);
+        if (uploadData?.url) setUploadedPhoto(uploadData.url);
+      }
     } catch {
-      // keep local preview
+      // Keep local preview
     } finally {
       setUploading(false);
-    }
-  };
-
-  const generate3DPreview = (photo) => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      // Set to 3D model photo
-      const fallback3D = product.images?.[0] || "/src/assets/images/3d-couple-keepsake.jpeg";
-      setModelPreview(fallback3D);
       setIsGenerating(false);
       setPreviewMode("3d");
-      toast.success("Cute 3D Model Generated!");
-    }, 700);
+    }
   };
 
   const selectPreset = (preset) => {

@@ -87,7 +87,7 @@ export default function TrackOrder() {
     },
     {
       step: 4,
-      title: "Dispatched via Shiprocket",
+      title: "Dispatched via Express Courier",
       desc: "Handed over to courier partner",
       icon: Truck,
     },
@@ -106,13 +106,13 @@ export default function TrackOrder() {
         <div className="text-center space-y-3 mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-ribbon-600 text-xs font-bold uppercase tracking-wider">
             <Truck size={14} className="text-ribbon-500" />
-            <span>Shiprocket Live Tracking Radar</span>
+            <span>Live Shipment Tracking</span>
           </div>
           <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900">
             Track Your Keepsake Order
           </h1>
           <p className="text-sm text-slate-600 max-w-lg mx-auto">
-            Enter your 6-digit Order ID or Shiprocket AWB Tracking Number to follow your bespoke package in real time.
+            Enter your 6-digit Order ID or AWB Tracking Number to follow your bespoke package in real time.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export default function TrackOrder() {
 
           {/* Quick Helper */}
           <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-3 gap-2">
-            <span>💡 Real-time Courier Status powered by <strong>Shiprocket</strong> (BlueDart, Delhivery, DTDC).</span>
+            <span>💡 Real-time Courier Status (BlueDart, Delhivery, DTDC, Express Air).</span>
             <Link to="/contact" className="text-ribbon-600 font-semibold hover:underline">
               Need WhatsApp Support?
             </Link>
@@ -188,7 +188,7 @@ export default function TrackOrder() {
                           month: "long",
                           year: "numeric",
                         })}`
-                      : "Shiprocket Active Consignment"}
+                      : "Active Consignment"}
                   </div>
                 </div>
 
@@ -198,10 +198,10 @@ export default function TrackOrder() {
                   </div>
                   <div className="font-display text-base font-extrabold text-slate-900 flex items-center sm:justify-end gap-1.5 mt-0.5">
                     <Award size={16} className="text-ribbon-500" />
-                    <span>{order?.courierPartner || srTrack?.courier_name || "BlueDart Air Express (Shiprocket)"}</span>
+                    <span>{order?.courierPartner || srTrack?.courier_name || "Express Air Courier"}</span>
                   </div>
                   <div className="text-xs text-slate-500 font-mono mt-0.5">
-                    AWB: <strong>{order?.trackingNumber || srTrack?.awb_code || "SR84729103IN"}</strong>
+                    AWB: <strong>{order?.trackingNumber || srTrack?.awb_code || "AWB-IN"}</strong>
                   </div>
                 </div>
               </div>
@@ -319,7 +319,7 @@ export default function TrackOrder() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
                     <Clock size={16} className="text-ribbon-500" />
-                    <span>Live Shiprocket Checkpoints</span>
+                    <span>Live Courier Activity Checkpoints</span>
                   </h3>
                   <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
                     Live Carrier Sync

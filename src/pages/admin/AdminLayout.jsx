@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Tag,
   MessageSquare,
+  Box,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 
@@ -31,9 +32,10 @@ export default function AdminLayout() {
 
   const navItems = [
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/admin/3d-studio", label: "3D Figurine Studio (AI)", icon: Box },
+    { to: "/admin/orders", label: "Customer Orders", icon: ShoppingBag },
     { to: "/admin/products", label: "Products & Pricing", icon: Package },
     { to: "/admin/collections", label: "Collections", icon: Layers },
-    { to: "/admin/orders", label: "Customer Orders", icon: ShoppingBag },
     { to: "/admin/coupons", label: "Coupons & Discounts", icon: Tag },
     { to: "/admin/reviews", label: "Reviews & Feedback", icon: MessageSquare },
   ];

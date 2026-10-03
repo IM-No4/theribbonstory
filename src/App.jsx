@@ -7,7 +7,6 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
 import WishlistDrawer from "./components/WishlistDrawer";
-import LocationModal from "./components/LocationModal";
 import FloatingHelp from "./components/FloatingHelp";
 
 // Lazy-Loaded Storefront Pages (High-Speed Code Splitting)
@@ -29,6 +28,7 @@ const Account = lazy(() => import("./pages/Account"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const BuildABox = lazy(() => import("./pages/BuildABox"));
+const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy-Loaded Admin Portal Pages & Guard
@@ -41,6 +41,7 @@ const AdminCollections = lazy(() => import("./pages/admin/AdminCollections"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const Admin3DStudio = lazy(() => import("./pages/admin/Admin3DStudio"));
 
 // Luxury Branded Page Loading Suspense Fallback
 function PageLoader() {
@@ -66,8 +67,33 @@ function ScrollToTop() {
 }
 
 function App() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const isAdminPath = pathname.startsWith("/admin");
+  const isAuthPath =
+    ["/login", "/register", "/forgot-password"].includes(pathname) ||
+    pathname.startsWith("/reset-password");
+
+  // Coming Soon Flag Evaluation:
+  // 1. Set VITE_COMING_SOON=true in .env to turn on site-wide coming soon mode
+  // 2. Or pass ?preview=coming-soon or ?coming_soon=true in the URL
+  // 3. To preview the full store while flag is on: ?preview=store or ?bypass=true
+  const searchParams = new URLSearchParams(search);
+  const isComingSoonEnv =
+    import.meta.env.VITE_COMING_SOON === "true" ||
+    import.meta.env.VITE_COMING_SOON === "1";
+  const forceComingSoon =
+    searchParams.get("preview") === "coming-soon" ||
+    searchParams.get("coming_soon") === "true";
+  const forceBypass =
+    searchParams.get("preview") === "store" ||
+    searchParams.get("bypass") === "true";
+
+  const isComingSoonActive =
+    (isComingSoonEnv || forceComingSoon || pathname === "/coming-soon") &&
+    !forceBypass &&
+    !isAdminPath;
+
+  const isIsolatedLayout = isAdminPath || isAuthPath || isComingSoonActive;
 
   return (
     <div className="flex min-h-screen flex-col bg-cream-50">
@@ -80,66 +106,73 @@ function App() {
       />
       <ScrollToTop />
 
-      {/* Show Storefront navigation components only outside admin portal */}
-      {!isAdminPath && (
+      {/* Show Storefront navigation components only outside admin, isolated auth portals and coming soon mode */}
+      {!isIsolatedLayout && (
         <>
           <Navbar />
           <CartDrawer />
           <WishlistDrawer />
-          <LocationModal />
           <FloatingHelp />
         </>
       )}
 
       <main className="flex-1">
         <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public Storefront Routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/product/:slug" element={<ProductDetail />} />
-            <Route path="/3d-keepsakes" element={<ThreeDKeepsakes />} />
-            <Route path="/personalized" element={<PersonalizedPage />} />
-            <Route path="/build-a-box" element={<BuildABox />} />
-            <Route path="/build-a-hamper" element={<BuildABox />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/track-order" element={<TrackOrder />} />
-            <Route path="/track" element={<TrackOrder />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/order-success/:id" element={<OrderSuccess />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/orders" element={<Account />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/our-story" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+          {isComingSoonActive ? (
+            <Routes>
+              <Route path="*" element={<ComingSoon />} />
+            </Routes>
+          ) : (
+            <Routes>
+              {/* Public Storefront Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/coming-soon" element={<ComingSoon />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/product/:slug" element={<ProductDetail />} />
+              <Route path="/3d-keepsakes" element={<ThreeDKeepsakes />} />
+              <Route path="/personalized" element={<PersonalizedPage />} />
+              <Route path="/build-a-box" element={<BuildABox />} />
+              <Route path="/build-a-hamper" element={<BuildABox />} />
+              <Route path="/how-it-works" element={<HowItWorksPage />} />
+              <Route path="/track-order" element={<TrackOrder />} />
+              <Route path="/track" element={<TrackOrder />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/order-success/:id" element={<OrderSuccess />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/orders" element={<Account />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/our-story" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
 
-            {/* Admin Authentication */}
-            <Route path="/admin/login" element={<AdminLogin />} />
+              {/* Admin Authentication */}
+              <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Protected Admin Portal */}
-            <Route path="/admin" element={<AdminRoute />}>
-              <Route element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="collections" element={<AdminCollections />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="coupons" element={<AdminCoupons />} />
-                <Route path="reviews" element={<AdminReviews />} />
+              {/* Protected Admin Portal */}
+              <Route path="/admin" element={<AdminRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="3d-studio" element={<Admin3DStudio />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="collections" element={<AdminCollections />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="coupons" element={<AdminCoupons />} />
+                  <Route path="reviews" element={<AdminReviews />} />
+                </Route>
               </Route>
-            </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          )}
         </Suspense>
       </main>
 
-      {!isAdminPath && <Footer />}
+      {!isIsolatedLayout && <Footer />}
     </div>
   );
 }
