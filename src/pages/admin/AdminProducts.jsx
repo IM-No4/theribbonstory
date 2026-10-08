@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Plus,
@@ -65,19 +65,20 @@ export default function AdminProducts() {
     isActive: true,
   });
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const { data } = await api.get("/categories");
       setCategories(data.categories || []);
-      if (!formData.category && data.categories?.length > 0) {
-        setFormData((prev) => ({ ...prev, category: data.categories[0].slug }));
+      if (data.categories?.length > 0) {
+        // Default the form's category only if none is chosen yet
+        setFormData((prev) => (prev.category ? prev : { ...prev, category: data.categories[0].slug }));
       }
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/products/admin/all", {
@@ -92,24 +93,17 @@ export default function AdminProducts() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
   }, [selectedCategory, search]);
 
   useEffect(() => {
-    if (params.get("action") === "new") {
-      openAddModal();
-      setParams({});
-    }
-  }, [params]);
+    fetchCategories();
+  }, [fetchCategories]);
 
-  const openAddModal = () => {
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const openAddModal = useCallback(() => {
     setEditingProduct(null);
     setFormData({
       name: "",
@@ -139,7 +133,14 @@ export default function AdminProducts() {
       isActive: true,
     });
     setIsModalOpen(true);
-  };
+  }, [categories]);
+
+  useEffect(() => {
+    if (params.get("action") === "new") {
+      openAddModal();
+      setParams({});
+    }
+  }, [params, setParams, openAddModal]);
 
   const openEditModal = (product) => {
     setEditingProduct(product);

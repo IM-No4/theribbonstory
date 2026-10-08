@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ShoppingBag,
   Search,
@@ -71,7 +71,7 @@ export default function AdminOrders() {
     }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/orders/admin/all", {
@@ -86,7 +86,7 @@ export default function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, search]);
 
   const openRefundModal = (order) => {
     setRefundModal(order);
@@ -139,7 +139,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     fetchOrders();
-  }, [statusFilter, search]);
+  }, [fetchOrders]);
 
   const exportOrdersCSV = () => {
     if (orders.length === 0) {

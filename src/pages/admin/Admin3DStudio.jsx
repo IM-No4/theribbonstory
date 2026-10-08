@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Sparkles,
@@ -37,14 +37,14 @@ export default function Admin3DStudio() {
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Fetch recent reference generations
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     setLoadingHistory(true);
     try {
       const { data } = await api.get("/3d-agent/all?limit=12");
       if (data.success) {
         setRecentSessions(data.sessions || []);
-        if (!activeSession && data.sessions?.length > 0) {
-          setActiveSession(data.sessions[0]);
+        if (data.sessions?.length > 0) {
+          setActiveSession((current) => current ?? data.sessions[0]);
         }
       }
     } catch (err) {
@@ -52,11 +52,11 @@ export default function Admin3DStudio() {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [fetchSessions]);
 
   // Turntable animation loop
   useEffect(() => {
