@@ -2,18 +2,14 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   Search,
-  Package,
   Truck,
   CheckCircle2,
   Clock,
   MapPin,
   Sparkles,
   ArrowRight,
-  ShieldCheck,
-  Phone,
   Gift,
   AlertCircle,
-  ExternalLink,
   Award,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -215,11 +211,11 @@ export default function TrackOrder() {
                       Refund Processed (₹{order.refundAmount || order.totalPrice})
                     </div>
                     <p className="text-emerald-700">
-                      Payment refund successfully initiated back to customer's source account. Reference ID:{" "}
+                      Payment refund successfully initiated back to customer&apos;s source account. Reference ID:{" "}
                       <span className="font-mono font-bold">{order.refundId || "rfnd_processed"}</span>
                     </p>
                     {order.refundReason && (
-                      <p className="text-emerald-600 italic">"{order.refundReason}"</p>
+                      <p className="text-emerald-600 italic">&quot;{order.refundReason}&quot;</p>
                     )}
                   </div>
                 </div>

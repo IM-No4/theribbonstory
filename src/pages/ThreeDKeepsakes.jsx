@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Heart, Box, Layers, ArrowRight, ShieldCheck, Truck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Sparkles, Box, Layers } from "lucide-react";
 import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";

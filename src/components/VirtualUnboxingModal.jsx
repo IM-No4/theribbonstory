@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Gift, Heart, RotateCcw, CheckCircle2, ArrowRight } from "lucide-react";
+import { X, Sparkles, Gift, Heart, RotateCcw } from "lucide-react";
 import { assetUrl } from "../api/client";
 
 export default function VirtualUnboxingModal({ isOpen, onClose, product, customNote }) {
@@ -147,7 +147,7 @@ export default function VirtualUnboxingModal({ isOpen, onClose, product, customN
                       <span>Complimentary Greeting Card</span>
                     </div>
                     <p className="italic text-[11px] text-espresso-700">
-                      "{customNote || "A memory frozen in time, handcrafted with love and wrapped with our signature ribbon."}"
+                      &quot;{customNote || "A memory frozen in time, handcrafted with love and wrapped with our signature ribbon."}&quot;
                     </p>
                   </div>
                 </div>

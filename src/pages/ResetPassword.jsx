@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Loader2, Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";

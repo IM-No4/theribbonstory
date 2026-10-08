@@ -33,7 +33,7 @@ export default function About() {
               What started as a small passion studio crafting personalized acrylic photo magnets evolved into a D2C keepsake brand. Today, we turn pet photos into 3D figurine magnets, couple portraits into 3D sculpts, travel moments into passport stamps, and milestone days into physical objects that live permanently on your fridge door.
             </p>
             <p className="text-espresso-500 text-base italic font-script text-xl text-ribbon-600">
-              "Little memories. Beautiful keepsakes."
+              &quot;Little memories. Beautiful keepsakes.&quot;
             </p>
 
             <div className="pt-2">
@@ -72,7 +72,7 @@ export default function About() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((v, i) => (
+            {values.map((v) => (
               <div key={v.title} className="card-editorial p-6 bg-white text-center space-y-3">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blush-100 text-ribbon-600">
                   <v.icon size={20} />

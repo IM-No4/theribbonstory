@@ -1,22 +1,16 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Minus,
-  Plus,
-  Upload,
   ShieldCheck,
   Truck,
   Star,
   Sparkles,
   Check,
-  Heart,
   Box,
-  Layers,
   MessageSquare,
   Camera,
   X,
-  ThumbsUp,
   Award,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -203,7 +197,7 @@ export default function ProductDetail() {
       const { data } = await api.post("/upload", form);
       setReviewPhoto(data.url);
       toast.success("Photo attached!");
-    } catch (err) {
+    } catch {
       toast.error("Photo upload failed");
     } finally {
       setUploadingReviewPhoto(false);
@@ -574,7 +568,7 @@ export default function ProductDetail() {
                   </div>
 
                   {rev.title && <h4 className="font-bold text-xs text-burgundy-900">{rev.title}</h4>}
-                  <p className="text-xs text-espresso-600 leading-relaxed italic">"{rev.comment}"</p>
+                  <p className="text-xs text-espresso-600 leading-relaxed italic">&quot;{rev.comment}&quot;</p>
 
                   {rev.photos?.length > 0 && (
                     <div className="flex gap-2 pt-1">

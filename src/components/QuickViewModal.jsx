@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, Heart, ArrowRight, ShieldCheck, Truck } from "lucide-react";
+import { X, Star, ShieldCheck, Truck } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "../store/cartStore";
 import toast from "react-hot-toast";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
@@ -9,10 +9,7 @@ import {
   Copy,
   Check,
   Gift,
-  Sparkles,
   ArrowRight,
-  ShieldCheck,
-  Heart,
   Package,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -22,7 +19,7 @@ const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function OrderSuccess() {
   const { id } = useParams();
-  const navigate = useNavigate();
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -31,7 +28,7 @@ export default function OrderSuccess() {
     api
       .get(`/orders/${id}`)
       .then(({ data }) => setOrder(data.order))
-      .catch((err) => {
+      .catch(() => {
         toast.error("Could not load order details");
       })
       .finally(() => setLoading(false));
@@ -65,7 +62,7 @@ export default function OrderSuccess() {
       <div className="container-page py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold text-burgundy-900">Order Not Found</h2>
         <p className="text-sm text-espresso-400">
-          We couldn't locate the order details. Please check your order history.
+          We couldn&apos;t locate the order details. Please check your order history.
         </p>
         <Link to="/orders" className="btn-primary inline-block">
           View My Orders
@@ -204,7 +201,7 @@ export default function OrderSuccess() {
                 )}
                 {order.giftOptions.giftMessage && (
                   <div className="bg-white/90 p-3 rounded-xl border border-rose-100 text-xs italic text-burgundy-900">
-                    "{order.giftOptions.giftMessage}"
+                    &quot;{order.giftOptions.giftMessage}&quot;
                   </div>
                 )}
               </div>
@@ -229,7 +226,7 @@ export default function OrderSuccess() {
                       </h4>
                       {item.customization?.text && (
                         <p className="text-xs text-ribbon-600 mt-0.5">
-                          Engraved Text: <span className="italic font-semibold">"{item.customization.text}"</span>
+                          Engraved Text: <span className="italic font-semibold">&quot;{item.customization.text}&quot;</span>
                         </p>
                       )}
                       {item.customization?.shape && (

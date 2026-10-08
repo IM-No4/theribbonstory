@@ -15,7 +15,7 @@ const getStoredLocation = () => {
   try {
     const saved = localStorage.getItem("ribbon_delivery_location");
     if (saved) return JSON.parse(saved);
-  } catch (e) {
+  } catch {
     // fallback
   }
   return {
@@ -37,7 +37,9 @@ export const useLocationStore = create((set, get) => ({
   setLocation: (loc) => {
     try {
       localStorage.setItem("ribbon_delivery_location", JSON.stringify(loc));
-    } catch (e) {}
+    } catch {
+      /* storage unavailable — keep defaults */
+    }
     set({ location: loc, isOpen: false });
   },
 

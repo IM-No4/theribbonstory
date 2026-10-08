@@ -1,25 +1,20 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  TrendingUp,
   Package,
   Layers,
   ShoppingBag,
-  AlertTriangle,
   Plus,
   ArrowRight,
   Sparkles,
   DollarSign,
-  Clock,
-  CheckCircle2,
-  Users,
 } from "lucide-react";
 import { api } from "../../api/client";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
-  const [lowStock, setLowStock] = useState([]);
+  const [, setLowStock] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

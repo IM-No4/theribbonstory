@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, X, Trash2, ShoppingBag, Sparkles, ArrowRight } from "lucide-react";
+import { Heart, X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
 

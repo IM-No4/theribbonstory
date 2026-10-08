@@ -10,14 +10,11 @@ import {
   Sparkles,
   ChevronDown,
   Heart,
-  MapPin,
   Truck,
-  HelpCircle,
   PhoneCall,
   Flame,
   ArrowRight,
   ShieldCheck,
-  Gift,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogoMark } from "./Logo";
@@ -31,7 +28,7 @@ const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeMegaCategory, setActiveMegaCategory] = useState(null);

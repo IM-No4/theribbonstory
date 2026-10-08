@@ -78,7 +78,7 @@ export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
               <div className="py-8 text-center text-espresso-400 text-sm">Searching memories...</div>
             ) : query && results.length === 0 ? (
               <div className="py-8 text-center text-espresso-400 text-sm">
-                No keepsakes found for "{query}". Try searching "3D", "pet", "photo magnet", or "hamper".
+                No keepsakes found for &quot;{query}&quot;. Try searching &quot;3D&quot;, &quot;pet&quot;, &quot;photo magnet&quot;, or &quot;hamper&quot;.
               </div>
             ) : results.length > 0 ? (
               results.map((p) => (

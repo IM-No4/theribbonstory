@@ -4,7 +4,9 @@ const getStoredWishlist = () => {
   try {
     const saved = localStorage.getItem("ribbon_wishlist");
     if (saved) return JSON.parse(saved);
-  } catch (e) {}
+  } catch {
+    /* storage unavailable — keep defaults */
+  }
   return [];
 };
 
@@ -26,7 +28,9 @@ export const useWishlistStore = create((set, get) => ({
     }
     try {
       localStorage.setItem("ribbon_wishlist", JSON.stringify(newItems));
-    } catch (e) {}
+    } catch {
+      /* storage unavailable — keep defaults */
+    }
     set({ items: newItems });
     return !exists;
   },
@@ -41,14 +45,18 @@ export const useWishlistStore = create((set, get) => ({
     const newItems = items.filter((item) => (item._id || item.id) !== productId);
     try {
       localStorage.setItem("ribbon_wishlist", JSON.stringify(newItems));
-    } catch (e) {}
+    } catch {
+      /* storage unavailable — keep defaults */
+    }
     set({ items: newItems });
   },
 
   clearWishlist: () => {
     try {
       localStorage.removeItem("ribbon_wishlist");
-    } catch (e) {}
+    } catch {
+      /* storage unavailable — keep defaults */
+    }
     set({ items: [] });
   },
 }));

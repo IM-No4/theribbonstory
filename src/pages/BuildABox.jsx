@@ -1,25 +1,13 @@
 import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Sparkles,
   Gift,
-  Heart,
   Upload,
   Check,
-  Plus,
-  Minus,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  ShieldCheck,
   Truck,
-  Box,
-  Layers,
-  Palette,
-  Camera,
-  Type,
-  Calendar,
 } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
@@ -190,7 +178,7 @@ export default function BuildABox() {
       const { data } = await api.post("/upload", form);
       setKeepsakePhoto(data.url);
       toast.success("Photo uploaded to your hamper!");
-    } catch (err) {
+    } catch {
       toast.error("Using local preview");
     } finally {
       setUploadingPhoto(false);
@@ -670,7 +658,7 @@ export default function BuildABox() {
                   <div className="min-w-0 flex-1 text-xs">
                     <div className="font-bold text-burgundy-900 truncate">{selectedKeepsake.name}</div>
                     <div className="text-[10px] text-espresso-400 italic truncate">
-                      "{keepsakeCaption}"
+                      &quot;{keepsakeCaption}&quot;
                     </div>
                   </div>
                   <span className="font-bold text-xs text-burgundy-900">{formatPrice(keepsakePrice)}</span>
@@ -695,7 +683,7 @@ export default function BuildABox() {
                 <div className="p-2.5 rounded-xl bg-white/90 border border-blush-200 text-xs">
                   <div className="font-bold text-burgundy-900 text-[11px]">{cardTheme} Card</div>
                   <div className="text-[10px] text-espresso-400 italic line-clamp-2 mt-0.5">
-                    "{cardMessage}"
+                    &quot;{cardMessage}&quot;
                   </div>
                 </div>
               </div>
