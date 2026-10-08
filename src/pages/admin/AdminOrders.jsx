@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
+import { blobErrorMessage, downloadPrintFile, formatBytes } from "../../utils/printFiles";
 
 const STATUSES = [
   { value: "all", label: "All Orders" },
@@ -578,6 +579,24 @@ export default function AdminOrders() {
                           <div className="text-slate-400">
                             Qty: {item.quantity} × ₹{item.price}
                           </div>
+
+                          {/* Production print file attached to this product (admin only) */}
+                          {item.printFile && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadPrintFile(item.product, item.printFile.originalName).catch(async (err) =>
+                                  toast.error(await blobErrorMessage(err, "Could not download print file"))
+                                )
+                              }
+                              className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/50 text-[11px] font-semibold cursor-pointer"
+                              title={item.printFile.originalName}
+                            >
+                              <Download size={12} />
+                              <span>Download print file</span>
+                              <span className="text-emerald-500/80 font-normal">{formatBytes(item.printFile.size)}</span>
+                            </button>
+                          )}
 
                           {/* Selected Options */}
                           {item.selectedOptions?.length > 0 && (

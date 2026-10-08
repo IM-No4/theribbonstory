@@ -10,7 +10,10 @@ import {
   X,
   Check,
   Package,
+  Download,
 } from "lucide-react";
+import PrintFilePanel from "../../components/admin/PrintFilePanel";
+import { blobErrorMessage, downloadPrintFile } from "../../utils/printFiles";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
 
@@ -456,10 +459,31 @@ export default function AdminProducts() {
                               Customizable
                             </span>
                           )}
+                          {prod.printFile && (
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/40 uppercase"
+                              title={prod.printFile.originalName}
+                            >
+                              STL attached
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {prod.printFile && (
+                            <button
+                              onClick={() =>
+                                downloadPrintFile(prod._id, prod.printFile.originalName).catch(async (err) =>
+                                  toast.error(await blobErrorMessage(err, "Could not download print file"))
+                                )
+                              }
+                              className="p-2 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-900/40 transition cursor-pointer"
+                              title={`Download print file (${prod.printFile.originalName})`}
+                            >
+                              <Download size={14} />
+                            </button>
+                          )}
                           <button
                             onClick={() => openEditModal(prod)}
                             className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition cursor-pointer"
@@ -905,6 +929,23 @@ export default function AdminProducts() {
                   />
                   <span>Active & Listed in Store</span>
                 </label>
+              </div>
+
+              {/* Production print file (admin only) */}
+              <div className="space-y-2">
+                <label className="block font-bold text-slate-300 uppercase tracking-wider text-[10px]">
+                  3D Print File (STL)
+                </label>
+                <PrintFilePanel
+                  productId={editingProduct?._id}
+                  printFile={editingProduct?.printFile}
+                  onChange={(printFile) => {
+                    setEditingProduct((prev) => (prev ? { ...prev, printFile } : prev));
+                    setProducts((prev) =>
+                      prev.map((p) => (p._id === editingProduct?._id ? { ...p, printFile } : p))
+                    );
+                  }}
+                />
               </div>
 
               {/* Action Buttons */}
