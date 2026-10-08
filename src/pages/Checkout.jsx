@@ -307,24 +307,20 @@ export default function Checkout() {
       customization: i.customization,
     }));
 
-  const finalizeOrder = async (paymentResult) => {
-    const courierName =
-      shippingEstimate?.recommendedCourier?.courier_name ||
-      "BlueDart Air Express (Shiprocket)";
+  // Everything the server needs to price and save the order
+  const buildOrderPayload = () => ({
+    items: buildOrderItems(),
+    shippingAddress: address,
+    courierPartner:
+      shippingEstimate?.recommendedCourier?.courier_name || "BlueDart Air Express (Shiprocket)",
+    couponCode: appliedCoupon?.code,
+    giftOptions: giftOptions.isGift ? giftOptions : undefined,
+  });
 
-    const { data } = await api.post("/orders", {
-      items: buildOrderItems(),
-      shippingAddress: address,
-      courierPartner: courierName,
-      paymentMethod,
-      paymentResult,
-      couponCode: appliedCoupon?.code,
-      giftOptions: giftOptions.isGift ? giftOptions : undefined,
-    });
-
+  const completeOrder = (orderId) => {
     clearCart();
     toast.success("Order placed successfully! We're crafting your keepsakes.");
-    navigate(`/order-success/${data.order._id}`);
+    navigate(`/order-success/${orderId}`);
   };
 
   const handlePlaceOrder = async (e) => {
@@ -339,15 +335,14 @@ export default function Checkout() {
     setPlacing(true);
     try {
       if (paymentMethod === "cod") {
-        await finalizeOrder(undefined);
+        const { data } = await api.post("/orders", { ...buildOrderPayload(), paymentMethod: "cod" });
+        completeOrder(data.order._id);
         return;
       }
 
-      // Razorpay Payment Flow
-      const { data: orderData } = await api.post("/payments/razorpay/order", {
-        items: buildOrderItems(),
-        couponCode: appliedCoupon?.code,
-      });
+      // Razorpay: the server saves the order as awaiting payment first, so a
+      // payment is never lost even if this page closes before confirming
+      const { data: orderData } = await api.post("/payments/razorpay/order", buildOrderPayload());
       const ok = await loadRazorpayScript();
       if (!ok) throw new Error("Could not load payment gateway script");
 
@@ -366,16 +361,23 @@ export default function Checkout() {
         theme: { color: "#a83f52" },
         handler: async (response) => {
           try {
-            await finalizeOrder({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
+            await api.post(`/orders/${orderData.orderId}/confirm-payment`, response);
+            completeOrder(orderData.orderId);
           } catch (err) {
-            toast.error(err.response?.data?.message || "Could not confirm your order");
+            if (err.response?.status === 400) {
+              toast.error(err.response.data?.message || "Could not confirm your payment");
+            } else {
+              // Paid, but the confirmation call failed (network): the Razorpay
+              // webhook confirms the order on the server, so show it anyway
+              toast.success("Payment received! Your order confirmation will follow shortly.");
+              completeOrder(orderData.orderId);
+            }
           } finally {
             setPlacing(false);
           }
+        },
+        modal: {
+          ondismiss: () => setPlacing(false),
         },
       });
 
