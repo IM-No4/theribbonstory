@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { api } from "../api/client";
+import { api, assetUrl } from "../api/client";
 
 export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
   const [query, setQuery] = useState("");
@@ -88,7 +88,7 @@ export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <img
-                      src={p.images?.[0]}
+                      src={assetUrl(p.images?.[0])}
                       alt={p.name}
                       className="h-14 w-14 rounded-xl object-cover border border-blush-100 shrink-0"
                     />

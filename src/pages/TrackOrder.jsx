@@ -358,7 +358,7 @@ export default function TrackOrder() {
                     >
                       <div className="flex items-center gap-3">
                         <img
-                          src={assetUrl(item.image || "/src/assets/images/photo-magnet.jpeg")}
+                          src={assetUrl(item.image || "/images/photo-magnet.webp")}
                           alt={item.name}
                           className="w-12 h-12 rounded-xl object-cover border border-white shadow-2xs"
                         />

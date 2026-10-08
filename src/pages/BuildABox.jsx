@@ -22,7 +22,7 @@ const BOX_STYLES = [
     name: "Royal Burgundy Velvet Box",
     desc: "Plush matte velvet finish with magnetic lid & gold foil seal",
     price: 299,
-    img: "/src/assets/images/gifts-for-her.jpeg",
+    img: "/images/gifts-for-her.webp",
     color: "from-burgundy-900 to-rose-950",
   },
   {
@@ -30,7 +30,7 @@ const BOX_STYLES = [
     name: "Classic Ivory Ribbon Box",
     desc: "Timeless cream luxury textured rigid box with satin ribbon wrap",
     price: 249,
-    img: "/src/assets/images/gifts-for-birthday.jpeg",
+    img: "/images/gifts-for-birthday.webp",
     color: "from-amber-50 to-cream-100",
   },
   {
@@ -38,7 +38,7 @@ const BOX_STYLES = [
     name: "Blush Pink Celebration Trunk",
     desc: "Romantic pastel blush box lined with custom shredded paper",
     price: 349,
-    img: "/src/assets/images/gifts-for-anniversary.jpeg",
+    img: "/images/gifts-for-anniversary.webp",
     color: "from-pink-100 to-rose-100",
   },
 ];
@@ -59,21 +59,21 @@ const KEEPSAKE_CHOICES = [
     name: "Personalized Acrylic Photo Magnet",
     tagline: "Crystal gloss finish with custom date & name",
     price: 349,
-    img: "/src/assets/images/photo-magnet.jpeg",
+    img: "/images/photo-magnet.webp",
   },
   {
     id: "polaroid-set",
     name: "Polaroid Memory Magnet Set (3 Pcs)",
     tagline: "Vintage white bordered magnetic polaroid trio",
     price: 499,
-    img: "/src/assets/images/polaroid-art.jpeg",
+    img: "/images/polaroid-art.webp",
   },
   {
     id: "3d-miniature",
     name: "3D Figurine Keepsake Sculpt",
     tagline: "Bespoke miniature sculpt handcrafted from your photo",
     price: 699,
-    img: "/src/assets/images/3d-dog-keepsake.jpeg",
+    img: "/images/3d-dog-keepsake.webp",
   },
 ];
 
@@ -137,7 +137,7 @@ export default function BuildABox() {
   const [selectedBox, setSelectedBox] = useState(BOX_STYLES[0]);
   const [selectedRibbon, setSelectedRibbon] = useState(RIBBON_COLORS[0]);
   const [selectedKeepsake, setSelectedKeepsake] = useState(KEEPSAKE_CHOICES[0]);
-  const [keepsakePhoto, setKeepsakePhoto] = useState("/src/assets/images/photo-magnet.jpeg");
+  const [keepsakePhoto, setKeepsakePhoto] = useState("/images/photo-magnet.webp");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [keepsakeCaption, setKeepsakeCaption] = useState("Forever & Always");
   const [selectedAddons, setSelectedAddons] = useState([CURATED_ADDONS[0], CURATED_ADDONS[1]]);

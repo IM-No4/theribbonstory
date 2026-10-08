@@ -32,7 +32,7 @@ export default function RecentlyViewed({ currentProductId }) {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
           {displayItems.slice(0, 6).map((product) => {
-            const img = product.images?.[0] || product.image || "/src/assets/images/photo-magnet.jpeg";
+            const img = product.images?.[0] || product.image || "/images/photo-magnet.webp";
             return (
               <Link
                 key={product._id || product.slug}

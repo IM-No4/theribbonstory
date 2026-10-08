@@ -177,7 +177,7 @@ export default function ProductDetail() {
     addItem({
       productId: product._id || product.slug,
       name: product.name,
-      image: product.images?.[0] || "/src/assets/images/photo-magnet.jpeg",
+      image: product.images?.[0] || "/images/photo-magnet.webp",
       price: product.price, // option deltas are added by the cart subtotal
       quantity,
       selectedOptions: chosenOptionsList,
@@ -260,7 +260,7 @@ export default function ProductDetail() {
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 onError={(e) => {
-                  e.target.src = "/src/assets/images/photo-magnet.jpeg";
+                  e.target.src = "/images/photo-magnet.webp";
                 }}
               />
               {product.isBestseller && (

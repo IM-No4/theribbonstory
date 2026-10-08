@@ -116,7 +116,7 @@ export default function AdminProducts() {
       description: "",
       price: "",
       compareAtPrice: "",
-      images: ["/src/assets/images/photo-magnet.jpeg"],
+      images: ["/images/photo-magnet.webp"],
       isCustomizable: true,
       customizationPrompt: "Upload your favourite photo and add custom note",
       optionGroups: [
@@ -399,7 +399,7 @@ export default function AdminProducts() {
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
                 {products.map((prod) => {
                   const cat = categories.find((c) => c.slug === prod.category);
-                  const img = prod.images?.[0] || "/src/assets/images/photo-magnet.jpeg";
+                  const img = prod.images?.[0] || "/images/photo-magnet.webp";
                   return (
                     <tr key={prod._id} className="hover:bg-slate-900/40 transition">
                       <td className="py-3 px-4">
@@ -409,7 +409,7 @@ export default function AdminProducts() {
                             alt={prod.name}
                             className="w-12 h-12 rounded-xl object-cover border border-slate-800 bg-slate-900 shrink-0"
                             onError={(e) => {
-                              e.target.src = "/src/assets/images/photo-magnet.jpeg";
+                              e.target.src = "/images/photo-magnet.webp";
                             }}
                           />
                           <div className="min-w-0">
@@ -689,7 +689,7 @@ export default function AdminProducts() {
                             alt="preview"
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.target.src = "/src/assets/images/photo-magnet.jpeg";
+                              e.target.src = "/images/photo-magnet.webp";
                             }}
                           />
                         ) : (

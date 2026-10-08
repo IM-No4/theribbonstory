@@ -15,7 +15,7 @@ import {
   Gift,
   CheckCircle2,
 } from "lucide-react";
-import { api } from "../api/client";
+import { api, assetUrl } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
@@ -33,7 +33,7 @@ const HERO_SLIDES = [
     ctaSecondaryLink: "/shop",
     bgGradient: "from-rose-50/90 via-white to-pink-50/70",
     badge: "100% Handcrafted",
-    img: "/src/assets/images/3d-couple-keepsake.jpeg",
+    img: "/images/3d-couple-keepsake.webp",
   },
   {
     id: 2,
@@ -46,7 +46,7 @@ const HERO_SLIDES = [
     ctaSecondaryLink: "/how-it-works",
     bgGradient: "from-purple-50/80 via-white to-rose-50/70",
     badge: "Most Loved Anniversary Gift",
-    img: "/src/assets/images/3d-family-keepsake.jpeg",
+    img: "/images/3d-family-keepsake.webp",
   },
   {
     id: 3,
@@ -59,7 +59,7 @@ const HERO_SLIDES = [
     ctaSecondaryLink: "/shop?occasion=birthday",
     bgGradient: "from-amber-50/80 via-white to-rose-50/60",
     badge: "Premium Ribbon Unboxing",
-    img: "/src/assets/images/luxury-ribbon-hamper.jpeg",
+    img: "/images/luxury-ribbon-hamper.webp",
   },
 ];
 
@@ -69,51 +69,51 @@ const STORY_CATEGORIES = [
     name: "3D Keepsakes",
     to: "/3d-keepsakes",
     badge: "Hot",
-    img: "/src/assets/images/3d-dog-keepsake.jpeg",
+    img: "/images/3d-dog-keepsake.webp",
   },
   {
     name: "Photo Magnets",
     to: "/shop?category=photo-magnets",
     badge: "Trending",
-    img: "/src/assets/images/photo-magnet.jpeg",
+    img: "/images/photo-magnet.webp",
   },
   {
     name: "Polaroid Art",
     to: "/shop?category=polaroid-magnets",
     badge: "Best Value",
-    img: "/src/assets/images/polaroid-art.jpeg",
+    img: "/images/polaroid-art.webp",
   },
   {
     name: "Birthday Gifts",
     to: "/shop?occasion=birthday",
-    img: "/src/assets/images/birthday-magnet.jpeg",
+    img: "/images/birthday-magnet.webp",
   },
   {
     name: "Anniversary",
     to: "/shop?occasion=anniversary",
-    img: "/src/assets/images/anniversary.jpeg",
+    img: "/images/anniversary.webp",
   },
   {
     name: "For Couples",
     to: "/shop?occasion=couples",
-    img: "/src/assets/images/for-couples.jpeg",
+    img: "/images/for-couples.webp",
   },
   {
     name: "Pet Keepsakes",
     to: "/3d-keepsakes",
-    img: "/src/assets/images/pet-keepsake.jpeg",
+    img: "/images/pet-keepsake.webp",
   },
   {
     name: "Under ₹499",
     to: "/shop?maxPrice=499",
     badge: "Budget",
-    img: "/src/assets/images/under-499.jpeg",
+    img: "/images/under-499.webp",
   },
   {
     name: "⚡ Same Day",
     to: "/shop?tag=express",
     badge: "Fast",
-    img: "/src/assets/images/same-day-delivery.jpeg",
+    img: "/images/same-day-delivery.webp",
   },
 ];
 
@@ -123,7 +123,7 @@ const RECIPIENTS = [
     id: "for-her",
     title: "Gifts For Her",
     subtitle: "Wife, Girlfriend, Sister, Mom",
-    img: "/src/assets/images/gifts-for-her.jpeg",
+    img: "/images/gifts-for-her.webp",
     to: "/shop?tag=for-her",
     tag: "300+ Gifts",
   },
@@ -131,7 +131,7 @@ const RECIPIENTS = [
     id: "for-him",
     title: "Gifts For Him",
     subtitle: "Husband, Boyfriend, Dad, Brother",
-    img: "/src/assets/images/gifts-for-him.jpeg",
+    img: "/images/gifts-for-him.webp",
     to: "/shop?tag=for-him",
     tag: "250+ Gifts",
   },
@@ -139,7 +139,7 @@ const RECIPIENTS = [
     id: "for-couples",
     title: "For Couples",
     subtitle: "Romantic & Keepsake Sets",
-    img: "/src/assets/images/gifts-for-couples.jpeg",
+    img: "/images/gifts-for-couples.webp",
     to: "/shop?occasion=couples",
     tag: "Most Loved",
   },
@@ -147,7 +147,7 @@ const RECIPIENTS = [
     id: "for-friends",
     title: "For Best Friends",
     subtitle: "Funny, Nostalgic & Memory Packs",
-    img: "/src/assets/images/gifts-for-friends.jpeg",
+    img: "/images/gifts-for-friends.webp",
     to: "/shop?occasion=friendship",
     tag: "Pack Deals",
   },
@@ -155,7 +155,7 @@ const RECIPIENTS = [
     id: "for-parents",
     title: "For Parents",
     subtitle: "Cherished Family Moments",
-    img: "/src/assets/images/gifts-for-parents.jpeg",
+    img: "/images/gifts-for-parents.webp",
     to: "/shop?tag=for-parents",
     tag: "Heartwarming",
   },
@@ -163,7 +163,7 @@ const RECIPIENTS = [
     id: "for-pets",
     title: "For Pet Parents",
     subtitle: "Custom 3D Cat & Dog Figurines",
-    img: "/src/assets/images/3d-dog-keepsake.jpeg",
+    img: "/images/3d-dog-keepsake.webp",
     to: "/3d-keepsakes",
     tag: "Bespoke Art",
   },
@@ -174,25 +174,25 @@ const OCCASIONS = [
   {
     title: "Birthday",
     subtitle: "Celebrate another milestone year",
-    img: "/src/assets/images/gifts-for-birthday.jpeg",
+    img: "/images/gifts-for-birthday.webp",
     to: "/shop?occasion=birthday",
   },
   {
     title: "Anniversary",
     subtitle: "Reminisce every beautiful year together",
-    img: "/src/assets/images/gifts-for-anniversary.jpeg",
+    img: "/images/gifts-for-anniversary.webp",
     to: "/shop?occasion=anniversary",
   },
   {
     title: "Wedding",
     subtitle: "Pre-wedding & marriage keepsakes",
-    img: "/src/assets/images/gifts-for-wedding.jpeg",
+    img: "/images/gifts-for-wedding.webp",
     to: "/shop?occasion=wedding",
   },
   {
     title: "Housewarming",
     subtitle: "Make a new house feel like home",
-    img: "/src/assets/images/gifts-for-housewarming.jpeg",
+    img: "/images/gifts-for-housewarming.webp",
     to: "/shop?occasion=housewarming",
   },
 ];
@@ -276,7 +276,7 @@ export default function Home() {
         name: c.name,
         to: c.slug === "3d-keepsakes" ? "/3d-keepsakes" : `/shop?category=${c.slug}`,
         badge: c.badge || "",
-        img: c.image || "/src/assets/images/photo-magnet.jpeg",
+        img: c.image || "/images/photo-magnet.webp",
       }))
     : STORY_CATEGORIES;
 
@@ -303,11 +303,11 @@ export default function Home() {
               <div className="relative p-0.5 rounded-full bg-gradient-to-tr from-coral-500 via-ribbon-500 to-ribbon-700 group-hover:scale-105 transition-transform duration-200">
                 <div className="p-0.5 bg-white rounded-full">
                   <img
-                    src={cat.img?.startsWith("http") || cat.img?.startsWith("/src") ? cat.img : `http://localhost:5000${cat.img}`}
+                    src={assetUrl(cat.img)}
                     alt={cat.name}
                     className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover"
                     onError={(e) => {
-                      e.target.src = "/src/assets/images/photo-magnet.jpeg";
+                      e.target.src = "/images/photo-magnet.webp";
                     }}
                   />
                 </div>

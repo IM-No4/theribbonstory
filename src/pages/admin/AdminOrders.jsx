@@ -570,7 +570,7 @@ export default function AdminOrders() {
                     >
                       <div className="flex gap-3">
                         <img
-                          src={assetUrl(item.image || "/src/assets/images/photo-magnet.jpeg")}
+                          src={assetUrl(item.image || "/images/photo-magnet.webp")}
                           alt={item.name}
                           className="w-14 h-14 rounded-xl object-cover bg-slate-950 border border-slate-700 shrink-0"
                         />

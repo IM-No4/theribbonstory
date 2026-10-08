@@ -39,7 +39,7 @@ const SAMPLE_PRESETS = [
   {
     id: "dog",
     name: "Bruno (Dog)",
-    url: "/src/assets/images/3d-dog-keepsake.jpeg",
+    url: "/images/3d-dog-keepsake.webp",
     text: "Bruno 🐾",
     date: "12.08.2026",
     note: "Forever in our hearts",
@@ -47,7 +47,7 @@ const SAMPLE_PRESETS = [
   {
     id: "couple",
     name: "Couple Milestone",
-    url: "/src/assets/images/3d-couple-keepsake.jpeg",
+    url: "/images/3d-couple-keepsake.webp",
     text: "Ananya & Kabir",
     date: "14.02.2025",
     note: "Our Story Begins Here",
@@ -55,7 +55,7 @@ const SAMPLE_PRESETS = [
   {
     id: "cat",
     name: "Milo (Cat)",
-    url: "/src/assets/images/3d-cat-keepsake.jpeg",
+    url: "/images/3d-cat-keepsake.webp",
     text: "Milo 🐱",
     date: "05.04.2026",
     note: "The Purrfect Keepsake",
@@ -63,7 +63,7 @@ const SAMPLE_PRESETS = [
   {
     id: "family",
     name: "Family Keepsake",
-    url: "/src/assets/images/3d-family-keepsake.jpeg",
+    url: "/images/3d-family-keepsake.webp",
     text: "Verma Family",
     date: "25.12.2025",
     note: "Home is family",
