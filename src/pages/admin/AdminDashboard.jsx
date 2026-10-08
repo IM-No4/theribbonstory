@@ -10,6 +10,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { api } from "../../api/client";
+import SalesOverview from "../../components/admin/SalesOverview";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -46,11 +47,11 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      label: "Total Store Revenue",
+      label: "All-time Revenue",
       value: `₹${(stats?.totalRevenue || 0).toLocaleString("en-IN")}`,
       icon: DollarSign,
       color: "from-emerald-500/20 to-emerald-700/20 text-emerald-400 border-emerald-500/30",
-      change: "Real-time orders",
+      change: "Excludes cancelled & refunded",
     },
     {
       label: "Active Products",
@@ -104,6 +105,8 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </div>
+
+      <SalesOverview />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

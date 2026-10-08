@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ShieldCheck,
@@ -31,6 +31,7 @@ const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const addItem = useCartStore((s) => s.addItem);
   const { user } = useAuthStore();
 
@@ -173,6 +174,15 @@ export default function ProductDetail() {
       : null,
   });
 
+  // "Leave a review" links (delivered email) open the review form directly
+  const wantsReview = searchParams.get("review") === "1";
+  useEffect(() => {
+    if (!wantsReview || !product) return;
+    setReviewModalOpen(true);
+    document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" });
+    setSearchParams({}, { replace: true });
+  }, [wantsReview, product, setSearchParams]);
+
   if (loading) {
     return (
       <div className="container-page py-24 text-center">
@@ -249,7 +259,7 @@ export default function ProductDetail() {
     e.preventDefault();
     if (!user) {
       toast.error("Please sign in to write a review");
-      navigate("/login");
+      navigate("/login", { state: { from: `/product/${slug}?review=1` } });
       return;
     }
     if (!reviewComment.trim()) {
@@ -518,7 +528,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Customer Reviews Section */}
-        <section className="mt-20 pt-12 border-t border-blush-200 space-y-8">
+        <section id="reviews" className="scroll-mt-24 mt-20 pt-12 border-t border-blush-200 space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-burgundy-900">
