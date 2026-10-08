@@ -81,7 +81,7 @@ export default function CartDrawer() {
                     >
                       <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-cream-100 border border-blush-100">
                         <img
-                          src={assetUrl(item.customization?.photoUrl || item.image)}
+                          src={assetUrl(item.customization?.reference3D ? item.image : item.customization?.photoUrl || item.image)}
                           alt={item.name}
                           className="h-full w-full object-cover"
                         />
@@ -107,12 +107,13 @@ export default function CartDrawer() {
                             </button>
                           </div>
 
-                          {item.customization?.petName && (
+                          {(item.customization?.customName || item.customization?.petName) && (
                             <p className="text-xs text-burgundy-800 font-medium mt-0.5">
-                              Name: <span className="text-espresso-600 font-normal">{item.customization.petName}</span>
+                              Name: <span className="text-espresso-600 font-normal">{item.customization.customName || item.customization.petName}</span>
+                              {item.customization.customDate && <span className="text-espresso-400 font-normal"> · {item.customization.customDate}</span>}
                             </p>
                           )}
-                          {item.customization?.note && (
+                          {item.customization?.note && item.customization.note !== item.customization.customName && (
                             <p className="text-xs text-espresso-400 line-clamp-1 italic mt-0.5">
                               &quot;{item.customization.note}&quot;
                             </p>

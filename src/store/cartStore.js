@@ -25,8 +25,13 @@ const persistCoupon = (coupon) => {
   else localStorage.removeItem(COUPON_KEY);
 };
 
-const lineKey = (item) =>
-  `${item.productId}|${JSON.stringify(item.selectedOptions || [])}|${item.customization?.photoUrl || ""}|${item.customization?.note || ""}`;
+// Lines merge only when everything printed on them is the same
+const lineKey = (item) => {
+  const c = item.customization || {};
+  return [item.productId, JSON.stringify(item.selectedOptions || []), c.photoUrl, c.reference3D?.approvedPreview, c.customName, c.customDate, c.note]
+    .map((v) => v || "")
+    .join("|");
+};
 
 // Plain catalog product -> cart line (prices are re-checked by the server at checkout)
 export const productToCartItem = (product, quantity = 1) => ({
