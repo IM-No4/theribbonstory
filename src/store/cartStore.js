@@ -28,6 +28,17 @@ const persistCoupon = (coupon) => {
 const lineKey = (item) =>
   `${item.productId}|${JSON.stringify(item.selectedOptions || [])}|${item.customization?.photoUrl || ""}|${item.customization?.note || ""}`;
 
+// Plain catalog product -> cart line (prices are re-checked by the server at checkout)
+export const productToCartItem = (product, quantity = 1) => ({
+  productId: product._id || product.id,
+  name: product.name,
+  image: product.images?.[0],
+  price: product.price,
+  quantity,
+  selectedOptions: [],
+  customization: {},
+});
+
 export const useCartStore = create((set, get) => ({
   items: load(),
   appliedCoupon: loadCoupon(),

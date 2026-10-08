@@ -29,8 +29,8 @@ export default function ResetPassword() {
       toast.error("Invalid or missing password reset token");
       return;
     }
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
       return;
     }
     if (password !== confirmPassword) {
@@ -84,7 +84,7 @@ export default function ResetPassword() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  minLength={6}
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl bg-[#F4F5F8] border border-transparent pl-3.5 pr-10 py-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-ribbon-500 focus:ring-2 focus:ring-rose-100 focus:outline-hidden transition-all duration-200"
@@ -103,7 +103,7 @@ export default function ResetPassword() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  minLength={6}
+                  minLength={8}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full rounded-xl bg-[#F4F5F8] border border-transparent px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-ribbon-500 focus:ring-2 focus:ring-rose-100 focus:outline-hidden transition-all duration-200"

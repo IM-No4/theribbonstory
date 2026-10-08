@@ -30,7 +30,7 @@ import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
-import { useCartStore } from "../store/cartStore";
+import { useCartStore, productToCartItem } from "../store/cartStore";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -77,6 +77,7 @@ export default function Account() {
   // Profile Edit
   const [profileName, setProfileName] = useState("");
   const [profilePassword, setProfilePassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Cancel & Refund Modal State
@@ -203,18 +204,20 @@ export default function Account() {
       await api.put("/auth/profile", {
         name: profileName,
         password: profilePassword || undefined,
+        currentPassword: profilePassword ? currentPassword : undefined,
       });
       toast.success("Profile updated!");
       setProfilePassword("");
+      setCurrentPassword("");
     } catch (err) {
-      toast.error("Failed to update profile");
+      toast.error(err.response?.data?.message || "Failed to update profile");
     } finally {
       setSavingProfile(false);
     }
   };
 
   const handleMoveWishlistToCart = (item) => {
-    addToCart(item, 1);
+    addToCart(productToCartItem(item, 1));
     toast.success(`${item.name} added to cart!`);
     openCart();
   };
@@ -731,6 +734,25 @@ export default function Account() {
                       className="w-full rounded-xl bg-[#F4F5F8] border border-transparent px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:bg-white focus:border-ribbon-500 focus:ring-2 focus:ring-rose-100 focus:outline-hidden transition"
                     />
                   </div>
+
+                  {profilePassword && (
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Required to change your password"
+                        className="w-full rounded-xl bg-[#F4F5F8] border border-transparent px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:bg-white focus:border-ribbon-500 focus:ring-2 focus:ring-rose-100 focus:outline-hidden transition"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Signed up with Google? Use &ldquo;Forgot password&rdquo; on the login page to set one first.
+                      </span>
+                    </div>
+                  )}
 
                   <button
                     type="submit"
