@@ -23,6 +23,8 @@ import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import VirtualUnboxingModal from "../components/VirtualUnboxingModal";
 import RecentlyViewed from "../components/RecentlyViewed";
+import ShareProduct from "../components/ShareProduct";
+import { useSeo, absoluteUrl, SITE_NAME, SITE_URL } from "../utils/seo";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -131,6 +133,45 @@ export default function ProductDetail() {
       .catch(() => toast.error("Couldn't load this keepsake"))
       .finally(() => setLoading(false));
   }, [slug, addRecentlyViewed]);
+
+  useSeo({
+    title: product ? `${product.name} — ${formatPrice(product.price)}` : undefined,
+    description: product?.tagline || product?.description,
+    path: `/product/${slug}`,
+    image: product?.images?.[0],
+    type: product ? "product" : "website",
+    jsonLd: product
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description || product.tagline || undefined,
+          image: (product.images || []).filter(Boolean).map(absoluteUrl),
+          sku: product.slug,
+          brand: { "@type": "Brand", name: SITE_NAME },
+          offers: {
+            "@type": "Offer",
+            url: `${SITE_URL}/product/${product.slug}`,
+            priceCurrency: "INR",
+            price: product.price,
+            availability:
+              typeof product.stock === "number" && product.stock <= 0
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
+          },
+          // Only real reviews: Google penalises made-up ratings
+          ...(reviewsData.totalReviews > 0
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: reviewsData.averageRating,
+                  reviewCount: reviewsData.totalReviews,
+                },
+              }
+            : {}),
+        }
+      : null,
+  });
 
   if (loading) {
     return (
@@ -409,6 +450,8 @@ export default function ProductDetail() {
                 <span>Experience 3D Virtual Ribbon Box Unboxing</span>
                 <Sparkles size={13} className="text-amber-500" />
               </button>
+
+              <ShareProduct product={product} />
             </div>
 
             {/* Pincode & Express Delivery Checker Widget */}

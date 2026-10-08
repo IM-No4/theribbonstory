@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 import { useCartStore } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
+import { useSeo } from "../utils/seo";
 
 const SIZES = [
   {
@@ -48,6 +49,7 @@ const SIZES = [
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function PersonalizedPage() {
+  useSeo({ title: "Create a Personalised 3D Keepsake", description: "Upload a photo, choose a size and add an inscription to create a one-of-a-kind 3D keepsake." });
 
   const { items, addItem, removeItem, openCart } = useCartStore();
   const fileInputRef = useRef(null);

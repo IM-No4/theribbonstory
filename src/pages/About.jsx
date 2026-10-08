@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Heart, Sparkles, Users, Leaf, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { LogoMark } from "../components/Logo";
+import { useSeo } from "../utils/seo";
 
 const values = [
   { icon: Heart, title: "Memory First", text: "We don't build generic products. We build physical representations of your real life memories." },
@@ -11,6 +12,7 @@ const values = [
 ];
 
 export default function About() {
+  useSeo({ title: "Our Story", description: "The Ribbon Story turns your favourite moments into handcrafted keepsakes. Meet the studio behind every gift." });
   return (
     <div className="bg-cream-50 min-h-screen py-16 sm:py-24">
       <div className="container-page space-y-20">

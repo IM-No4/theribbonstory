@@ -26,6 +26,7 @@ import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
+import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
 
@@ -51,6 +52,7 @@ const emptyAddress = {
 };
 
 export default function Checkout() {
+  useSeo({ title: "Checkout", noindex: true });
   const navigate = useNavigate();
   const { items, clearCart, appliedCoupon, setCoupon, removeCoupon } = useCartStore();
   const subtotal = useCartStore((s) => s.subtotal());

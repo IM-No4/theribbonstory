@@ -6,8 +6,10 @@ import { api } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { LogoMark } from "../components/Logo";
 import AuthShowcase from "../components/AuthShowcase";
+import { useSeo } from "../utils/seo";
 
 export default function ResetPassword() {
+  useSeo({ title: "Reset Password", noindex: true });
   const [params] = useSearchParams();
   const routeParams = useParams();
   const token = params.get("token") || routeParams.token || "";

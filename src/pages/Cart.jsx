@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
 import toast from "react-hot-toast";
+import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
 export default function Cart() {
+  useSeo({ title: "Your Cart", noindex: true });
   const { items, updateQuantity, removeItem, appliedCoupon, setCoupon, removeCoupon } = useCartStore();
   const subtotal = useCartStore((s) => s.subtotal());
   const navigate = useNavigate();

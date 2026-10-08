@@ -4,8 +4,10 @@ import { Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";
 import SectionHeading from "../components/SectionHeading";
+import { useSeo } from "../utils/seo";
 
 export default function Contact() {
+  useSeo({ title: "Contact Us", description: "Questions about an order or a custom gift? Get in touch with The Ribbon Story studio team." });
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
 

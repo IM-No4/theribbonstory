@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useSeo } from "../utils/seo";
 
 export default function HowItWorksPage() {
+  useSeo({ title: "How It Works", description: "From your photo to a handcrafted keepsake at your door: see how The Ribbon Story makes your gift." });
   const steps = [
     {
       num: "01",

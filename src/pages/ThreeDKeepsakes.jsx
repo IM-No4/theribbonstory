@@ -5,8 +5,10 @@ import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
+import { useSeo } from "../utils/seo";
 
 export default function ThreeDKeepsakes() {
+  useSeo({ title: "3D Keepsakes & Custom Figurines", description: "Turn your photo into a hand-finished 3D figurine of your couple, family, baby or pet. Made to order and delivered across India." });
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);

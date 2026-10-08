@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Heart, Send, Sparkles, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";
+import { useSeo } from "../utils/seo";
 
 const landscapeBg = "/images/coming-soon-landscape.webp";
 const portraitBg = "/images/coming-soon-potrait.webp";
@@ -80,6 +81,7 @@ function InstagramIcon({ className = "w-3.5 h-3.5" }) {
 }
 
 export default function ComingSoon() {
+  useSeo({ title: "Coming Soon" });
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -23,10 +23,12 @@ import { api, assetUrl } from "../api/client";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
+import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function Account() {
+  useSeo({ title: "My Account", noindex: true });
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "orders";
 

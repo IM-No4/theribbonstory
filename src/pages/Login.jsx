@@ -6,8 +6,10 @@ import { useAuthStore } from "../store/authStore";
 import { LogoMark } from "../components/Logo";
 import AuthShowcase from "../components/AuthShowcase";
 import { triggerGoogleSignIn } from "../utils/googleAuth";
+import { useSeo } from "../utils/seo";
 
 export default function Login() {
+  useSeo({ title: "Sign In", noindex: true });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

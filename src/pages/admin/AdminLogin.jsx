@@ -3,8 +3,10 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Lock, Mail, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
+import { useSeo } from "../../utils/seo";
 
 export default function AdminLogin() {
+  useSeo({ title: "Admin Sign In", noindex: true });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

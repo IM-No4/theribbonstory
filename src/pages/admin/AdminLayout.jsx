@@ -16,8 +16,10 @@ import {
   Box,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import { useSeo } from "../../utils/seo";
 
 export default function AdminLayout() {
+  useSeo({ title: "Admin", noindex: true });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
