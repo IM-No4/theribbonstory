@@ -15,6 +15,7 @@ import {
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import OrderItemPersonalization from "../components/OrderItemPersonalization";
+import InvoiceButton from "../components/InvoiceButton";
 import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -135,7 +136,7 @@ export default function OrderSuccess() {
         {/* Quick Action Buttons (Print & Track) */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-8 print:hidden">
           <Link
-            to={`/track-order?orderId=${order._id}`}
+            to={`/track-order?id=${order._id}`}
             className="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md"
           >
             <Truck size={16} />
@@ -147,8 +148,14 @@ export default function OrderSuccess() {
             className="btn-outline py-2.5 px-5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 bg-white"
           >
             <Printer size={16} />
-            <span>Print Invoice / Receipt</span>
+            <span>Print Receipt</span>
           </button>
+
+          <InvoiceButton
+            order={order}
+            label="Download GST Invoice"
+            className="btn-outline py-2.5 px-5 text-xs font-bold uppercase tracking-wider bg-white"
+          />
         </div>
 
         {/* Itemized Order & Keepsake Receipt Card */}
@@ -201,7 +208,7 @@ export default function OrderSuccess() {
                 </div>
               </div>
               <Link
-                to={`/track-order?orderId=${order._id}`}
+                to={`/track-order?id=${order._id}`}
                 className="text-xs font-bold text-ribbon-600 hover:text-burgundy-900 flex items-center gap-1"
               >
                 <span>View Timeline</span>

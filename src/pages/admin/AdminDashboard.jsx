@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { api } from "../../api/client";
 import SalesOverview from "../../components/admin/SalesOverview";
+import EmailCheck from "../../components/admin/EmailCheck";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -255,12 +256,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-900/40">
-            <div className="text-[11px] font-semibold text-rose-300">Live Dynamic Database</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
-              All collections, product cards, prices, and checkout options sync directly with MongoDB.
-            </div>
-          </div>
+          <EmailCheck />
         </div>
       </div>
     </div>

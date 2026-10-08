@@ -10,6 +10,7 @@ import { useCartStore } from "../store/cartStore";
 import { assetUrl } from "../api/client";
 import { useKeepsakePreview } from "../hooks/useKeepsakePreview";
 import KeepsakeDesignPreview from "./KeepsakeDesignPreview";
+import DesignNoteField from "./DesignNoteField";
 import toast from "react-hot-toast";
 
 const SIZE_TIERS = [
@@ -250,6 +251,8 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
                   A clear, well-lit photo with faces visible works best. We&apos;ll show you the 3D design before you order.
                 </p>
               </div>
+
+              <DesignNoteField preview={preview} />
 
               {/* 2. Select from 3 Sizes */}
               <div>

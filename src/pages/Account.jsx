@@ -21,6 +21,7 @@ import {
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import OrderItemPersonalization from "../components/OrderItemPersonalization";
+import InvoiceButton from "../components/InvoiceButton";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
@@ -443,6 +444,10 @@ export default function Account() {
                                 <Truck size={13} />
                                 <span>Track</span>
                               </Link>
+                              <InvoiceButton
+                                order={order}
+                                className="px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold transition border border-slate-200 cursor-pointer"
+                              />
                               <Link
                                 to={`/order-success/${order._id}`}
                                 className="px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 transition border border-slate-200"

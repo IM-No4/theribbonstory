@@ -14,6 +14,7 @@ const INITIAL = {
 };
 
 const MAX_SIDE = 2048;
+export const NOTE_MAX = 200;
 
 /**
  * Phone photos are often larger than the 5 MB upload limit: scale them down
@@ -48,6 +49,14 @@ export function useKeepsakePreview() {
   const [state, setState] = useState(INITIAL);
   // Ignore a slow response for a photo the customer has since replaced
   const photoRun = useRef(0);
+  // Optional design note ("add a little crown"), sent with each new design
+  const [note, setNoteState] = useState("");
+  const noteRef = useRef("");
+  const setNote = useCallback((value) => {
+    const next = String(value || "").slice(0, NOTE_MAX);
+    noteRef.current = next;
+    setNoteState(next);
+  }, []);
 
   // Free the local photo preview when it is replaced or the page closes
   useEffect(() => {
@@ -64,6 +73,7 @@ export function useKeepsakePreview() {
     try {
       const form = new FormData();
       form.append("photo", await shrinkPhoto(file));
+      if (noteRef.current.trim()) form.append("customNotes", noteRef.current.trim());
       const { data } = await api.post("/3d-agent/preview", form);
       if (run !== photoRun.current) return;
       setState((s) => ({
@@ -87,7 +97,7 @@ export function useKeepsakePreview() {
     const run = photoRun.current;
     setState((s) => ({ ...s, regenerating: true, error: "" }));
     try {
-      const { data } = await api.post(`/3d-agent/preview/${sessionId}/regenerate`);
+      const { data } = await api.post(`/3d-agent/preview/${sessionId}/regenerate`, { customNotes: noteRef.current.trim() });
       if (run !== photoRun.current) return;
       setState((s) => {
         const attempts = data.previewUrl ? [...s.attempts, data.previewUrl] : s.attempts;
@@ -108,7 +118,8 @@ export function useKeepsakePreview() {
   const reset = useCallback(() => {
     photoRun.current += 1;
     setState(INITIAL);
-  }, []);
+    setNote("");
+  }, [setNote]);
 
   const approvedPreview = state.attempts[state.selected] || null;
 
@@ -139,5 +150,7 @@ export function useKeepsakePreview() {
     select,
     reset,
     cartFields,
+    note,
+    setNote,
   };
 }
