@@ -204,6 +204,11 @@ export default function BuildABox() {
       name: `Custom Ribbon Hamper (${selectedBox.name})`,
       image: selectedBox.img,
       price: totalHamperPrice,
+      hamper: {
+        boxId: selectedBox.id,
+        keepsakeId: selectedKeepsake.id,
+        addonIds: selectedAddons.map((a) => a.id),
+      },
       quantity: 1,
       selectedOptions: [
         { name: "Box Style", value: selectedBox.name, priceDelta: 0 },

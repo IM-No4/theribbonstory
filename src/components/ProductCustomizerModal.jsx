@@ -160,6 +160,7 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
       name: `${product.name} (${selectedSize.name.split("(")[0].trim()})`,
       image: modelPreview || uploadedPhoto || product.images?.[0],
       price: unitPrice,
+      sizeId: selectedSize.id,
       quantity,
       selectedOptions: [
         { name: "Size", value: selectedSize.name, priceDelta: 0 },

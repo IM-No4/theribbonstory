@@ -184,7 +184,7 @@ export default function ProductDetail() {
       productId: product._id || product.slug,
       name: product.name,
       image: product.images?.[0] || "/src/assets/images/photo-magnet.jpeg",
-      price: unitPrice,
+      price: product.price, // option deltas are added by the cart subtotal
       quantity,
       selectedOptions: chosenOptionsList,
       customization: {},

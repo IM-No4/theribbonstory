@@ -156,6 +156,7 @@ export default function PersonalizedPage() {
       name: `Custom 3D Keepsake (${currentSize.name} - ${currentSize.dimensions})`,
       image: uploadedServerUrl ? assetUrl(uploadedServerUrl) : userPhoto,
       price: unitPrice,
+      sizeId: currentSize.id,
       quantity,
       selectedOptions: [
         { name: "Keepsake Size", value: `${currentSize.name} (${currentSize.dimensions})`, priceDelta: 0 },

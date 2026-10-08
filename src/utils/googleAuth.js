@@ -54,25 +54,10 @@ function triggerGoogleOAuthPopup({ clientId, onSuccess, onError }) {
         scope: "email profile openid",
         callback: async (tokenResponse) => {
           if (tokenResponse?.access_token) {
-            try {
-              // Fetch Google user profile using access token
-              const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-              });
-              const userInfo = await userInfoRes.json();
-              if (userInfo?.email) {
-                onSuccess({
-                  email: userInfo.email,
-                  name: userInfo.name,
-                  picture: userInfo.picture,
-                  googleId: userInfo.sub,
-                });
-              } else {
-                onError?.(new Error("Failed to fetch Google profile"));
-              }
-            } catch (err) {
-              onError?.(err);
-            }
+            // The backend verifies the token with Google and fetches the profile itself
+            onSuccess({ accessToken: tokenResponse.access_token });
+          } else {
+            onError?.(new Error("No access token received from Google"));
           }
         },
         error_callback: (err) => {

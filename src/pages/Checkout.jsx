@@ -93,10 +93,8 @@ export default function Checkout() {
 
   // Dynamic Shipping Calculation from Shiprocket API
   const isFreeDeliveryQualified = subtotal >= 999;
-  const shiprocketCourierRate =
-    shippingEstimate?.recommendedCourier?.rate ?? (isFreeDeliveryQualified ? 0 : 79);
-
-  const shippingFee = isFreeDeliveryQualified ? 0 : shiprocketCourierRate;
+  // Flat fee — must match the server's pricing (services/pricingService.js)
+  const shippingFee = isFreeDeliveryQualified ? 0 : 79;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
   const total = Math.max(0, subtotal + shippingFee - discount);
 
@@ -303,6 +301,10 @@ export default function Checkout() {
   const buildOrderItems = () =>
     items.map((i) => ({
       productId: i.productId,
+      name: i.name,
+      image: i.image,
+      sizeId: i.sizeId,
+      hamper: i.hamper,
       quantity: i.quantity,
       selectedOptions: i.selectedOptions,
       customization: i.customization,
@@ -316,12 +318,10 @@ export default function Checkout() {
     const { data } = await api.post("/orders", {
       items: buildOrderItems(),
       shippingAddress: address,
-      shippingPrice: shippingFee,
       courierPartner: courierName,
       paymentMethod,
       paymentResult,
       couponCode: appliedCoupon?.code,
-      discountPrice: discount,
       giftOptions: giftOptions.isGift ? giftOptions : undefined,
     });
 
@@ -347,7 +347,10 @@ export default function Checkout() {
       }
 
       // Razorpay Payment Flow
-      const { data: orderData } = await api.post("/payments/razorpay/order", { amount: total });
+      const { data: orderData } = await api.post("/payments/razorpay/order", {
+        items: buildOrderItems(),
+        couponCode: appliedCoupon?.code,
+      });
       const ok = await loadRazorpayScript();
       if (!ok) throw new Error("Could not load payment gateway script");
 

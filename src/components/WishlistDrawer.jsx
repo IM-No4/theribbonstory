@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, X, Trash2, ShoppingBag, Sparkles, ArrowRight } from "lucide-react";
 import { useWishlistStore } from "../store/wishlistStore";
-import { useCartStore } from "../store/cartStore";
+import { useCartStore, productToCartItem } from "../store/cartStore";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -14,11 +14,7 @@ export default function WishlistDrawer() {
   if (!isDrawerOpen) return null;
 
   const handleMoveToCart = (item) => {
-    addItem({
-      product: item,
-      quantity: 1,
-      options: {},
-    });
+    addItem(productToCartItem(item, 1));
     removeItem(item._id || item.id);
     closeDrawer();
     openCart();
