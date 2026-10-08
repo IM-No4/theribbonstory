@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
+import OrderItemPersonalization from "../components/OrderItemPersonalization";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
@@ -476,13 +477,14 @@ export default function Account() {
                                   <img
                                     src={assetUrl(item.image || "/images/photo-magnet.webp")}
                                     alt={item.name}
-                                    className="w-10 h-10 rounded-xl object-cover border border-slate-200 bg-white"
+                                    className={`${item.customization?.reference3D?.approvedPreview ? "w-16 h-16 object-contain" : "w-10 h-10 object-cover"} rounded-xl border border-slate-200 bg-white`}
                                   />
                                   <div>
                                     <div className="font-bold text-slate-800">{item.name}</div>
                                     <div className="text-[11px] text-slate-400">
                                       Qty: {item.quantity} × {formatPrice(item.price)}
                                     </div>
+                                    <OrderItemPersonalization item={item} />
                                   </div>
                                 </div>
                                 <div className="font-bold text-slate-900">

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
+import OrderItemPersonalization from "../components/OrderItemPersonalization";
 import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -260,22 +261,19 @@ export default function OrderSuccess() {
                           Shape: {item.customization.shape}
                         </p>
                       )}
-                      {item.selectedOptions && (
+                      {item.selectedOptions?.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-1">
-                          {Object.entries(
-                            item.selectedOptions instanceof Map
-                              ? Object.fromEntries(item.selectedOptions)
-                              : item.selectedOptions
-                          ).map(([k, v]) => (
+                          {item.selectedOptions.map((o) => (
                             <span
-                              key={k}
+                              key={o.name}
                               className="text-[10px] bg-cream-100 text-espresso-600 px-2 py-0.5 rounded-md font-medium"
                             >
-                              {k}: {v}
+                              {o.name}: {o.value}
                             </span>
                           ))}
                         </div>
                       )}
+                      <OrderItemPersonalization item={item} />
                       <div className="text-xs text-espresso-400 mt-1">Qty: {item.quantity}</div>
                     </div>
                     <div className="text-right shrink-0">

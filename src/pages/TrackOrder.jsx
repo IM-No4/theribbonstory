@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
+import OrderItemPersonalization from "../components/OrderItemPersonalization";
 import { useSeo } from "../utils/seo";
 
 export default function TrackOrder() {
@@ -369,6 +370,7 @@ export default function TrackOrder() {
                           <div className="text-[11px] text-slate-500">
                             Qty: {item.quantity} × ₹{item.price}
                           </div>
+                          <OrderItemPersonalization item={item} />
                         </div>
                       </div>
                       <div className="font-bold text-xs text-slate-900">
