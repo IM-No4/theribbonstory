@@ -639,6 +639,37 @@ export default function AdminOrders() {
                               </a>
                             </div>
 
+                            {/* The design the customer saw and approved: print this */}
+                            {item.customization?.reference3D?.approvedPreview && (
+                              <div>
+                                <span className="text-[10px] font-semibold uppercase text-emerald-400 block mb-1">
+                                  Customer-Approved 3D Design (print this):
+                                </span>
+                                <a
+                                  href={assetUrl(item.customization.reference3D.approvedPreview)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 p-1.5 bg-slate-950 rounded-xl border border-emerald-900/50 hover:border-emerald-500 transition group"
+                                >
+                                  <img
+                                    src={assetUrl(item.customization.reference3D.approvedPreview)}
+                                    alt="Approved 3D design"
+                                    className="w-20 h-20 rounded-lg object-contain bg-white"
+                                  />
+                                  <span className="text-[11px] text-emerald-300 group-hover:underline flex flex-col gap-0.5">
+                                    <span className="flex items-center gap-1">
+                                      View Design <ExternalLink size={11} />
+                                    </span>
+                                    {item.customization.reference3D.approvedAt && (
+                                      <span className="text-[9px] text-slate-500 no-underline">
+                                        Approved {new Date(item.customization.reference3D.approvedAt).toLocaleString("en-IN")}
+                                      </span>
+                                    )}
+                                  </span>
+                                </a>
+                              </div>
+                            )}
+
                             {/* 3D Reference Generation Status & Controls */}
                             <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                               <div className="flex items-center justify-between">
@@ -649,6 +680,14 @@ export default function AdminOrders() {
                                 {item.customization?.reference3D?.status === "completed" ? (
                                   <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[9px] font-bold border border-emerald-800">
                                     4 Views Ready
+                                  </span>
+                                ) : item.customization?.reference3D?.status === "approved" ? (
+                                  <span className="px-1.5 py-0.5 rounded bg-sky-950 text-sky-400 text-[9px] font-bold border border-sky-800">
+                                    Building Views…
+                                  </span>
+                                ) : item.customization?.reference3D?.status === "failed" ? (
+                                  <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-400 text-[9px] font-bold border border-rose-800">
+                                    Failed: Retry
                                   </span>
                                 ) : (
                                   <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 text-[9px] font-bold border border-amber-800">
@@ -767,7 +806,18 @@ export default function AdminOrders() {
                           </span>
                         )}
 
-                        {item.customization?.note && (
+                        {(item.customization?.customName || item.customization?.customDate) && (
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase text-rose-400 block">
+                              Inscription:
+                            </span>
+                            <p className="text-[11px] text-slate-200 bg-slate-950 p-2 rounded-lg border border-slate-800 mt-1">
+                              {[item.customization.customName, item.customization.customDate].filter(Boolean).join(" · ")}
+                            </p>
+                          </div>
+                        )}
+
+                        {item.customization?.note && item.customization.note !== item.customization.customName && (
                           <div>
                             <span className="text-[10px] font-semibold uppercase text-rose-400 block">
                               Custom Note / Caption:

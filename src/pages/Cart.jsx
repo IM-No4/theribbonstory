@@ -147,15 +147,24 @@ export default function Cart() {
                     {item.customization?.photoUrl && (
                       <div className="mt-2 flex items-center gap-2 p-1.5 bg-cream-50 rounded-xl border border-blush-100 w-fit">
                         <img
-                          src={assetUrl(item.customization.photoUrl)}
+                          src={assetUrl(item.customization.reference3D ? item.image : item.customization.photoUrl)}
                           alt="custom"
                           className="h-7 w-7 rounded-lg object-cover"
                         />
-                        <span className="text-[11px] font-medium text-ribbon-600">Custom keepsake photo</span>
+                        <span className="text-[11px] font-medium text-ribbon-600">
+                          {item.customization.reference3D ? "Your approved 3D design" : "Custom keepsake photo"}
+                        </span>
                       </div>
                     )}
 
-                    {item.customization?.note && (
+                    {item.customization?.customName && (
+                      <p className="text-[11px] text-espresso-500 mt-1 truncate">
+                        Inscription: {item.customization.customName}
+                        {item.customization.customDate && ` · ${item.customization.customDate}`}
+                      </p>
+                    )}
+
+                    {item.customization?.note && item.customization.note !== item.customization.customName && (
                       <p className="text-[11px] text-espresso-400 italic mt-1 truncate">
                         &quot;{item.customization.note}&quot;
                       </p>

@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCartStore } from "../store/cartStore";
-import { api, assetUrl } from "../api/client";
+import { assetUrl } from "../api/client";
 import { useSeo } from "../utils/seo";
+import { useKeepsakePreview } from "../hooks/useKeepsakePreview";
+import KeepsakeDesignPreview from "../components/KeepsakeDesignPreview";
 
 const SIZES = [
   {
@@ -64,11 +66,10 @@ export default function PersonalizedPage() {
   const [inscriptionText, setInscriptionText] = useState("");
   const [quantity, setQuantity] = useState(1);
 
-  // Photo Upload State
-  const [userPhoto, setUserPhoto] = useState(null);
+  // Photo -> 3D design preview (the chosen design is what gets printed)
+  const preview = useKeepsakePreview();
+  const hasPhoto = preview.status !== "idle";
   const [fileName, setFileName] = useState("");
-  const [uploadedServerUrl, setUploadedServerUrl] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
   const [zoomImage, setZoomImage] = useState(null);
 
   // Lock body scroll and listen for Escape key when fullscreen preview is active
@@ -90,45 +91,19 @@ export default function PersonalizedPage() {
     };
   }, [zoomImage]);
 
-  // Handle Photo Selection
-  const handlePhotoUpload = async (e) => {
+  // Photo chosen: create the customer's 3D design preview
+  const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // allow choosing the same file again
     if (!file) return;
-
     setFileName(file.name);
-
-    // Instant local preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      setUserPhoto(reader.result);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload to server for order attachment
-    const formData = new FormData();
-    formData.append("photo", file);
-    formData.append("image", file);
-    setIsUploading(true);
-
-    try {
-      const { data } = await api.post("/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (data?.url) {
-        setUploadedServerUrl(data.url);
-      }
-    } catch (err) {
-      console.warn("Upload fallback to local preview:", err.message);
-    } finally {
-      setIsUploading(false);
-    }
+    preview.upload(file);
   };
 
   // Reset form for next personalized keepsake
   const handleResetForm = () => {
-    setUserPhoto(null);
+    preview.reset();
     setFileName("");
-    setUploadedServerUrl("");
     setInscriptionText("");
     setQuantity(1);
     setSelectedSize(SIZES[1]);
@@ -137,8 +112,9 @@ export default function PersonalizedPage() {
 
   // Add customized 3D keepsake to cart
   const handleAddToCart = (continueCustomizing = false) => {
-    if (!userPhoto) {
-      toast.error("Please upload a photograph for this keepsake");
+    const design = preview.cartFields();
+    if (!design) {
+      toast.error("Please upload a photograph and wait for your 3D design");
       return;
     }
 
@@ -149,7 +125,7 @@ export default function PersonalizedPage() {
     addItem({
       productId: uniqueId,
       name: `Custom 3D Keepsake (${currentSize.name} - ${currentSize.dimensions})`,
-      image: uploadedServerUrl ? assetUrl(uploadedServerUrl) : userPhoto,
+      image: design.image,
       price: unitPrice,
       sizeId: currentSize.id,
       quantity,
@@ -157,7 +133,7 @@ export default function PersonalizedPage() {
         { name: "Keepsake Size", value: `${currentSize.name} (${currentSize.dimensions})`, priceDelta: 0 },
       ],
       customization: {
-        photoUrl: uploadedServerUrl || userPhoto,
+        ...design.customization,
         size: currentSize.name,
         dimensions: currentSize.dimensions,
         customName: inscriptionText.trim(),
@@ -224,13 +200,13 @@ export default function PersonalizedPage() {
                     {personalizedCartItems.length + 1}
                   </span>
                   <span>
-                    {userPhoto
+                    {hasPhoto
                       ? `Configuring Keepsake #${personalizedCartItems.length + 1}`
                       : "Create a New 3D Keepsake"}
                   </span>
                 </div>
 
-                {userPhoto && (
+                {hasPhoto && (
                   <button
                     type="button"
                     onClick={handleResetForm}
@@ -247,7 +223,7 @@ export default function PersonalizedPage() {
                   1. Upload Photograph *
                 </label>
 
-                {!userPhoto ? (
+                {!hasPhoto ? (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="flex flex-col items-center justify-center p-8 sm:p-10 border-2 border-dashed border-rose-200 hover:border-ribbon-500 bg-rose-50/30 hover:bg-rose-50/60 rounded-2xl text-center space-y-3 transition-all duration-300 group cursor-pointer"
@@ -260,7 +236,7 @@ export default function PersonalizedPage() {
                         Click to select or drop keepsake photo
                       </h4>
                       <p className="text-[11px] text-espresso-400 mt-0.5">
-                        High clarity portraits, pets, couple, or family photos (JPG, PNG up to 10MB)
+                        Clear, well-lit portraits, pets, couple or family photos. You&apos;ll see your cute 3D design before ordering.
                       </p>
                     </div>
                     <button
@@ -275,37 +251,35 @@ export default function PersonalizedPage() {
                     </button>
                   </div>
                 ) : (
-                  /* Photo Preview Box */
+                  /* The customer's 3D design */
                   <div className="p-4 rounded-2xl bg-cream-50/60 border border-rose-200 space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-emerald-800 flex items-center gap-1.5">
-                        <CheckCircle2 size={15} className="text-emerald-600" />
-                        <span>Photo Attached ({fileName || "uploaded-image.jpg"})</span>
+                    <div className="flex items-center justify-between text-xs gap-2">
+                      <span className="font-bold text-emerald-800 flex items-center gap-1.5 min-w-0">
+                        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+                        <span className="truncate">Photo: {fileName || "your photo"}</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="text-xs font-bold text-ribbon-600 hover:underline cursor-pointer"
+                        disabled={preview.busy}
+                        className="text-xs font-bold text-ribbon-600 hover:underline cursor-pointer shrink-0 disabled:opacity-50"
                       >
                         Change Photo
                       </button>
                     </div>
 
-                    <div
-                      onClick={() =>
-                        setZoomImage({
-                          src: userPhoto,
-                          title: fileName || "Your Keepsake Photograph",
-                        })
-                      }
-                      className="relative h-48 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 hover:border-ribbon-400 transition cursor-pointer flex items-center justify-center group"
-                    >
-                      <img src={userPhoto} alt="Uploaded" className="h-full w-full object-contain" />
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2 text-xs font-semibold">
-                        <Eye size={16} />
-                        <span>Click to view full screen</span>
-                      </div>
-                    </div>
+                    <KeepsakeDesignPreview preview={preview} />
+
+                    {preview.status === "ready" && (
+                      <button
+                        type="button"
+                        onClick={() => setZoomImage({ src: assetUrl(preview.approvedPreview), title: "Your 3D Keepsake Design" })}
+                        className="w-full text-center text-[11px] font-semibold text-espresso-500 hover:text-burgundy-900 flex items-center justify-center gap-1.5"
+                      >
+                        <Eye size={13} />
+                        <span>View design full screen</span>
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -412,7 +386,7 @@ export default function PersonalizedPage() {
                 <button
                   type="button"
                   onClick={() => handleAddToCart(true)}
-                  disabled={!userPhoto || isUploading}
+                  disabled={!preview.canOrder || preview.busy}
                   className="w-full sm:w-auto flex-1 btn-secondary py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Plus size={15} />
@@ -423,7 +397,7 @@ export default function PersonalizedPage() {
                 <button
                   type="button"
                   onClick={() => handleAddToCart(false)}
-                  disabled={!userPhoto || isUploading}
+                  disabled={!preview.canOrder || preview.busy}
                   className="w-full sm:w-auto flex-1 btn-primary py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50"
                 >
                   <ShoppingBag size={15} />
@@ -565,7 +539,7 @@ export default function PersonalizedPage() {
               className="relative max-h-[90vh] max-w-[95vw] flex items-center justify-center"
             >
               <img
-                src={zoomImage.src || userPhoto}
+                src={zoomImage.src}
                 alt={zoomImage.title}
                 className="max-h-[88vh] max-w-[92vw] object-contain shadow-2xl transition-transform"
               />

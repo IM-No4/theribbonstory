@@ -7,7 +7,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
-import { api, assetUrl } from "../api/client";
+import { assetUrl } from "../api/client";
+import { useKeepsakePreview } from "../hooks/useKeepsakePreview";
+import KeepsakeDesignPreview from "./KeepsakeDesignPreview";
 import toast from "react-hot-toast";
 
 const SIZE_TIERS = [
@@ -74,83 +76,47 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
   const { addItem, openCart } = useCartStore();
   const fileInputRef = useRef(null);
 
-  const [uploadedPhoto, setUploadedPhoto] = useState(null);
-  const [modelPreview, setModelPreview] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const preview = useKeepsakePreview();
+  const resetPreview = preview.reset;
+  const [sample, setSample] = useState(SAMPLE_PRESETS[0]);
   const [selectedSize, setSelectedSize] = useState(SIZE_TIERS[1]); // Default to Classic
   const [petName, setPetName] = useState("");
   const [date, setDate] = useState("");
-  const [note, setNote] = useState("");
   const [quantity] = useState(1);
-  const [previewMode, setPreviewMode] = useState("3d");
 
+  // Fresh start each time: the inscription is printed, so never pre-fill it
   useEffect(() => {
     if (product) {
-      setPetName(product.name.includes("Pet") ? "Bruno 🐾" : "Ananya & Kabir");
-      setDate(new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }));
-      setNote("Made with love");
-      const defaultImg = product.images?.[0] || SAMPLE_PRESETS[0].url;
-      setUploadedPhoto(defaultImg);
-      setModelPreview(defaultImg);
+      setPetName("");
+      setDate("");
+      setSample(product.images?.[0] ? { url: product.images[0], text: product.name, date: "" } : SAMPLE_PRESETS[0]);
+      resetPreview();
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, resetPreview]);
 
   if (!isOpen || !product) return null;
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Show local preview immediately with customer's actual uploaded photo
-    const reader = new FileReader();
-    reader.onload = () => {
-      setUploadedPhoto(reader.result);
-      setModelPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload & trigger 3D reference agent
-    const form = new FormData();
-    form.append("photo", file);
-    setUploading(true);
-    setIsGenerating(true);
-    try {
-      const { data } = await api.post("/3d-agent/generate", form);
-      if (data.success && data.session?.views?.front?.url) {
-        setUploadedPhoto(assetUrl(data.session.originalImage?.url));
-        setModelPreview(assetUrl(data.session.views.front.url));
-        toast.success("3D Model Generated from your photo!");
-      } else {
-        const { data: uploadData } = await api.post("/upload", form);
-        if (uploadData?.url) setUploadedPhoto(uploadData.url);
-      }
-    } catch {
-      // Keep local preview
-    } finally {
-      setUploading(false);
-      setIsGenerating(false);
-      setPreviewMode("3d");
-    }
+    e.target.value = ""; // allow choosing the same file again
+    preview.upload(file);
   };
 
-  const selectPreset = (preset) => {
-    setUploadedPhoto(preset.url);
-    setModelPreview(preset.url);
-    setPetName(preset.text);
-    setDate(preset.date);
-    setNote(preset.note);
-    toast.success(`Loaded preset: ${preset.name}`);
-  };
+  const selectPreset = (preset) => setSample(preset);
 
   const unitPrice = selectedSize ? selectedSize.price : product.price;
   const totalPrice = unitPrice * quantity;
 
   const handleAddToCart = () => {
+    const design = preview.cartFields();
+    if (!design) {
+      toast.error("Upload your photo to create your 3D design first");
+      return;
+    }
     addItem({
       productId: `${product._id || product.slug}-${selectedSize.id}`,
       name: `${product.name} (${selectedSize.name.split("(")[0].trim()})`,
-      image: modelPreview || uploadedPhoto || product.images?.[0],
+      image: design.image,
       price: unitPrice,
       sizeId: selectedSize.id,
       quantity,
@@ -158,12 +124,10 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
         { name: "Size", value: selectedSize.name, priceDelta: 0 },
       ],
       customization: {
-        photoUrl: uploadedPhoto || product.images?.[0],
-        modelPreview: modelPreview || uploadedPhoto,
+        ...design.customization,
         size: selectedSize.name,
         customName: petName.trim(),
         customDate: date.trim(),
-        note: note.trim(),
       },
     });
     toast.success(`${product.name} added to cart!`);
@@ -195,7 +159,7 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-ribbon-500" />
               <h2 className="font-display text-base sm:text-lg font-bold text-slate-900 truncate">
-                3D Keepsake Customizer &amp; Live Model Generator
+                Design Your 3D Keepsake
               </h2>
             </div>
             <button
@@ -210,52 +174,27 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
           <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12">
             {/* Left: 3D Model Canvas */}
             <div className="lg:col-span-5 p-5 sm:p-6 bg-slate-50 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-100 relative">
-              {/* Mode Toggle */}
-              <div className="mb-3 flex items-center bg-white border border-slate-200 p-1 rounded-xl gap-1 shadow-2xs">
-                <button
-                  onClick={() => setPreviewMode("3d")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    previewMode === "3d" ? "bg-ribbon-500 text-white" : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  🎨 3D Model
-                </button>
-                <button
-                  onClick={() => setPreviewMode("original")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    previewMode === "original" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  📷 Photo
-                </button>
-              </div>
-
-              {/* Keepsake Visual Card */}
-              <div className="relative w-56 sm:w-64 aspect-square rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-slate-200 flex items-center justify-center">
-                {isGenerating ? (
-                  <div className="text-center p-4 space-y-2">
-                    <Sparkles className="animate-spin text-ribbon-500 mx-auto" size={28} />
-                    <p className="text-xs font-bold text-slate-800">Generating 3D Miniature...</p>
+              {preview.status !== "idle" ? (
+                <KeepsakeDesignPreview preview={preview} className="w-full" />
+              ) : (
+                /* Example keepsake until the customer uploads their own photo */
+                <div className="relative w-56 sm:w-64 aspect-square rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-slate-200 flex items-center justify-center">
+                  <img src={assetUrl(sample.url)} alt="Example keepsake" className="w-full h-full object-cover" />
+                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    Example
+                  </span>
+                  <div className="absolute bottom-2 left-2 right-2 bg-slate-900/80 backdrop-blur-xs text-white p-2 rounded-xl text-center">
+                    <p className="text-xs font-bold truncate">{sample.text}</p>
+                    {sample.date && <p className="text-[10px] text-slate-300">{sample.date}</p>}
                   </div>
-                ) : (
-                  <img
-                    src={previewMode === "3d" ? assetUrl(modelPreview) : assetUrl(uploadedPhoto)}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                )}
-
-                {/* Bottom Inscription Overlay */}
-                <div className="absolute bottom-2 left-2 right-2 bg-slate-900/80 backdrop-blur-xs text-white p-2 rounded-xl text-center">
-                  <p className="text-xs font-bold truncate">{petName || "Custom Keepsake"}</p>
-                  {date && <p className="text-[10px] text-slate-300">{date}</p>}
                 </div>
-              </div>
+              )}
 
               {/* Presets */}
+              {preview.status === "idle" && (
               <div className="mt-4 w-full max-w-xs">
                 <p className="text-[10px] text-center uppercase tracking-wider font-bold text-slate-400 mb-1.5">
-                  Try sample 3D presets
+                  Example 3D keepsakes
                 </p>
                 <div className="grid grid-cols-4 gap-2">
                   {SAMPLE_PRESETS.map((p) => (
@@ -270,6 +209,7 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
                   ))}
                 </div>
               </div>
+              )}
             </div>
 
             {/* Right: Size Selection & Details */}
@@ -294,12 +234,21 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
+                  disabled={preview.busy}
                   className="w-full py-2.5 px-4 rounded-xl border-2 border-dashed border-rose-300 hover:border-ribbon-500 bg-rose-50/40 text-slate-900 flex items-center justify-center gap-2 transition text-xs font-semibold"
                 >
                   <Upload size={15} className="text-ribbon-500" />
-                  <span>{uploading ? "Generating 3D preview..." : "Upload Photo for 3D Model"}</span>
+                  <span>
+                    {preview.status === "generating"
+                      ? "Creating your 3D design..."
+                      : preview.status === "idle"
+                        ? "Upload Photo for Your 3D Design"
+                        : "Upload a Different Photo"}
+                  </span>
                 </button>
+                <p className="mt-1 text-[10px] text-slate-500">
+                  A clear, well-lit photo with faces visible works best. We&apos;ll show you the 3D design before you order.
+                </p>
               </div>
 
               {/* 2. Select from 3 Sizes */}
@@ -374,11 +323,15 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="btn-primary w-full py-3.5 text-xs sm:text-sm shadow-soft font-bold uppercase tracking-wider"
+                  disabled={!preview.canOrder || preview.busy}
+                  className="btn-primary w-full py-3.5 text-xs sm:text-sm shadow-soft font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Add Customized 3D Keepsake — ₹{totalPrice.toLocaleString("en-IN")}</span>
                   <ArrowRight size={15} />
                 </button>
+                {!preview.canOrder && !preview.busy && (
+                  <p className="mt-1.5 text-center text-[10px] text-slate-500">Upload your photo to see your 3D design, then add it to your cart.</p>
+                )}
               </div>
             </div>
           </div>
