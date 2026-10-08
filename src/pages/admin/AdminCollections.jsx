@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Plus,
@@ -52,14 +52,7 @@ export default function AdminCollections() {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    if (params.get("action") === "new") {
-      openAddModal();
-      setParams({});
-    }
-  }, [params]);
-
-  const openAddModal = () => {
+  const openAddModal = useCallback(() => {
     setEditingCategory(null);
     setFormData({
       name: "",
@@ -72,7 +65,14 @@ export default function AdminCollections() {
       isActive: true,
     });
     setIsModalOpen(true);
-  };
+  }, [categories.length]);
+
+  useEffect(() => {
+    if (params.get("action") === "new") {
+      openAddModal();
+      setParams({});
+    }
+  }, [params, setParams, openAddModal]);
 
   const openEditModal = (cat) => {
     setEditingCategory(cat);

@@ -22,7 +22,8 @@ import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import SearchModal from "./SearchModal";
-import MegaMenu, { MENU_CATEGORIES } from "./MegaMenu";
+import MegaMenu from "./MegaMenu";
+import { MENU_CATEGORIES } from "../data/menuCategories";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 

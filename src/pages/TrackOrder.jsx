@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   Search,
@@ -22,24 +22,15 @@ export default function TrackOrder() {
   const [trackingResponse, setTrackingResponse] = useState(null);
   const [error, setError] = useState("");
 
-  const handleTrack = async (e) => {
-    if (e) e.preventDefault();
-    if (!identifier.trim()) {
-      toast.error("Please enter an Order ID or AWB Tracking Number");
-      return;
-    }
-
+  const trackShipment = useCallback(async (cleanId) => {
     setLoading(true);
     setError("");
     setTrackingResponse(null);
-
-    const cleanId = identifier.trim().replace(/^#/, "");
 
     try {
       const { data } = await api.get(`/shipping/track/${cleanId}`);
       if (data.success) {
         setTrackingResponse(data);
-        setParams({ id: cleanId });
       } else {
         setError(data.message || "Shipment tracking details unavailable");
       }
@@ -49,13 +40,26 @@ export default function TrackOrder() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (params.get("id")) {
-      handleTrack();
-    }
   }, []);
+
+  // The ?id= URL parameter is the source of truth: links, reloads and
+  // back/forward navigation all track the order it names
+  const urlId = params.get("id");
+  useEffect(() => {
+    if (urlId) trackShipment(urlId.trim().replace(/^#/, ""));
+  }, [urlId, trackShipment]);
+
+  const handleTrack = (e) => {
+    if (e) e.preventDefault();
+    if (!identifier.trim()) {
+      toast.error("Please enter an Order ID or AWB Tracking Number");
+      return;
+    }
+    const cleanId = identifier.trim().replace(/^#/, "");
+    // Same id as the URL: the effect won't re-run, so fetch directly
+    if (cleanId === urlId) trackShipment(cleanId);
+    else setParams({ id: cleanId });
+  };
 
   const order = trackingResponse?.order;
   const srData = trackingResponse?.shiprocketTracking;

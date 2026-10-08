@@ -2,10 +2,11 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 
 export default function AdminRoute() {
-  const { user, token } = useAuthStore();
+  // Signed in = a user profile confirmed by the cookie session (see authStore)
+  const user = useAuthStore((s) => s.user);
   const location = useLocation();
 
-  if (!token || !user) {
+  if (!user) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 

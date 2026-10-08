@@ -130,7 +130,7 @@ export default function ProductDetail() {
       .then(({ data }) => setRelated((data.products || []).filter((p) => p.slug !== slug).slice(0, 3)))
       .catch(() => toast.error("Couldn't load this keepsake"))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, addRecentlyViewed]);
 
   if (loading) {
     return (
