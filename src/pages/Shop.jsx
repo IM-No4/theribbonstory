@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { SlidersHorizontal } from "lucide-react";
 import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
@@ -26,7 +25,7 @@ export default function Shop() {
   const [categories, setCategories] = useState([{ slug: "all", name: "All Keepsakes" }]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [, setFiltersOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 

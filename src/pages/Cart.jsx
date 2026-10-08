@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Tag, CheckCircle2, X, Sparkles, Truck } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, Tag, CheckCircle2, X, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
@@ -155,7 +155,7 @@ export default function Cart() {
 
                     {item.customization?.note && (
                       <p className="text-[11px] text-espresso-400 italic mt-1 truncate">
-                        "{item.customization.note}"
+                        &quot;{item.customization.note}&quot;
                       </p>
                     )}
 

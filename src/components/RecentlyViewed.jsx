@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Sparkles, ArrowRight, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useRecentlyViewedStore } from "../store/recentlyViewedStore";
 import { assetUrl } from "../api/client";
 

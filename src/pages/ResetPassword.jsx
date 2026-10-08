@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Loader2, Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";
@@ -42,9 +41,8 @@ export default function ResetPassword() {
     try {
       const { data } = await api.post(`/auth/reset-password/${token}`, { password });
       toast.success(data?.message || "Password updated successfully!");
-      if (data?.token && data?.user) {
-        setAuth(data.user, data.token);
-      }
+      // The server also signs the user in with a session cookie
+      if (data?.user) setAuth(data.user);
       setSuccess(true);
       setTimeout(() => {
         navigate("/account");

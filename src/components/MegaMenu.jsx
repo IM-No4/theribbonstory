@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Star, Zap, Gift, Heart, Users, Clock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const MENU_CATEGORIES = [
   {

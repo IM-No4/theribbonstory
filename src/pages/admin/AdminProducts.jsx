@@ -3,18 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import {
   Plus,
   Search,
-  SlidersHorizontal,
   Edit2,
   Trash2,
   Image as ImageIcon,
-  Sparkles,
   Upload,
   X,
   Check,
-  Tag,
-  Layers,
-  AlertCircle,
-  Eye,
+  Package,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
@@ -47,7 +42,7 @@ export default function AdminProducts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [, setUploadingImage] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -92,7 +87,7 @@ export default function AdminProducts() {
         },
       });
       setProducts(data.products || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load products");
     } finally {
       setLoading(false);
@@ -306,7 +301,7 @@ export default function AdminProducts() {
       await api.delete(`/products/${product._id}`);
       toast.success("Product deleted");
       fetchProducts();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete product");
     }
   };

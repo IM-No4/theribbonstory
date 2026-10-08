@@ -2,12 +2,9 @@ import { useState, useEffect } from "react";
 import {
   Star,
   Trash2,
-  CheckCircle,
   EyeOff,
   Eye,
   MessageSquare,
-  ShieldCheck,
-  ExternalLink,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
@@ -21,7 +18,7 @@ export default function AdminReviews() {
     try {
       const { data } = await api.get("/reviews/admin/all");
       setReviews(data.reviews || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load customer reviews");
     } finally {
       setLoading(false);
@@ -37,7 +34,7 @@ export default function AdminReviews() {
       const { data } = await api.put(`/reviews/${review._id}/toggle`);
       toast.success(data.message);
       fetchReviews();
-    } catch (err) {
+    } catch {
       toast.error("Failed to update review visibility");
     }
   };
@@ -48,7 +45,7 @@ export default function AdminReviews() {
       await api.delete(`/reviews/${review._id}`);
       toast.success("Review deleted");
       fetchReviews();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete review");
     }
   };

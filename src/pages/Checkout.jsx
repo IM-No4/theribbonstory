@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Loader2,
   Lock,
   CreditCard,
   MapPin,
   Tag,
-  CheckCircle2,
   Truck,
   ShieldCheck,
   Check,
@@ -19,11 +18,9 @@ import {
   Building,
   Phone,
   User,
-  PackageCheck,
   ArrowRight,
   ShoppingBag,
   Info,
-  HeartHandshake,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";

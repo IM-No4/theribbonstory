@@ -2,17 +2,12 @@ import { useState, useEffect } from "react";
 import {
   ShoppingBag,
   Search,
-  CheckCircle2,
-  Clock,
   Truck,
-  XCircle,
   Eye,
   ExternalLink,
   X,
   User,
   MapPin,
-  Image as ImageIcon,
-  DollarSign,
   Download,
   Calendar,
   RotateCcw,
@@ -86,7 +81,7 @@ export default function AdminOrders() {
         },
       });
       setOrders(data.orders || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load customer orders");
     } finally {
       setLoading(false);
@@ -236,7 +231,7 @@ export default function AdminOrders() {
       } else {
         toast.error("Shipping label not ready yet");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch shipping label");
     }
   };
@@ -250,7 +245,7 @@ export default function AdminOrders() {
         setSelectedOrder(data.order);
       }
       fetchOrders();
-    } catch (err) {
+    } catch {
       toast.error("Failed to update status");
     } finally {
       setUpdating(false);
@@ -759,7 +754,7 @@ export default function AdminOrders() {
                               Custom Note / Caption:
                             </span>
                             <p className="text-[11px] text-slate-200 bg-slate-950 p-2 rounded-lg border border-slate-800 mt-1 italic">
-                              "{item.customization.note}"
+                              &quot;{item.customization.note}&quot;
                             </p>
                           </div>
                         )}
@@ -824,7 +819,7 @@ export default function AdminOrders() {
                       Customer Cancellation & Refund Requested
                     </div>
                     <p className="text-slate-300 text-xs">
-                      Customer requested cancellation with reason: <em>"{selectedOrder.cancellationReason || "Not specified"}"</em>
+                      Customer requested cancellation with reason: <em>&quot;{selectedOrder.cancellationReason || "Not specified"}&quot;</em>
                     </p>
                     <button
                       onClick={() => openRefundModal(selectedOrder)}
@@ -1007,7 +1002,7 @@ export default function AdminOrders() {
               </div>
 
               <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-200">
-                ⚡ Razorpay will automatically credit the customer's source account (UPI / Card / NetBanking) within 5-7 business days.
+                ⚡ Razorpay will automatically credit the customer&apos;s source account (UPI / Card / NetBanking) within 5-7 business days.
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">

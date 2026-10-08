@@ -1,30 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
-  LogOut,
-  User,
   Loader2,
   ChevronRight,
   MapPin,
   Plus,
   Trash2,
-  Edit2,
   ShieldCheck,
   Truck,
   Sparkles,
   ExternalLink,
   CheckCircle2,
-  Clock,
   Settings,
   RotateCcw,
-  AlertTriangle,
   X,
   Heart,
-  Gift,
   ShoppingBag,
-  ArrowRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
@@ -38,7 +30,7 @@ export default function Account() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "orders";
 
-  const { user, logout, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { items: wishlistItems, removeItem: removeFromWishlist } = useWishlistStore();
   const { addItem: addToCart, openCart } = useCartStore();
 
@@ -192,7 +184,7 @@ export default function Account() {
       const { data } = await api.delete(`/auth/address/${addressId}`);
       setAddresses(data.addresses || []);
       toast.success("Address deleted");
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete address");
     }
   };
@@ -644,7 +636,7 @@ export default function Account() {
                     </div>
                     <h3 className="font-bold text-base text-slate-800">No saved addresses</h3>
                     <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                      Save your home, office or loved ones' addresses for fast delivery.
+                      Save your home, office or loved ones&apos; addresses for fast delivery.
                     </p>
                     <button
                       onClick={() => setAddressModalOpen(true)}

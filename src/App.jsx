@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
 import WishlistDrawer from "./components/WishlistDrawer";
 import FloatingHelp from "./components/FloatingHelp";
+import { useAuthStore } from "./store/authStore";
 
 // Lazy-Loaded Storefront Pages (High-Speed Code Splitting)
 const Home = lazy(() => import("./pages/Home"));
@@ -68,6 +69,12 @@ function ScrollToTop() {
 
 function App() {
   const { pathname, search } = useLocation();
+  const restoreSession = useAuthStore((s) => s.restoreSession);
+
+  // Confirm the cookie session once on load (the cached user may be stale)
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
   const isAdminPath = pathname.startsWith("/admin");
   const isAuthPath =
     ["/login", "/register", "/forgot-password"].includes(pathname) ||

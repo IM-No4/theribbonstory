@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Heart, Send, Sparkles, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";
@@ -244,7 +244,7 @@ export default function ComingSoon() {
               ) : submitted ? (
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FAF5F2] border border-[#D9CBC2] text-[#A85848] text-xs font-medium">
                   <CheckCircle2 size={14} />
-                  <span>You're on the VIP launch list!</span>
+                  <span>You&apos;re on the VIP launch list!</span>
                 </div>
               ) : (
                 <form

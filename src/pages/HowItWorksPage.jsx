@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Sparkles, Layers, Box, Truck, ShieldCheck, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function HowItWorksPage() {

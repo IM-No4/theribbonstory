@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Heart,
   Mail,
   Phone,
   MapPin,
   Sparkles,
   ShieldCheck,
   Truck,
-  RotateCcw,
   Headphones,
-  CheckCircle2,
   Gift,
-  CreditCard,
   Lock,
 } from "lucide-react";
 import { LogoMark } from "./Logo";

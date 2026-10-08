@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -10,9 +10,7 @@ import {
   Menu,
   X,
   Sparkles,
-  ShieldCheck,
   ChevronRight,
-  TrendingUp,
   Tag,
   MessageSquare,
   Box,
@@ -23,7 +21,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
+
 
   const handleLogout = () => {
     logout();

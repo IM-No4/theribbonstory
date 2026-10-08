@@ -5,14 +5,10 @@ import {
   Edit2,
   Trash2,
   Layers,
-  Sparkles,
   Upload,
   X,
   Check,
   Image as ImageIcon,
-  Tag,
-  ArrowUpDown,
-  Eye,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
@@ -45,7 +41,7 @@ export default function AdminCollections() {
     try {
       const { data } = await api.get("/categories/admin/all");
       setCategories(data.categories || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load collections");
     } finally {
       setLoading(false);
@@ -163,7 +159,7 @@ export default function AdminCollections() {
       await api.delete(`/categories/${cat._id}`);
       toast.success("Collection deleted");
       fetchCategories();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete collection");
     }
   };

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";

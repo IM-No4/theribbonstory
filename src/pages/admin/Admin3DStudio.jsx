@@ -11,13 +11,8 @@ import {
   Layers,
   Camera,
   RotateCw,
-  ArrowRight,
   ShieldCheck,
   Cpu,
-  Info,
-  ExternalLink,
-  ChevronRight,
-  ShoppingBag,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";

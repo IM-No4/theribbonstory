@@ -3,15 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Upload,
-  Check,
   Sparkles,
-  CheckCircle2,
-  Calendar,
-  Type,
-  Layers,
-  Award,
-  Truck,
-  ShieldCheck,
   ArrowRight,
 } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
@@ -90,7 +82,7 @@ export default function ProductCustomizerModal({ product, isOpen, onClose }) {
   const [petName, setPetName] = useState("");
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity] = useState(1);
   const [previewMode, setPreviewMode] = useState("3d");
 
   useEffect(() => {

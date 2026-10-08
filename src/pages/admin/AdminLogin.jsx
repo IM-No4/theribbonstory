@@ -9,7 +9,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login, user } = useAuthStore();
+  const { login } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 

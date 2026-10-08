@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, X, Check, Search, Sparkles, Building2, ShieldCheck, Clock } from "lucide-react";
+import { MapPin, X, Check, Building2, Clock } from "lucide-react";
 import { useLocationStore } from "../store/locationStore";
 
 export default function LocationModal() {

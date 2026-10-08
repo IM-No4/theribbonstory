@@ -1,45 +1,63 @@
 import { create } from "zustand";
-import { api } from "../api/client";
+import { api, onUnauthorized } from "../api/client";
 
+const USER_KEY = "trs_user";
+
+// Sessions used to be a token in localStorage; drop any leftover copy.
+try {
+  localStorage.removeItem("trs_token");
+} catch {
+  /* storage unavailable */
+}
+
+// The cached user is only a display hint until /auth/me confirms the session cookie.
 const getStoredUser = () => {
   try {
-    const raw = localStorage.getItem("trs_user");
+    const raw = localStorage.getItem(USER_KEY);
     if (!raw || raw === "undefined" || raw === "null") return null;
     return JSON.parse(raw);
-  } catch (e) {
-    localStorage.removeItem("trs_user");
+  } catch {
+    localStorage.removeItem(USER_KEY);
     return null;
+  }
+};
+
+const storeUser = (user) => {
+  try {
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+    else localStorage.removeItem(USER_KEY);
+  } catch {
+    /* storage unavailable */
   }
 };
 
 export const useAuthStore = create((set, get) => ({
   user: getStoredUser(),
-  token: localStorage.getItem("trs_token") && localStorage.getItem("trs_token") !== "undefined" ? localStorage.getItem("trs_token") : null,
   loading: false,
 
-  isAuthenticated: () => !!get().token,
+  isAuthenticated: () => !!get().user,
 
-  setAuth: (user, token) => {
-    if (token) {
-      localStorage.setItem("trs_token", token);
-    } else {
-      localStorage.removeItem("trs_token");
+  setAuth: (user) => {
+    storeUser(user);
+    set({ user: user || null });
+  },
+
+  /** Confirm the session cookie is still valid and refresh the user profile */
+  restoreSession: async () => {
+    try {
+      const { data } = await api.get("/auth/me");
+      get().setAuth(data.user);
+    } catch (err) {
+      if (err.response?.status === 401) get().setAuth(null);
     }
-    if (user) {
-      localStorage.setItem("trs_user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("trs_user");
-    }
-    set({ user: user || null, token: token || null });
   },
 
   login: async (email, password) => {
     set({ loading: true });
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      if (data.token) localStorage.setItem("trs_token", data.token);
-      if (data.user) localStorage.setItem("trs_user", JSON.stringify(data.user));
-      set({ user: data.user || null, token: data.token || null, loading: false });
+      get().setAuth(data.user);
+      set({ loading: false });
       return data.user;
     } catch (err) {
       set({ loading: false });
@@ -51,9 +69,8 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     try {
       const { data } = await api.post("/auth/register", { name, email, password });
-      if (data.token) localStorage.setItem("trs_token", data.token);
-      if (data.user) localStorage.setItem("trs_user", JSON.stringify(data.user));
-      set({ user: data.user || null, token: data.token || null, loading: false });
+      get().setAuth(data.user);
+      set({ loading: false });
       return data.user;
     } catch (err) {
       set({ loading: false });
@@ -65,9 +82,8 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     try {
       const { data } = await api.post("/auth/google", googlePayload);
-      if (data.token) localStorage.setItem("trs_token", data.token);
-      if (data.user) localStorage.setItem("trs_user", JSON.stringify(data.user));
-      set({ user: data.user || null, token: data.token || null, loading: false });
+      get().setAuth(data.user);
+      set({ loading: false });
       return data;
     } catch (err) {
       set({ loading: false });
@@ -76,8 +92,13 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: () => {
-    localStorage.removeItem("trs_token");
-    localStorage.removeItem("trs_user");
-    set({ user: null, token: null });
+    get().setAuth(null);
+    // Clear the httpOnly session cookie on the server
+    api.post("/auth/logout").catch(() => {});
   },
 }));
+
+// Session expired or was revoked: forget the cached user
+onUnauthorized(() => {
+  if (useAuthStore.getState().user) useAuthStore.getState().setAuth(null);
+});

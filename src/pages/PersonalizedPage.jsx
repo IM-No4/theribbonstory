@@ -1,24 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
   Sparkles,
   CheckCircle2,
   Trash2,
-  Gift,
   ArrowRight,
   Eye,
   X,
-  Camera,
-  Layers,
   Plus,
   ShoppingBag,
-  Edit2,
-  Check,
   Package,
-  Heart,
-  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCartStore } from "../store/cartStore";
@@ -55,7 +48,7 @@ const SIZES = [
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function PersonalizedPage() {
-  const navigate = useNavigate();
+
   const { items, addItem, removeItem, openCart } = useCartStore();
   const fileInputRef = useRef(null);
 

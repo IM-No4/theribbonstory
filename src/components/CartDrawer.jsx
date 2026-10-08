@@ -113,7 +113,7 @@ export default function CartDrawer() {
                           )}
                           {item.customization?.note && (
                             <p className="text-xs text-espresso-400 line-clamp-1 italic mt-0.5">
-                              "{item.customization.note}"
+                              &quot;{item.customization.note}&quot;
                             </p>
                           )}
                           {item.selectedOptions?.map((o) => (

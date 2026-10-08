@@ -7,23 +7,13 @@ import {
   ShieldCheck,
   Truck,
   Star,
-  Quote,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
   Box,
-  Layers,
   Camera,
   Gift,
-  Smile,
-  Users,
-  Calendar,
   CheckCircle2,
-  Zap,
-  Clock,
-  Flame,
-  Award,
-  Lock,
 } from "lucide-react";
 import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
@@ -863,7 +853,7 @@ export default function Home() {
                     )}
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">
-                    "{rev.text}"
+                    &quot;{rev.text}&quot;
                   </p>
                 </div>
 

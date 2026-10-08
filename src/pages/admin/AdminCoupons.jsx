@@ -6,10 +6,6 @@ import {
   Trash2,
   Check,
   X,
-  Percent,
-  DollarSign,
-  Calendar,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api } from "../../api/client";
@@ -38,7 +34,7 @@ export default function AdminCoupons() {
     try {
       const { data } = await api.get("/coupons/admin/all");
       setCoupons(data.coupons || []);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load coupons");
     } finally {
       setLoading(false);
@@ -121,7 +117,7 @@ export default function AdminCoupons() {
       await api.delete(`/coupons/${coupon._id}`);
       toast.success("Coupon deleted");
       fetchCoupons();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete coupon");
     }
   };
