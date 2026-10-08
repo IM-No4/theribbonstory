@@ -19,6 +19,7 @@ import { assetUrl } from "../api/client";
 import { useSeo } from "../utils/seo";
 import { useKeepsakePreview } from "../hooks/useKeepsakePreview";
 import KeepsakeDesignPreview from "../components/KeepsakeDesignPreview";
+import DesignNoteField from "../components/DesignNoteField";
 
 const SIZES = [
   {
@@ -282,6 +283,8 @@ export default function PersonalizedPage() {
                     )}
                   </div>
                 )}
+
+                <DesignNoteField preview={preview} />
 
                 <input
                   ref={fileInputRef}

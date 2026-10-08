@@ -20,6 +20,8 @@ import {
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
 import { blobErrorMessage, downloadPrintFile, formatBytes } from "../../utils/printFiles";
+import { downloadFromApi } from "../../utils/download";
+import InvoiceButton from "../../components/InvoiceButton";
 
 const STATUSES = [
   { value: "all", label: "All Orders" },
@@ -142,69 +144,35 @@ export default function AdminOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
-  const exportOrdersCSV = () => {
-    if (orders.length === 0) {
-      toast.error("No orders to export");
+  // Server-side CSV of every order in a date range (India time), for accounts and GST
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const today = new Date(Date.now() + 330 * 60 * 1000).toISOString().slice(0, 10);
+  const [exportRange, setExportRange] = useState({ from: `${today.slice(0, 8)}01`, to: today });
+
+  const exportOrdersCSV = async () => {
+    if (exportRange.from && exportRange.to && exportRange.from > exportRange.to) {
+      toast.error("The start date is after the end date");
       return;
     }
-
-    const headers = [
-      "Order ID",
-      "Date",
-      "Customer Name",
-      "Phone",
-      "Address Line 1",
-      "Address Line 2",
-      "City",
-      "State",
-      "Pincode",
-      "Scheduled Delivery Date",
-      "Delivery Slot",
-      "Items Count",
-      "Items Description",
-      "Total Amount",
-      "Payment Mode",
-      "Payment Status",
-      "Order Status",
-      "Is Gift",
-      "Gift Message",
-    ];
-
-    const rows = orders.map((o) => {
-      const itemsDesc = o.items.map((i) => `${i.name} (x${i.quantity})`).join("; ");
-      return [
-        `"${o._id}"`,
-        `"${new Date(o.createdAt).toLocaleDateString("en-IN")}"`,
-        `"${o.shippingAddress?.name || ""}"`,
-        `"${o.shippingAddress?.phone || ""}"`,
-        `"${o.shippingAddress?.line1 || ""}"`,
-        `"${o.shippingAddress?.line2 || ""}"`,
-        `"${o.shippingAddress?.city || ""}"`,
-        `"${o.shippingAddress?.state || ""}"`,
-        `"${o.shippingAddress?.postalCode || ""}"`,
-        `"${o.scheduledDeliveryDate || ""}"`,
-        `"${o.deliverySlot || ""}"`,
-        `"${o.items?.length || 0}"`,
-        `"${itemsDesc}"`,
-        `"${o.totalPrice || 0}"`,
-        `"${o.paymentMethod || "online"}"`,
-        `"${o.isPaid ? "Paid" : "Pending"}"`,
-        `"${o.status || ""}"`,
-        `"${o.giftOptions?.isGift ? "Yes" : "No"}"`,
-        `"${(o.giftOptions?.giftMessage || "").replace(/"/g, '""')}"`,
-      ];
-    });
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `TRS_Orders_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("Orders exported to CSV successfully!");
+    setExporting(true);
+    try {
+      const res = await downloadFromApi("/orders/admin/export", {
+        params: { from: exportRange.from || undefined, to: exportRange.to || undefined, status: statusFilter },
+        fallbackName: "orders.csv",
+      });
+      const count = Number(res.headers["x-order-count"] || 0);
+      toast.success(
+        res.headers["x-export-truncated"]
+          ? `Exported the first ${count} orders. Pick a shorter date range for the rest.`
+          : `Exported ${count} order${count === 1 ? "" : "s"}`
+      );
+      setExportOpen(false);
+    } catch (err) {
+      toast.error(await blobErrorMessage(err, "Export failed. Please try again."));
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleShiprocketDispatch = async (orderId) => {
@@ -266,13 +234,54 @@ export default function AdminOrders() {
           </p>
         </div>
 
-        <button
-          onClick={exportOrdersCSV}
-          className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-semibold flex items-center gap-2 transition self-start sm:self-auto cursor-pointer"
-        >
-          <Download size={15} className="text-rose-400" />
-          <span>Export Orders CSV</span>
-        </button>
+        <div className="relative self-start sm:self-auto">
+          <button
+            onClick={() => setExportOpen((v) => !v)}
+            aria-expanded={exportOpen}
+            className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+          >
+            <Download size={15} className="text-rose-400" />
+            <span>Export Orders CSV</span>
+          </button>
+          {exportOpen && (
+            <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 z-30 w-72 p-4 rounded-2xl bg-slate-950 border border-slate-700 shadow-2xl shadow-black/60 space-y-3">
+              <p className="text-[11px] text-slate-400">
+                Orders placed between these dates (India time)
+                {statusFilter !== "all" ? `, status: ${statusFilter}` : ""}. Includes invoice numbers and GST split.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[11px] text-slate-400 space-y-1">
+                  <span>From</span>
+                  <input
+                    type="date"
+                    value={exportRange.from}
+                    max={today}
+                    onChange={(e) => setExportRange((r) => ({ ...r, from: e.target.value }))}
+                    className="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white [color-scheme:dark]"
+                  />
+                </label>
+                <label className="text-[11px] text-slate-400 space-y-1">
+                  <span>To</span>
+                  <input
+                    type="date"
+                    value={exportRange.to}
+                    max={today}
+                    onChange={(e) => setExportRange((r) => ({ ...r, to: e.target.value }))}
+                    className="w-full px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white [color-scheme:dark]"
+                  />
+                </label>
+              </div>
+              <button
+                onClick={exportOrdersCSV}
+                disabled={exporting}
+                className="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                {exporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
+                <span>{exporting ? "Preparing…" : "Download CSV"}</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filter and Search */}
@@ -493,8 +502,14 @@ export default function AdminOrders() {
                     {selectedOrder.status}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Placed on {new Date(selectedOrder.createdAt).toLocaleString()}
+                <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span>Placed on {new Date(selectedOrder.createdAt).toLocaleString()}</span>
+                  {selectedOrder.invoice?.number && <span className="font-mono">{selectedOrder.invoice.number}</span>}
+                  <InvoiceButton
+                    order={selectedOrder}
+                    label="GST invoice"
+                    className="text-rose-300 hover:text-rose-200 font-semibold cursor-pointer"
+                  />
                 </p>
               </div>
               <button
