@@ -19,7 +19,7 @@ export default function VirtualUnboxingModal({ isOpen, onClose, product, customN
     setStage("tied");
   };
 
-  const productImage = product?.images?.[0] || product?.image || "/src/assets/images/photo-magnet.jpeg";
+  const productImage = product?.images?.[0] || product?.image || "/images/photo-magnet.webp";
   const productName = product?.name || "Bespoke Keepsake Gift Box";
 
   return (

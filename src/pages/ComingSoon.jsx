@@ -4,8 +4,8 @@ import { Heart, Send, Sparkles, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "../api/client";
 
-import landscapeBg from "../assets/images/coming-soon-landscape.jpeg";
-import portraitBg from "../assets/images/coming-soon-potrait.jpeg";
+const landscapeBg = "/images/coming-soon-landscape.webp";
+const portraitBg = "/images/coming-soon-potrait.webp";
 
 // Minimalist Luxury Ribbon Bow Icon
 function RibbonBowIcon({ className = "w-12 h-8 text-[#A85848]" }) {

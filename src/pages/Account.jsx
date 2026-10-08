@@ -472,7 +472,7 @@ export default function Account() {
                               <div key={idx} className="flex items-center justify-between gap-3 text-xs">
                                 <div className="flex items-center gap-3">
                                   <img
-                                    src={assetUrl(item.image || "/src/assets/images/photo-magnet.jpeg")}
+                                    src={assetUrl(item.image || "/images/photo-magnet.webp")}
                                     alt={item.name}
                                     className="w-10 h-10 rounded-xl object-cover border border-slate-200 bg-white"
                                   />
@@ -555,7 +555,7 @@ export default function Account() {
                           <div className="flex gap-3.5">
                             <Link to={productUrl} className="shrink-0">
                               <img
-                                src={assetUrl(item.image || item.images?.[0] || "/src/assets/images/photo-magnet.jpeg")}
+                                src={assetUrl(item.image || item.images?.[0] || "/images/photo-magnet.webp")}
                                 alt={item.name}
                                 className="w-20 h-20 rounded-xl object-cover border border-slate-200 bg-white shadow-2xs"
                               />

@@ -3,6 +3,7 @@ import { Sparkles, Eye, ArrowRight, Heart, Star, Zap, Clock } from "lucide-react
 import { motion } from "framer-motion";
 import { useWishlistStore } from "../store/wishlistStore";
 import toast from "react-hot-toast";
+import { assetUrl } from "../api/client";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -43,7 +44,7 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
         <div className="relative aspect-square overflow-hidden bg-slate-100">
           <Link to={`/product/${product.slug}`} className="block h-full w-full">
             <img
-              src={product.images?.[0] || product.image || "/placeholder.jpg"}
+              src={assetUrl(product.images?.[0] || product.image) || "/images/photo-magnet.webp"}
               alt={product.name}
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"

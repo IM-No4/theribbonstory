@@ -3,6 +3,7 @@ import { X, Star, ShieldCheck, Truck } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "../store/cartStore";
 import toast from "react-hot-toast";
+import { assetUrl } from "../api/client";
 
 export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomizer }) {
   const { addItem } = useCartStore();
@@ -52,7 +53,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
           <div className="p-4 sm:p-6 bg-gradient-to-br from-blush-50 to-peach-50 flex flex-col justify-center items-center">
             <div className="w-full aspect-square rounded-2xl overflow-hidden bg-white shadow-soft border border-blush-200/60 mb-3 max-w-[280px] md:max-w-none">
               <img
-                src={product.images?.[selectedImage] || product.images?.[0]}
+                src={assetUrl(product.images?.[selectedImage] || product.images?.[0])}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -67,7 +68,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
                       selectedImage === i ? "border-ribbon-500 shadow-xs" : "border-transparent opacity-60"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={assetUrl(img)} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

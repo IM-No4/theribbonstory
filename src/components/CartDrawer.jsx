@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Trash2, ArrowRight, Sparkles, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "../store/cartStore";
+import { assetUrl } from "../api/client";
 
 export default function CartDrawer() {
   const { items, isCartOpen, closeCart, updateQuantity, removeItem, subtotal } = useCartStore();
@@ -80,7 +81,7 @@ export default function CartDrawer() {
                     >
                       <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-cream-100 border border-blush-100">
                         <img
-                          src={item.customization?.photoUrl || item.image}
+                          src={assetUrl(item.customization?.photoUrl || item.image)}
                           alt={item.name}
                           className="h-full w-full object-cover"
                         />

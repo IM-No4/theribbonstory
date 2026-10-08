@@ -58,7 +58,7 @@ export default function AdminCollections() {
       name: "",
       slug: "",
       description: "",
-      image: "/src/assets/images/photo-magnet.jpeg",
+      image: "/images/photo-magnet.webp",
       badge: "Trending",
       order: categories.length + 1,
       isFeatured: true,
@@ -227,11 +227,11 @@ export default function AdminCollections() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <img
-                          src={assetUrl(cat.image || "/src/assets/images/photo-magnet.jpeg")}
+                          src={assetUrl(cat.image || "/images/photo-magnet.webp")}
                           alt={cat.name}
                           className="w-12 h-12 rounded-xl object-cover border border-slate-800 bg-slate-900 shrink-0"
                           onError={(e) => {
-                            e.target.src = "/src/assets/images/photo-magnet.jpeg";
+                            e.target.src = "/images/photo-magnet.webp";
                           }}
                         />
                         <div className="min-w-0">
@@ -373,7 +373,7 @@ export default function AdminCollections() {
                         alt="preview"
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.target.src = "/src/assets/images/photo-magnet.jpeg";
+                          e.target.src = "/images/photo-magnet.webp";
                         }}
                       />
                     ) : (

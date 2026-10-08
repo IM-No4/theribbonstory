@@ -34,6 +34,23 @@ export default function OrderSuccess() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Paid online but not confirmed yet (the Razorpay webhook may take a few
+  // seconds): re-check every 3s for up to a minute
+  const awaitingPayment = Boolean(order?.awaitingPayment);
+  useEffect(() => {
+    if (!awaitingPayment) return;
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      api
+        .get(`/orders/${id}`)
+        .then(({ data }) => setOrder(data.order))
+        .catch(() => {});
+      if (attempts >= 20) clearInterval(timer);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [awaitingPayment, id]);
+
   const copyOrderId = () => {
     if (!order) return;
     navigator.clipboard.writeText(order._id);
@@ -88,9 +105,16 @@ export default function OrderSuccess() {
           <h1 className="font-display text-3xl sm:text-4xl font-bold text-burgundy-900">
             Thank You! Your Story is Being Crafted
           </h1>
-          <p className="text-xs sm:text-sm text-espresso-500 max-w-lg mx-auto leading-relaxed">
-            Order confirmed &amp; queued in our studio. Our master artisans are preparing your bespoke keepsakes with love and precision.
-          </p>
+          {awaitingPayment ? (
+            <p className="text-xs sm:text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-4 py-2 max-w-lg mx-auto inline-flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin" />
+              Confirming your payment with Razorpay — this usually takes a few seconds.
+            </p>
+          ) : (
+            <p className="text-xs sm:text-sm text-espresso-500 max-w-lg mx-auto leading-relaxed">
+              Order confirmed &amp; queued in our studio. Our master artisans are preparing your bespoke keepsakes with love and precision.
+            </p>
+          )}
 
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-blush-200 shadow-xs text-xs">
             <span className="text-espresso-400">Order Reference:</span>

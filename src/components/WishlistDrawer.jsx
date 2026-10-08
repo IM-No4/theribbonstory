@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Heart, X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
+import { assetUrl } from "../api/client";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -96,7 +97,7 @@ export default function WishlistDrawer() {
                     className="flex gap-3.5 p-3 rounded-2xl border border-espresso-100 bg-cream-50/50 hover:border-ribbon-200 transition-all"
                   >
                     <img
-                      src={item.images?.[0] || item.image || "/placeholder.jpg"}
+                      src={assetUrl(item.images?.[0] || item.image) || "/images/photo-magnet.webp"}
                       alt={item.name}
                       className="h-20 w-20 rounded-xl object-cover border border-blush-200 bg-white"
                     />
