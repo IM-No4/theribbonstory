@@ -12,6 +12,7 @@ import {
 import { useCartStore } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
 import toast from "react-hot-toast";
+import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -126,6 +127,7 @@ const CARD_THEMES = [
 ];
 
 export default function BuildABox() {
+  useSeo({ title: "Build a Custom Gift Hamper", description: "Design your own luxury gift hamper: pick a box, a personalised keepsake, treats and a handwritten card." });
   const navigate = useNavigate();
   const addItem = useCartStore((s) => s.addItem);
   const fileInputRef = useRef(null);

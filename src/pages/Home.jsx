@@ -19,6 +19,7 @@ import { api, assetUrl } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
+import { useSeo } from "../utils/seo";
 
 // 1. HERO CAROUSEL SLIDES (IGP Style)
 const HERO_SLIDES = [
@@ -229,6 +230,7 @@ const REVIEWS = [
 ];
 
 export default function Home() {
+  useSeo({ path: "/" });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [products, setProducts] = useState([]);
   const [activeTab, setActiveTab] = useState("all");

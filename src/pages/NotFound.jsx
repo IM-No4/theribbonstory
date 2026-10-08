@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { LogoMark } from "../components/Logo";
+import { useSeo } from "../utils/seo";
 
 export default function NotFound() {
+  useSeo({ title: "Page Not Found", noindex: true });
   return (
     <div className="container-page py-24 text-center flex flex-col items-center">
       <LogoMark to="/" size="compact" />

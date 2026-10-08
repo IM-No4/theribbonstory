@@ -5,8 +5,10 @@ import toast from "react-hot-toast";
 import { api } from "../api/client";
 import { LogoMark } from "../components/Logo";
 import AuthShowcase from "../components/AuthShowcase";
+import { useSeo } from "../utils/seo";
 
 export default function ForgotPassword() {
+  useSeo({ title: "Forgot Password", noindex: true });
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);

@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
+import { useSeo } from "../utils/seo";
 
 export default function TrackOrder() {
+  useSeo({ title: "Track Your Order", description: "Track your Ribbon Story order with your order ID or AWB tracking number." });
   const [params, setParams] = useSearchParams();
   const [identifier, setIdentifier] = useState(params.get("id") || "");
   const [loading, setLoading] = useState(false);

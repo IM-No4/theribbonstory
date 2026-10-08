@@ -7,6 +7,7 @@ import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import RecentlyViewed from "../components/RecentlyViewed";
 import { OCCASIONS } from "../data/occasions";
+import { useSeo } from "../utils/seo";
 
 const sorts = [
   { value: "", label: "Featured" },
@@ -16,6 +17,7 @@ const sorts = [
 ];
 
 export default function Shop() {
+  useSeo({ title: "Shop All Keepsakes & Gifts", description: "Browse personalised photo magnets, 3D keepsakes, polaroid art and gift hampers. Handcrafted in India with express delivery." });
   const [params, setParams] = useSearchParams();
   const category = params.get("category") || "all";
   const occasion = params.get("occasion") || "";

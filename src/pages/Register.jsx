@@ -6,8 +6,10 @@ import { useAuthStore } from "../store/authStore";
 import { LogoMark } from "../components/Logo";
 import AuthShowcase from "../components/AuthShowcase";
 import { triggerGoogleSignIn } from "../utils/googleAuth";
+import { useSeo } from "../utils/seo";
 
 export default function Register() {
+  useSeo({ title: "Create Account", noindex: true });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

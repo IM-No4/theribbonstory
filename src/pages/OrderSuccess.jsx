@@ -14,10 +14,12 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
+import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function OrderSuccess() {
+  useSeo({ title: "Order Placed", noindex: true });
   const { id } = useParams();
 
   const [order, setOrder] = useState(null);
