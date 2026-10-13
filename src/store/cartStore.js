@@ -5,7 +5,14 @@ const COUPON_KEY = "trs_applied_coupon";
 
 const load = () => {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return raw.map((item) => {
+      const cuteImg = item.customization?.cuteImageUrl || item.customization?.reference3D?.approvedPreview;
+      if (cuteImg && item.image !== cuteImg) {
+        return { ...item, image: cuteImg };
+      }
+      return item;
+    });
   } catch {
     return [];
   }
@@ -28,7 +35,7 @@ const persistCoupon = (coupon) => {
 // Lines merge only when everything printed on them is the same
 const lineKey = (item) => {
   const c = item.customization || {};
-  return [item.productId, JSON.stringify(item.selectedOptions || []), c.photoUrl, c.reference3D?.approvedPreview, c.customName, c.customDate, c.note]
+  return [item.productId, JSON.stringify(item.selectedOptions || []), c.photoUrl, c.cuteImageUrl || c.reference3D?.approvedPreview, c.customName, c.customDate, c.note]
     .map((v) => v || "")
     .join("|");
 };
@@ -65,12 +72,14 @@ export const useCartStore = create((set, get) => ({
 
   addItem: (item) => {
     const items = [...get().items];
-    const key = lineKey(item);
+    const cuteImg = item.customization?.cuteImageUrl || item.customization?.reference3D?.approvedPreview;
+    const finalItem = cuteImg ? { ...item, image: cuteImg } : item;
+    const key = lineKey(finalItem);
     const existingIndex = items.findIndex((i) => lineKey(i) === key);
     if (existingIndex > -1) {
-      items[existingIndex] = { ...items[existingIndex], quantity: items[existingIndex].quantity + item.quantity };
+      items[existingIndex] = { ...items[existingIndex], quantity: items[existingIndex].quantity + finalItem.quantity };
     } else {
-      items.push({ ...item, id: `${Date.now()}-${Math.round(Math.random() * 1e6)}` });
+      items.push({ ...finalItem, id: `${Date.now()}-${Math.round(Math.random() * 1e6)}` });
     }
     persist(items);
     set({ items, isCartOpen: true });

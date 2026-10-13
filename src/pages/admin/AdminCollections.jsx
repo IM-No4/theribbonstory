@@ -244,7 +244,7 @@ export default function AdminCollections() {
                     </td>
                     <td className="py-3 px-4 font-mono text-[11px] text-slate-400">{cat.slug}</td>
                     <td className="py-3 px-4 font-semibold text-white">
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-rose-300 font-medium text-[11px]">
+                      <span className="admin-collection-pill px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-rose-300 font-medium text-[11px] inline-block">
                         {cat.productCount || 0} items
                       </span>
                     </td>

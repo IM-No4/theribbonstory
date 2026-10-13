@@ -13,17 +13,19 @@ import {
   ChevronRight,
   Tag,
   MessageSquare,
-  Box,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import { useAdminThemeStore } from "../../store/adminThemeStore";
+import AdminThemeToggle from "../../components/admin/AdminThemeToggle";
 import { useSeo } from "../../utils/seo";
+import "../../styles/adminTheme.css";
 
 export default function AdminLayout() {
   useSeo({ title: "Admin", noindex: true });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const { theme } = useAdminThemeStore();
   const navigate = useNavigate();
-
 
   const handleLogout = () => {
     logout();
@@ -32,7 +34,6 @@ export default function AdminLayout() {
 
   const navItems = [
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-    { to: "/admin/3d-studio", label: "3D Figurine Studio (AI)", icon: Box },
     { to: "/admin/orders", label: "Customer Orders", icon: ShoppingBag },
     { to: "/admin/products", label: "Products & Pricing", icon: Package },
     { to: "/admin/collections", label: "Collections", icon: Layers },
@@ -41,7 +42,13 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col md:flex-row">
+    <div
+      className={`min-h-screen flex flex-col md:flex-row transition-colors duration-200 ${
+        theme === "light"
+          ? "admin-theme-light bg-slate-50 text-slate-800"
+          : "admin-theme-dark bg-slate-900 text-slate-100"
+      }`}
+    >
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -52,35 +59,38 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:max-h-screen md:translate-x-0 shrink-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Brand Header */}
-        <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
-          <Link to="/admin" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-rose-500 to-ribbon-600 flex items-center justify-center text-white font-bold shadow-lg shadow-rose-900/30">
+        <div className="p-5 border-b border-slate-800/80 flex items-center justify-between shrink-0">
+          <Link to="/admin" className="flex items-center gap-3 min-w-0">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-rose-500 to-ribbon-600 flex items-center justify-center text-white font-bold shadow-lg shadow-rose-900/30 shrink-0">
               <Sparkles size={20} />
             </div>
-            <div>
-              <span className="font-display font-bold text-lg text-white tracking-wide block">
+            <div className="min-w-0">
+              <span className="font-display font-bold text-base text-white tracking-wide block truncate">
                 The Ribbon Story
               </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded-full border border-rose-800/50">
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded-full border border-rose-800/50 inline-block">
                 Admin Center
               </span>
             </div>
           </Link>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="md:hidden text-slate-400 hover:text-white p-1"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            <AdminThemeToggle variant="compact" />
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden text-slate-400 hover:text-white p-1"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto min-h-0">
           <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
             Store Management
           </div>
@@ -122,8 +132,21 @@ export default function AdminLayout() {
           </Link>
         </nav>
 
+        {/* Theme Appearance Mode in Sidebar */}
+        <div className="p-4 border-t border-slate-800/80 shrink-0">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Appearance
+            </span>
+            <span className="text-[10px] text-slate-400 capitalize font-medium">
+              {theme} mode
+            </span>
+          </div>
+          <AdminThemeToggle variant="segmented" />
+        </div>
+
         {/* Admin User Profile & Logout */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
+        <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 shrink-0">
           <div className="flex items-center gap-3 px-2 mb-3">
             <div className="h-9 w-9 rounded-full bg-rose-900/50 border border-rose-700/50 flex items-center justify-center text-rose-300 font-bold text-sm">
               {user?.name?.[0]?.toUpperCase() || "A"}
@@ -135,7 +158,7 @@ export default function AdminLayout() {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 border border-rose-900/40 transition"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 border border-rose-900/40 transition cursor-pointer"
           >
             <LogOut size={14} />
             <span>Sign Out</span>
@@ -144,7 +167,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-900">
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-900 admin-main-bg">
         {/* Mobile Header Bar */}
         <header className="md:hidden bg-slate-950 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30">
           <button
@@ -157,9 +180,12 @@ export default function AdminLayout() {
             <Sparkles size={18} className="text-rose-400" />
             <span className="font-display font-bold text-sm text-white">TRS Admin</span>
           </div>
-          <Link to="/" target="_blank" className="p-2 text-slate-400 hover:text-white">
-            <ExternalLink size={18} />
-          </Link>
+          <div className="flex items-center gap-2">
+            <AdminThemeToggle variant="compact" />
+            <Link to="/" target="_blank" className="p-2 text-slate-400 hover:text-white">
+              <ExternalLink size={18} />
+            </Link>
+          </div>
         </header>
 
         {/* Page Content */}

@@ -1,18 +1,26 @@
+import { useConfigStore } from "../store/configStore";
+
 /**
  * Google Identity Services & OAuth Integration
  */
 
-export function triggerGoogleSignIn({ clientId, onSuccess, onError }) {
-  const googleClientId = clientId || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+export async function triggerGoogleSignIn({ clientId, onSuccess, onError }) {
+  try {
+    let googleClientId = clientId || useConfigStore.getState().config?.googleClientId;
 
-  if (!googleClientId || googleClientId.includes("placeholder") || googleClientId.startsWith("1038192847291")) {
-    onError?.(
-      new Error(
-        "Google Client ID is not configured. Please add your VITE_GOOGLE_CLIENT_ID in frontend/.env"
-      )
-    );
-    return;
-  }
+    if (!googleClientId) {
+      const fresh = await useConfigStore.getState().fetchConfig();
+      googleClientId = fresh?.googleClientId;
+    }
+
+    if (!googleClientId || googleClientId.includes("placeholder") || googleClientId.startsWith("1038192847291")) {
+      onError?.(
+        new Error(
+          "Google sign-in is not configured on the server. Please add GOOGLE_CLIENT_ID in backend/.env"
+        )
+      );
+      return;
+    }
 
   if (typeof window !== "undefined" && window.google?.accounts?.id) {
     try {
@@ -42,9 +50,13 @@ export function triggerGoogleSignIn({ clientId, onSuccess, onError }) {
     }
   }
 
-  // Fallback to OAuth popup
-  triggerGoogleOAuthPopup({ clientId: googleClientId, onSuccess, onError });
+    // Fallback to OAuth popup
+    triggerGoogleOAuthPopup({ clientId: googleClientId, onSuccess, onError });
+  } catch (err) {
+    onError?.(err);
+  }
 }
+
 
 function triggerGoogleOAuthPopup({ clientId, onSuccess, onError }) {
   if (typeof window !== "undefined" && window.google?.accounts?.oauth2) {

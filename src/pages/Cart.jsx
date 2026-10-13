@@ -122,7 +122,7 @@ export default function Cart() {
                   <img
                     src={assetUrl(item.image)}
                     alt={item.name}
-                    className="h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-2xl object-cover bg-cream-100 border border-blush-100"
+                    className="h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-2xl object-contain bg-white border border-rose-100 p-1"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
@@ -147,12 +147,12 @@ export default function Cart() {
                     {item.customization?.photoUrl && (
                       <div className="mt-2 flex items-center gap-2 p-1.5 bg-cream-50 rounded-xl border border-blush-100 w-fit">
                         <img
-                          src={assetUrl(item.customization.reference3D ? item.image : item.customization.photoUrl)}
-                          alt="custom"
+                          src={assetUrl(item.customization.photoUrl)}
+                          alt="source photo"
                           className="h-7 w-7 rounded-lg object-cover"
                         />
-                        <span className="text-[11px] font-medium text-ribbon-600">
-                          {item.customization.reference3D ? "Your approved 3D design" : "Custom keepsake photo"}
+                        <span className="text-[11px] font-medium text-espresso-600">
+                          Uploaded photo attached
                         </span>
                       </div>
                     )}

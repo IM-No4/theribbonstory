@@ -421,7 +421,7 @@ export default function AdminProducts() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-rose-300 font-medium text-[11px]">
+                        <span className="admin-collection-pill px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-rose-300 font-medium text-[11px] inline-block">
                           {cat?.name || prod.category}
                         </span>
                       </td>

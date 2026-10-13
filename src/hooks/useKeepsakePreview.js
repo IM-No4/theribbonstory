@@ -38,7 +38,7 @@ export const shrinkPhoto = async (file) => {
   }
 };
 
-const errorMessage = (err, fallback) => err.response?.data?.message || fallback;
+const errorMessage = (err, fallback) => err.response?.data?.error || err.response?.data?.message || fallback;
 
 /**
  * Customer photo -> cute 3D design preview. The design the customer picks is
@@ -66,53 +66,101 @@ export function useKeepsakePreview() {
     };
   }, [state.localPhoto]);
 
-  const upload = useCallback(async (file) => {
+  const upload = useCallback(async (file, customNotes = "", extra = {}) => {
     if (!file) return;
     const run = ++photoRun.current;
     setState({ ...INITIAL, status: "generating", localPhoto: URL.createObjectURL(file) });
     try {
       const form = new FormData();
       form.append("photo", await shrinkPhoto(file));
-      if (noteRef.current.trim()) form.append("customNotes", noteRef.current.trim());
-      const { data } = await api.post("/3d-agent/preview", form);
+      const noteToSend = (typeof customNotes === "string" && customNotes.trim())
+        ? customNotes.trim()
+        : noteRef.current.trim();
+      if (noteToSend) {
+        form.append("customNotes", noteToSend);
+        form.append("prompt", noteToSend);
+      }
+      if (extra?.engravingText) {
+        form.append("engravingText", String(extra.engravingText).trim());
+      }
+      if (extra?.artisanNotes) {
+        form.append("artisanNotes", String(extra.artisanNotes).trim());
+      }
+      const { data } = await api.post("/chibi/generate", form);
       if (run !== photoRun.current) return;
+      const previewUrl = data.cuteImageUrl || data.imageUrl;
       setState((s) => ({
         ...s,
-        status: data.previewAvailable ? "ready" : "unavailable",
-        sessionId: data.sessionId,
-        originalUrl: data.originalUrl,
-        attempts: data.previewUrl ? [data.previewUrl] : [],
+        status: previewUrl ? "ready" : "unavailable",
+        originalUrl: data.photoUrl || s.originalUrl,
+        attempts: previewUrl ? [previewUrl] : [],
         selected: 0,
-        attemptsLeft: data.attemptsLeft,
+        attemptsLeft: 3,
+        error: "",
       }));
     } catch (err) {
       if (run !== photoRun.current) return;
-      setState((s) => ({ ...s, status: "error", error: errorMessage(err, "We couldn't read that photo. Please try another one.") }));
+      console.warn("Chibi upload notice:", err);
+      setState((s) => ({
+        ...s,
+        status: "unavailable",
+        error: "",
+      }));
     }
   }, []);
 
-  const { sessionId } = state;
-  const regenerate = useCallback(async () => {
-    if (!sessionId) return;
+  const regenerate = useCallback(async (customNotes = "", extra = {}) => {
+    if (!state.originalUrl) return;
     const run = photoRun.current;
     setState((s) => ({ ...s, regenerating: true, error: "" }));
     try {
-      const { data } = await api.post(`/3d-agent/preview/${sessionId}/regenerate`, { customNotes: noteRef.current.trim() });
+      const noteToSend = (typeof customNotes === "string" && customNotes.trim())
+        ? customNotes.trim()
+        : noteRef.current.trim();
+      const payload = {
+        photoUrl: state.originalUrl,
+        customNotes: noteToSend,
+        prompt: noteToSend,
+      };
+      if (extra?.engravingText) {
+        payload.engravingText = String(extra.engravingText).trim();
+      }
+      if (extra?.artisanNotes) {
+        payload.artisanNotes = String(extra.artisanNotes).trim();
+      }
+      const { data } = await api.post("/chibi/generate", payload);
       if (run !== photoRun.current) return;
-      setState((s) => {
-        const attempts = data.previewUrl ? [...s.attempts, data.previewUrl] : s.attempts;
-        return { ...s, regenerating: false, attempts, selected: attempts.length - 1, attemptsLeft: data.attemptsLeft };
-      });
+      const newUrl = data.cuteImageUrl || data.imageUrl;
+      if (newUrl) {
+        setState((s) => {
+          const attempts = [...s.attempts, newUrl];
+          const attemptsLeft = Math.max(0, (s.attemptsLeft ?? 3) - 1);
+          return {
+            ...s,
+            status: "ready",
+            regenerating: false,
+            attempts,
+            selected: attempts.length - 1,
+            attemptsLeft,
+            error: "",
+          };
+        });
+      } else {
+        setState((s) => ({
+          ...s,
+          regenerating: false,
+          error: "",
+        }));
+      }
     } catch (err) {
       if (run !== photoRun.current) return;
       setState((s) => ({
         ...s,
         regenerating: false,
-        attemptsLeft: err.response?.status === 429 ? 0 : s.attemptsLeft,
-        error: errorMessage(err, "We couldn't create a new design just now. Your current design is kept."),
+        error: "",
       }));
     }
-  }, [sessionId]);
+  }, [state.originalUrl]);
 
   const select = useCallback((index) => setState((s) => ({ ...s, selected: index })), []);
   const reset = useCallback(() => {
@@ -124,18 +172,30 @@ export function useKeepsakePreview() {
   const approvedPreview = state.attempts[state.selected] || null;
 
   /**
-   * Fields for the cart item: the approved design and the hosted original
-   * photo. When no design could be made, the studio sculpts from the photo.
+   * Fields for the cart item: the approved cute 3D design and the hosted original
+   * photo. The admin downloads this exact image to create the 3D model.
    */
   const cartFields = () => {
     if (state.status === "ready" && approvedPreview) {
       return {
         image: approvedPreview,
-        customization: { photoUrl: state.originalUrl, reference3D: { sessionId: state.sessionId, approvedPreview } },
+        customization: {
+          photoUrl: state.originalUrl || state.localPhoto,
+          cuteImageUrl: approvedPreview,
+          note: noteRef.current.trim(),
+        },
       };
     }
-    if (state.status === "unavailable" && state.originalUrl) {
-      return { image: state.originalUrl, customization: { photoUrl: state.originalUrl } };
+    const fallbackPhoto = state.originalUrl || state.localPhoto;
+    if (fallbackPhoto) {
+      return {
+        image: fallbackPhoto,
+        customization: {
+          photoUrl: fallbackPhoto,
+          cuteImageUrl: null,
+          note: noteRef.current.trim(),
+        },
+      };
     }
     return null;
   };
@@ -144,7 +204,7 @@ export function useKeepsakePreview() {
     ...state,
     approvedPreview,
     busy: state.status === "generating" || state.regenerating,
-    canOrder: (state.status === "ready" && Boolean(approvedPreview)) || (state.status === "unavailable" && Boolean(state.originalUrl)),
+    canOrder: Boolean((state.status === "ready" && approvedPreview) || state.originalUrl || state.localPhoto),
     upload,
     regenerate,
     select,

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useId } from "react";
+import { Link } from "react-router-dom";
 import {
   Box,
   Sparkles,
@@ -8,573 +9,944 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
+  ExternalLink,
+  Search,
+  Filter,
+  Printer,
+  ChevronRight,
+  Clock,
   Layers,
-  Camera,
-  RotateCw,
-  ShieldCheck,
-  Cpu,
+  ArrowRight,
+  FileCheck,
+  Save,
+  X,
+  FileCode,
+  Sliders,
+  User,
+  ShoppingBag,
+  Info,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
 
-const VIEWS = [
-  { key: "front", label: "Front (0° Master)", angle: "0° Azimuth", desc: "Master Design Anchor" },
-  { key: "left", label: "Left 3/4 (+45°)", angle: "+45° Left", desc: "Left Lateral Silhouette" },
-  { key: "right", label: "Right 3/4 (-45°)", angle: "-45° Right", desc: "Right Lateral Silhouette" },
-  { key: "back", label: "Rear / Back (180°)", angle: "180° Posterior", desc: "Backside Hair & Outfit" },
+const PRODUCTION_STAGES = [
+  { key: "all", label: "All Keepsake Orders" },
+  { key: "pending_design", label: "Awaiting 3D Stylization", color: "amber" },
+  { key: "cute_ready", label: "Cute Design Ready", color: "sky" },
+  { key: "model_ready", label: "3D Model Ready", color: "purple" },
+  { key: "queued_for_print", label: "Queued for Bambu A1 Print", color: "indigo" },
+  { key: "printed", label: "Completed & Printed", color: "emerald" },
 ];
 
+const STAGE_META = {
+  pending_design: {
+    label: "Awaiting 3D Stylization",
+    bg: "bg-amber-950/60",
+    text: "text-amber-400",
+    border: "border-amber-800/60",
+    badge: "bg-amber-500",
+  },
+  cute_ready: {
+    label: "Cute 3D Design Ready",
+    bg: "bg-sky-950/60",
+    text: "text-sky-300",
+    border: "border-sky-800/60",
+    badge: "bg-sky-500",
+  },
+  model_ready: {
+    label: "3D Model Attached",
+    bg: "bg-purple-950/60",
+    text: "text-purple-300",
+    border: "border-purple-800/60",
+    badge: "bg-purple-500",
+  },
+  queued_for_print: {
+    label: "Queued for Printing",
+    bg: "bg-indigo-950/60",
+    text: "text-indigo-300",
+    border: "border-indigo-800/60",
+    badge: "bg-indigo-500",
+  },
+  printed: {
+    label: "Printed & Complete",
+    bg: "bg-emerald-950/60",
+    text: "text-emerald-400",
+    border: "border-emerald-800/60",
+    badge: "bg-emerald-500",
+  },
+};
+
 export default function Admin3DStudio() {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [customNotes, setCustomNotes] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [activeSession, setActiveSession] = useState(null);
-  const [activeViewTab, setActiveViewTab] = useState("front");
-  const [turntableMode, setTurntableMode] = useState(false);
-  const [turntableIndex, setTurntableIndex] = useState(0);
-  const [recentSessions, setRecentSessions] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeStage, setActiveStage] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [updatingItemId, setUpdatingItemId] = useState(null);
 
-  // Fetch recent reference generations
-  const fetchSessions = useCallback(async () => {
-    setLoadingHistory(true);
+  // Modal inspection states
+  const [compareModal, setCompareModal] = useState(null);
+  const [zoomImage, setZoomImage] = useState(null);
+
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get("/3d-agent/all?limit=12");
+      const params = new URLSearchParams();
+      if (activeStage !== "all") params.append("status", activeStage);
+      if (searchQuery.trim()) params.append("search", searchQuery.trim());
+
+      const { data } = await api.get(`/3d-studio/orders?${params.toString()}`);
       if (data.success) {
-        setRecentSessions(data.sessions || []);
-        if (data.sessions?.length > 0) {
-          setActiveSession((current) => current ?? data.sessions[0]);
-        }
+        setOrders(data.orders || []);
+        setStats(data.stats || null);
       }
     } catch (err) {
-      console.warn("Could not load past sessions", err);
+      console.warn("Could not load keepsake orders:", err);
+      toast.error("Could not fetch keepsake orders from server");
     } finally {
-      setLoadingHistory(false);
+      setLoading(false);
     }
-  }, []);
+  }, [activeStage, searchQuery]);
 
   useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+    fetchOrders();
+  }, [fetchOrders]);
 
-  // Turntable animation loop
-  useEffect(() => {
-    let interval = null;
-    if (turntableMode && activeSession) {
-      interval = setInterval(() => {
-        setTurntableIndex((prev) => (prev + 1) % 4);
-      }, 1200);
-    }
-    return () => clearInterval(interval);
-  }, [turntableMode, activeSession]);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+  const handleDownloadAsset = (fileUrl, downloadName) => {
+    if (!fileUrl) return;
+    const downloadEndpoint = `${api.defaults.baseURL || "/api"}/3d-studio/download?fileUrl=${encodeURIComponent(
+      fileUrl
+    )}&downloadName=${encodeURIComponent(downloadName)}`;
+    window.open(downloadEndpoint, "_blank");
   };
 
-  const handleGenerate = async (e) => {
-    if (e) e.preventDefault();
-    if (!selectedFile && !previewUrl) {
-      toast.error("Please select a customer photo to generate 3D references");
-      return;
-    }
-
-    setGenerating(true);
+  // Upload Cute 3D Keepsake Image
+  const handleUploadCuteImage = async (orderId, itemIndex, file) => {
+    if (!file) return;
+    const key = `${orderId}-${itemIndex}-cute`;
+    setUpdatingItemId(key);
     const formData = new FormData();
-    if (selectedFile) {
-      formData.append("photo", selectedFile);
-    }
-    if (customNotes) {
-      formData.append("customNotes", customNotes);
-    }
+    formData.append("image", file);
 
+    const toastId = toast.loading("Uploading cute 3D keepsake render...");
     try {
-      toast.loading("Gemini AI 3D Agent: Generating 4-view references (Front, Left 45°, Right 45°, Back)...", {
-        id: "gen-toast",
-      });
-
-      const { data } = await api.post("/3d-agent/generate", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (data.success && data.session) {
-        setActiveSession(data.session);
-        toast.success("4-View 3D references generated successfully!", { id: "gen-toast" });
-        fetchSessions();
-      }
+      const { data } = await api.post(
+        `/3d-studio/orders/${orderId}/items/${itemIndex}/upload-cute`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success(data.message || "Cute 3D render uploaded!", { id: toastId });
+      fetchOrders();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to generate 3D references", { id: "gen-toast" });
+      toast.error(err.response?.data?.message || "Failed to upload cute image", { id: toastId });
     } finally {
-      setGenerating(false);
+      setUpdatingItemId(null);
     }
   };
 
-  const handleDownloadZip = (session) => {
-    if (!session) return;
-    const targetSession = session || activeSession;
-    if (targetSession.zipPackageUrl) {
-      window.open(assetUrl(targetSession.zipPackageUrl), "_blank");
-    } else {
-      window.open(assetUrl(`/api/3d-agent/session/${targetSession.sessionId}/download`), "_blank");
+  // Upload 3D Model File (.3mf / .obj / .stl)
+  const handleUploadModelFile = async (orderId, itemIndex, file) => {
+    if (!file) return;
+    const key = `${orderId}-${itemIndex}-model`;
+    setUpdatingItemId(key);
+    const formData = new FormData();
+    formData.append("model", file);
+
+    const toastId = toast.loading("Uploading 3D model file (.3mf / .obj)...");
+    try {
+      const { data } = await api.post(
+        `/3d-studio/orders/${orderId}/items/${itemIndex}/upload-model`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success(data.message || "3D model file attached!", { id: toastId });
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to upload 3D model file", { id: toastId });
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
-  const getActiveViewImage = () => {
-    if (!activeSession) return null;
-    if (turntableMode) {
-      const keys = ["front", "left", "back", "right"];
-      const key = keys[turntableIndex];
-      return activeSession.views?.[key]?.url ? assetUrl(activeSession.views[key].url) : null;
+  // Update Workshop Status & Notes
+  const handleUpdateStatus = async (orderId, itemIndex, productionStatus, productionNotes) => {
+    const key = `${orderId}-${itemIndex}-status`;
+    setUpdatingItemId(key);
+    try {
+      await api.patch(`/3d-studio/orders/${orderId}/items/${itemIndex}/status`, {
+        productionStatus,
+        productionNotes,
+      });
+      toast.success("Workshop production status updated");
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status");
+    } finally {
+      setUpdatingItemId(null);
     }
-    return activeSession.views?.[activeViewTab]?.url ? assetUrl(activeSession.views[activeViewTab].url) : null;
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16">
+    <div className="space-y-8 max-w-7xl mx-auto pb-20">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">
-            <Cpu size={15} />
-            <span>AI 3D Reconstruction Pipeline</span>
+            <Box size={16} />
+            <span>Order-Linked Keepsake Production Pipeline</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-white flex items-center gap-3">
-            <span>Meshy & Tripo 3D Reference Studio</span>
-            <span className="text-xs bg-rose-950/80 text-rose-300 border border-rose-800/60 px-2.5 py-0.5 rounded-full font-sans font-semibold">
-              Gemini Vision Agent
+            <span>Tripo 3D Keepsake Studio & Workshop</span>
+            <span className="text-xs bg-rose-950/90 text-rose-300 border border-rose-800/60 px-3 py-1 rounded-full font-sans font-semibold">
+              Bambu Lab A1 Ready
             </span>
           </h1>
-          <p className="text-slate-400 text-sm mt-1 max-w-2xl">
-            Transforms customer photos into 4 strictly consistent, multi-angle reference views (Front, Left 45°, Right 45°, Back) calibrated for Bambu Lab A1 PLA printing and downstream Image-to-3D reconstruction.
+          <p className="text-slate-400 text-sm mt-1 max-w-3xl leading-relaxed">
+            Custom orders arrive with customer source photos intact. Download the photo, generate a stylized cute
+            3D figurine with ChatGPT / Midjourney, upload the cute preview here against the product, convert to a 3D mesh
+            in Tripo Studio, and archive the 3D model file (<code className="text-rose-300 text-xs font-mono">.3mf</code>,{" "}
+            <code className="text-rose-300 text-xs font-mono">.obj</code>) for Bambu Lab A1 3D printing.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {activeSession && (
+        <div className="flex items-center gap-3 shrink-0">
+          <a
+            href="https://platform.tripo3d.ai"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-950/50 transition group"
+          >
+            <span>Open Tripo Studio</span>
+            <ExternalLink size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition" />
+          </a>
+
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            className="p-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition"
+            title="Refresh Orders"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin text-rose-400" : ""} />
+          </button>
+        </div>
+      </div>
+
+      {/* Workshop Workflow Guide Banner */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 space-y-3">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-200 uppercase tracking-wider">
+          <Sparkles size={14} className="text-amber-400" />
+          <span>Workshop Step-by-Step Production SOP</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
+            <span className="h-6 w-6 rounded-full bg-rose-950 text-rose-300 border border-rose-800/60 flex items-center justify-center font-bold text-xs shrink-0">
+              1
+            </span>
+            <div>
+              <div className="font-bold text-white mb-0.5">Download Photo</div>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Click download on the customer’s attached source photo intact with the order.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
+            <span className="h-6 w-6 rounded-full bg-sky-950 text-sky-300 border border-sky-800/60 flex items-center justify-center font-bold text-xs shrink-0">
+              2
+            </span>
+            <div>
+              <div className="font-bold text-white mb-0.5">Style Cute 3D Version</div>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Prompt ChatGPT / Midjourney to craft the cute 3D figurine look and upload it here.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
+            <span className="h-6 w-6 rounded-full bg-purple-950 text-purple-300 border border-purple-800/60 flex items-center justify-center font-bold text-xs shrink-0">
+              3
+            </span>
+            <div>
+              <div className="font-bold text-white mb-0.5">Convert on Tripo</div>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Feed the cute render into Tripo Studio to reconstruct the 3D printable mesh.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex items-start gap-3">
+            <span className="h-6 w-6 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60 flex items-center justify-center font-bold text-xs shrink-0">
+              4
+            </span>
+            <div>
+              <div className="font-bold text-white mb-0.5">Attach .3MF & Print</div>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Attach the generated .3mf / .obj file to keep track and send to Bambu Studio!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Metrics Bar */}
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+              Custom Orders
+            </span>
+            <span className="text-2xl font-bold font-display text-white mt-1 block">
+              {stats.totalOrders || 0}
+            </span>
+            <span className="text-[11px] text-slate-500">{stats.totalKeepsakeItems || 0} items with photos</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider block">
+              Awaiting Cute Design
+            </span>
+            <span className="text-2xl font-bold font-display text-amber-400 mt-1 block">
+              {stats.pendingDesignCount || 0}
+            </span>
+            <span className="text-[11px] text-slate-500">Need ChatGPT stylization</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-[11px] font-semibold text-sky-400 uppercase tracking-wider block">
+              Cute Design Ready
+            </span>
+            <span className="text-2xl font-bold font-display text-sky-400 mt-1 block">
+              {stats.cuteReadyCount || 0}
+            </span>
+            <span className="text-[11px] text-slate-500">Ready for Tripo 3D</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-[11px] font-semibold text-purple-400 uppercase tracking-wider block">
+              3D Model Attached
+            </span>
+            <span className="text-2xl font-bold font-display text-purple-400 mt-1 block">
+              {stats.modelReadyCount || 0}
+            </span>
+            <span className="text-[11px] text-slate-500">.3MF / .OBJ files saved</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block">
+              Printed & Complete
+            </span>
+            <span className="text-2xl font-bold font-display text-emerald-400 mt-1 block">
+              {stats.printedCount || 0}
+            </span>
+            <span className="text-[11px] text-slate-500">Bambu Lab A1 fulfilled</span>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-950 p-2.5 rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {PRODUCTION_STAGES.map((s) => (
             <button
-              onClick={() => handleDownloadZip(activeSession)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-ribbon-700 text-white text-xs font-bold shadow-lg shadow-rose-950/50 hover:from-rose-500 hover:to-ribbon-600 transition"
+              key={s.key}
+              onClick={() => setActiveStage(s.key)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                activeStage === s.key
+                  ? "bg-rose-600 text-white shadow-md shadow-rose-950/40"
+                  : "text-slate-400 hover:text-white hover:bg-slate-900"
+              }`}
             >
-              <Download size={15} />
-              <span>Download 3D Reference Pack (.ZIP)</span>
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative min-w-[240px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search Order #, customer, keepsake..."
+            className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-rose-500 transition"
+          />
+        </div>
+      </div>
+
+      {/* Keepsake Orders List */}
+      {loading ? (
+        <div className="p-16 rounded-3xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center gap-3">
+          <RefreshCw size={28} className="animate-spin text-rose-500" />
+          <p className="text-sm font-semibold text-slate-300">Loading incoming keepsake orders...</p>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="p-16 rounded-3xl bg-slate-950 border border-slate-800 text-center space-y-3">
+          <Box size={40} className="mx-auto text-slate-700" />
+          <div className="text-base font-bold text-white">No Custom Keepsake Orders Found</div>
+          <p className="text-slate-400 text-xs max-w-md mx-auto">
+            {activeStage !== "all" || searchQuery
+              ? "No orders match the selected filter or search term. Try resetting the filters."
+              : "When customers place orders with custom photos (for 3D keepsakes or personalized gifts), they will appear here automatically with their photo intact."}
+          </p>
+          {(activeStage !== "all" || searchQuery) && (
+            <button
+              onClick={() => {
+                setActiveStage("all");
+                setSearchQuery("");
+              }}
+              className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-white hover:border-slate-700 transition"
+            >
+              Clear Filters
             </button>
           )}
         </div>
-      </div>
-
-      {/* Main Grid: Upload Generator & 4-View Viewer */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Photo Upload & Prompt Settings (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-                <Camera size={18} className="text-rose-400" />
-                <span>Customer Photo Ingestion</span>
-              </h3>
-              <span className="text-[10px] text-slate-400 font-mono">Source of Truth</span>
-            </div>
-
-            {/* Dropzone */}
-            <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-slate-800 hover:border-rose-500/60 bg-slate-900/60 hover:bg-slate-900/90 rounded-2xl p-6 cursor-pointer transition group min-h-[200px] overflow-hidden">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={generating}
-              />
-              {previewUrl ? (
-                <div className="relative w-full flex flex-col items-center">
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="max-h-48 rounded-xl object-contain shadow-md border border-slate-700"
-                  />
-                  <div className="mt-3 text-xs text-rose-300 font-medium group-hover:underline flex items-center gap-1">
-                    <RefreshCw size={12} />
-                    <span>Click to change customer photo</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="p-3 rounded-2xl bg-slate-800 text-rose-400 group-hover:scale-110 transition duration-300">
-                    <Upload size={24} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-white">Upload customer photograph</div>
-                    <div className="text-xs text-slate-400 mt-0.5">JPG, PNG, WebP up to 10MB</div>
-                  </div>
-                </div>
-              )}
-            </label>
-
-            {/* Special Instructions & Story Preservations */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <span>Story Preservation Notes & Feature Guidance</span>
-                <span className="text-[10px] text-slate-500 font-normal">(Optional)</span>
-              </label>
-              <textarea
-                value={customNotes}
-                onChange={(e) => setCustomNotes(e.target.value)}
-                placeholder="e.g. Preserve guitar and drinking cup, simplify flower petals, thicken glasses frame for Bambu Lab A1 0.4mm nozzle"
-                rows={3}
-                disabled={generating}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition resize-none"
-              />
-            </div>
-
-            {/* Generate Action Button */}
-            <button
-              onClick={handleGenerate}
-              disabled={generating || (!selectedFile && !previewUrl)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-ribbon-700 hover:from-rose-500 hover:to-ribbon-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-950/60 transition"
+      ) : (
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div
+              key={order._id}
+              className="rounded-3xl bg-slate-950 border border-slate-800 overflow-hidden shadow-xl shadow-black/40"
             >
-              {generating ? (
-                <>
-                  <RefreshCw size={16} className="animate-spin" />
-                  <span>Synthesizing 4-Angle References...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={16} />
-                  <span>Run Gemini 3D Reference Agent</span>
-                </>
-              )}
-            </button>
+              {/* Order Header Summary */}
+              <div className="px-6 py-4 bg-slate-900/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-mono font-bold text-white px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800">
+                    Order #{String(order._id).slice(-6).toUpperCase()}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}{" "}
+                    at{" "}
+                    {new Date(order.createdAt).toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
 
-            {/* Pipeline Architecture Legend */}
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 space-y-2.5 text-xs text-slate-400">
-              <div className="flex items-center gap-1.5 text-slate-200 font-semibold text-[11px] uppercase tracking-wider">
-                <ShieldCheck size={14} className="text-emerald-400" />
-                <span>Pipeline Architecture</span>
-              </div>
-              <ul className="space-y-1 text-[11px] text-slate-400 list-disc list-inside">
-                <li><strong className="text-slate-200">Phase 1:</strong> Customer Photo → Gemini Front (Master Anchor)</li>
-                <li><strong className="text-slate-200">Phase 2:</strong> [Photo + Master Front] → Left 3/4 (+45°)</li>
-                <li><strong className="text-slate-200">Phase 3:</strong> [Photo + Master Front] → Right 3/4 (-45°)</li>
-                <li><strong className="text-slate-200">Phase 4:</strong> [Photo + Master Front] → Rear View (180°)</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: 4-Angle Viewer & 3D Readiness Inspector (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-                  <Box size={18} className="text-rose-400" />
-                  <span>3D Multi-View Reference Viewer</span>
-                </h3>
-                <p className="text-[11px] text-slate-400">
-                  {activeSession ? `Session: ${activeSession.sessionId}` : "No active session loaded"}
-                </p>
-              </div>
-
-              {/* View Mode Controls */}
-              {activeSession && (
-                <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
-                  <button
-                    onClick={() => setTurntableMode(false)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
-                      !turntableMode ? "bg-rose-600 text-white font-semibold" : "text-slate-400 hover:text-white"
+                  <span
+                    className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                      order.paymentMethod === "cod"
+                        ? "bg-amber-950/60 text-amber-300 border-amber-800/60"
+                        : order.isPaid
+                        ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/60"
+                        : "bg-rose-950/60 text-rose-300 border-rose-800/60"
                     }`}
                   >
-                    Static Angles
-                  </button>
-                  <button
-                    onClick={() => setTurntableMode(true)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition ${
-                      turntableMode ? "bg-rose-600 text-white font-semibold" : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    <RotateCw size={12} className={turntableMode ? "animate-spin" : ""} />
-                    <span>360° Turntable</span>
-                  </button>
+                    {order.paymentMethod === "cod"
+                      ? "Cash on Delivery"
+                      : order.isPaid
+                      ? "Paid via Razorpay"
+                      : "Awaiting Payment"}
+                  </span>
                 </div>
-              )}
-            </div>
 
-            {/* View Tabs */}
-            {activeSession && !turntableMode && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {VIEWS.map((v) => {
-                  const isActive = activeViewTab === v.key;
-                  const hasImage = !!activeSession.views?.[v.key]?.url;
-                  return (
-                    <button
-                      key={v.key}
-                      onClick={() => setActiveViewTab(v.key)}
-                      className={`p-3 rounded-2xl border text-left transition ${
-                        isActive
-                          ? "bg-slate-900 border-rose-500 text-white shadow-lg shadow-rose-950/40"
-                          : "bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-mono text-rose-400 font-bold">{v.angle}</span>
-                        {hasImage ? (
-                          <CheckCircle2 size={12} className="text-emerald-400" />
-                        ) : (
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                        )}
-                      </div>
-                      <div className="text-xs font-bold truncate">{v.label}</div>
-                      <div className="text-[10px] text-slate-500 truncate">{v.desc}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Main Image Preview Window */}
-            <div className="relative rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 min-h-[380px] flex items-center justify-center p-4 overflow-hidden group">
-              {activeSession ? (
-                getActiveViewImage() ? (
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <img
-                      src={getActiveViewImage()}
-                      alt={`3D Reference - ${activeViewTab}`}
-                      className="max-h-[360px] w-auto object-contain rounded-xl drop-shadow-2xl transition duration-300"
-                    />
-
-                    {/* Overlay Angle Badge */}
-                    <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-xs border border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                      <span className="text-[11px] font-bold text-white uppercase tracking-wider font-mono">
-                        {turntableMode
-                          ? `Turntable Angle: ${["Front (0°)", "Left (+45°)", "Back (180°)", "Right (-45°)"][turntableIndex]}`
-                          : VIEWS.find((v) => v.key === activeViewTab)?.label}
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="text-slate-300 flex items-center gap-1.5">
+                    <User size={13} className="text-rose-400" />
+                    <span>{order.shippingAddress?.name || order.user?.name || "Customer"}</span>
+                    {order.shippingAddress?.phone && (
+                      <span className="text-slate-500 font-mono text-[11px]">
+                        ({order.shippingAddress.phone})
                       </span>
-                    </div>
+                    )}
+                  </div>
 
-                    {/* View Full in new tab */}
-                    <a
-                      href={getActiveViewImage()}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="absolute bottom-3 right-3 p-2 bg-slate-950/80 hover:bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold"
-                    >
-                      <Eye size={13} />
-                      <span>Inspect High-Res</span>
-                    </a>
-                  </div>
-                ) : (
-                  <div className="text-center text-slate-500 space-y-2">
-                    <AlertCircle size={32} className="mx-auto text-amber-500/60" />
-                    <p className="text-xs">Generating reference view...</p>
-                  </div>
-                )
-              ) : (
-                <div className="text-center text-slate-500 space-y-3 py-12">
-                  <Box size={40} className="mx-auto text-slate-700" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-400">No 3D Reference Set Selected</p>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      Upload a customer photo or pick a session from history below
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3D Reconstruction Readiness Metrics */}
-            {activeSession && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-800">
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Silhouette Clarity</div>
-                  <div className="text-base font-bold text-emerald-400 font-mono mt-0.5">98%</div>
-                  <div className="text-[9px] text-slate-500">Neutral Studio Edge</div>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">FDM Printability</div>
-                  <div className="text-base font-bold text-rose-400 font-mono mt-0.5">Bambu A1</div>
-                  <div className="text-[9px] text-slate-500">0.4mm PLA Profile</div>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Multi-View Symmetry</div>
-                  <div className="text-base font-bold text-sky-400 font-mono mt-0.5">97%</div>
-                  <div className="text-[9px] text-slate-500">Front Anchor Locked</div>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Reconstruction Engine</div>
-                  <div className="text-base font-bold text-purple-400 font-mono mt-0.5">Meshy / Tripo</div>
-                  <div className="text-[9px] text-slate-500">Ready for Mesh Gen</div>
+                  <Link
+                    to={`/admin/orders?search=${String(order._id).slice(-6)}`}
+                    className="text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 hover:underline"
+                  >
+                    <span>View Full Order</span>
+                    <ExternalLink size={12} />
+                  </Link>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* Keepsake Items within this Order */}
+              <div className="p-6 space-y-6 divide-y divide-slate-800/60">
+                {order.keepsakeItems.map((item) => (
+                  <KeepsakeItemRow
+                    key={`${order._id}-${item.itemIndex}`}
+                    order={order}
+                    item={item}
+                    onDownloadAsset={handleDownloadAsset}
+                    onUploadCuteImage={handleUploadCuteImage}
+                    onUploadModelFile={handleUploadModelFile}
+                    onUpdateStatus={handleUpdateStatus}
+                    updatingItemId={updatingItemId}
+                    onOpenCompare={(itemData) => setCompareModal(itemData)}
+                    onZoom={(imgUrl) => setZoomImage(imgUrl)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* 4-View Strip & Quick Download Gallery */}
-      {activeSession && (
-        <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display font-bold text-white text-sm flex items-center gap-2">
-              <Layers size={16} className="text-rose-400" />
-              <span>Reference Package Views (Stored on Server)</span>
-            </h3>
-            <span className="text-xs text-slate-400 font-mono">
-              Folder: /uploads/3d_references/{activeSession.storageKey}/
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-            {/* Original Customer Photo */}
-            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-2 font-mono">
-                Original Input
-              </span>
-              <img
-                src={assetUrl(activeSession.originalImage?.url)}
-                alt="Original"
-                className="w-full h-32 rounded-xl object-contain bg-slate-950 border border-slate-800"
-              />
-              <span className="text-[10px] text-slate-400 mt-2 truncate w-full text-center">
-                {activeSession.originalImage?.filename}
-              </span>
+      {/* Compare Side-by-Side Modal */}
+      {compareModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setCompareModal(null)}
+        >
+          <div
+            className="max-w-4xl w-full bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <h3 className="font-display font-bold text-white text-base">
+                  3D Keepsake Design Comparison: Original Photo vs. Cute 3D Render
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">{compareModal.name}</p>
+              </div>
+              <button
+                onClick={() => setCompareModal(null)}
+                className="p-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Front View */}
-            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 font-mono">
-                1. Front (0°)
-              </span>
-              <img
-                src={assetUrl(activeSession.views?.front?.url)}
-                alt="Front"
-                className="w-full h-32 rounded-xl object-contain bg-slate-950 border border-slate-800"
-              />
-              <span className="text-[10px] text-slate-400 mt-2 truncate w-full text-center">front.png</span>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Original */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                  Original Customer Photograph
+                </span>
+                <div className="h-80 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center p-2 overflow-hidden">
+                  <img
+                    src={assetUrl(compareModal.customization?.photoUrl)}
+                    alt="Original"
+                    className="max-h-full max-w-full object-contain rounded-xl"
+                  />
+                </div>
+              </div>
 
-            {/* Left View */}
-            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2 font-mono">
-                2. Left (+45°)
-              </span>
-              <img
-                src={assetUrl(activeSession.views?.left?.url)}
-                alt="Left"
-                className="w-full h-32 rounded-xl object-contain bg-slate-950 border border-slate-800"
-              />
-              <span className="text-[10px] text-slate-400 mt-2 truncate w-full text-center">left.png</span>
-            </div>
-
-            {/* Right View */}
-            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 font-mono">
-                3. Right (-45°)
-              </span>
-              <img
-                src={assetUrl(activeSession.views?.right?.url)}
-                alt="Right"
-                className="w-full h-32 rounded-xl object-contain bg-slate-950 border border-slate-800"
-              />
-              <span className="text-[10px] text-slate-400 mt-2 truncate w-full text-center">right.png</span>
-            </div>
-
-            {/* Rear View */}
-            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-2 font-mono">
-                4. Rear (180°)
-              </span>
-              <img
-                src={assetUrl(activeSession.views?.back?.url)}
-                alt="Back"
-                className="w-full h-32 rounded-xl object-contain bg-slate-950 border border-slate-800"
-              />
-              <span className="text-[10px] text-slate-400 mt-2 truncate w-full text-center">back.png</span>
+              {/* Cute 3D Render */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-sky-400 uppercase tracking-wider block">
+                  Cute 3D Keepsake Render (Ready for Tripo)
+                </span>
+                <div className="h-80 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center p-2 overflow-hidden">
+                  <img
+                    src={assetUrl(
+                      compareModal.customization?.cuteImageUrl ||
+                        compareModal.customization?.reference3D?.approvedPreview
+                    )}
+                    alt="Cute 3D Design"
+                    className="max-h-full max-w-full object-contain rounded-xl"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Recent Reference Sets History */}
-      <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-            <Layers size={18} className="text-rose-400" />
-            <span>Generated Reference Sets Repository</span>
-          </h3>
-          <button
-            onClick={fetchSessions}
-            disabled={loadingHistory}
-            className="p-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition"
-          >
-            <RefreshCw size={14} className={loadingHistory ? "animate-spin" : ""} />
-          </button>
+      {/* Full Image Zoom Modal */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setZoomImage(null)}
+              className="absolute -top-3 -right-3 p-2 rounded-full bg-slate-900 text-white border border-slate-700 shadow-xl"
+            >
+              <X size={18} />
+            </button>
+            <img
+              src={assetUrl(zoomImage)}
+              alt="Zoomed"
+              className="max-h-[85vh] max-w-full object-contain rounded-2xl border border-slate-800 shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Individual Custom Keepsake Item Component
+function KeepsakeItemRow({
+  order,
+  item,
+  onDownloadAsset,
+  onUploadCuteImage,
+  onUploadModelFile,
+  onUpdateStatus,
+  updatingItemId,
+  onOpenCompare,
+  onZoom,
+}) {
+  const c = item.customization || {};
+  const currentStatus = c.productionStatus || "pending_design";
+  const [selectedStatus, setSelectedStatus] = useState(currentStatus);
+  const [notes, setNotes] = useState(c.productionNotes || "");
+
+  const cuteInputId = useId();
+  const modelInputId = useId();
+
+  const isUpdatingStatus = updatingItemId === `${order._id}-${item.itemIndex}-status`;
+  const isUpdatingCute = updatingItemId === `${order._id}-${item.itemIndex}-cute`;
+  const isUpdatingModel = updatingItemId === `${order._id}-${item.itemIndex}-model`;
+
+  const meta = STAGE_META[currentStatus] || STAGE_META.pending_design;
+
+  const originalPhotoUrl = c.photoUrl;
+  const cuteImageUrl = c.cuteImageUrl || c.reference3D?.approvedPreview;
+  const model3dUrl = c.model3dUrl;
+
+  const originalDownloadName = `Order_${String(order._id).slice(-6).toUpperCase()}_${item.name.replace(
+    /\s+/g,
+    "_"
+  )}_Customer_Photo.webp`;
+
+  const cuteDownloadName = `Order_${String(order._id).slice(-6).toUpperCase()}_${item.name.replace(
+    /\s+/g,
+    "_"
+  )}_Cute_3D_Render.webp`;
+
+  const modelDownloadName =
+    c.model3dFilename ||
+    `Order_${String(order._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}.3mf`;
+
+  return (
+    <div className="pt-6 first:pt-0 space-y-5">
+      {/* Product Details & Status Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <img
+            src={assetUrl(item.image)}
+            alt={item.name}
+            className="w-12 h-12 rounded-xl object-cover border border-slate-800 bg-slate-900"
+          />
+          <div>
+            <div className="font-display font-bold text-white text-sm flex items-center gap-2">
+              <span>{item.name}</span>
+              <span className="text-xs text-slate-400 font-sans font-normal">× {item.quantity}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-0.5">
+              <span>₹{item.price}</span>
+              {c.size && <span>• Size: {c.size}</span>}
+              {c.customName && <span>• Name: <strong className="text-rose-300">{c.customName}</strong></span>}
+              {c.customDate && <span>• Date: {c.customDate}</span>}
+            </div>
+          </div>
         </div>
 
-        {recentSessions.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-500">
-            No 3D reference packages generated yet. Upload a photo above to run the pipeline.
+        {/* Status Badge */}
+        <div className={`px-3 py-1 rounded-xl border flex items-center gap-2 text-xs font-bold ${meta.bg} ${meta.text} ${meta.border}`}>
+          <span className={`h-2 w-2 rounded-full ${meta.badge} animate-pulse`} />
+          <span>{meta.label}</span>
+        </div>
+      </div>
+
+      {/* Customer Note / Special Instructions */}
+      {c.note && (
+        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs flex items-start gap-2">
+          <Info size={15} className="text-rose-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold text-slate-300">Customer Story / Inscription:</span>{" "}
+            <span className="text-slate-400 italic">"{c.note}"</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {recentSessions.map((s) => (
-              <div
-                key={s._id}
-                onClick={() => setActiveSession(s)}
-                className={`p-4 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
-                  activeSession?._id === s._id
-                    ? "bg-slate-900 border-rose-500 shadow-lg shadow-rose-950/40"
-                    : "bg-slate-900/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70"
-                }`}
+        </div>
+      )}
+
+      {/* 3-Column Production Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Step 1: Customer Source Photo (Intact) */}
+        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="h-4 w-4 rounded-full bg-amber-950 text-amber-300 border border-amber-800/60 flex items-center justify-center text-[10px]">
+                  1
+                </span>
+                <span>Customer Source Photo</span>
+              </span>
+              <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                <CheckCircle2 size={11} />
+                <span>Intact with Order</span>
+              </span>
+            </div>
+
+            {originalPhotoUrl ? (
+              <div className="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center group">
+                <img
+                  src={assetUrl(originalPhotoUrl)}
+                  alt="Customer source"
+                  className="max-h-full max-w-full object-contain cursor-pointer transition group-hover:scale-105 duration-300"
+                  onClick={() => onZoom(originalPhotoUrl)}
+                />
+                <button
+                  onClick={() => onZoom(originalPhotoUrl)}
+                  className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white text-[10px] flex items-center gap-1 transition"
+                >
+                  <Eye size={12} />
+                  <span>Zoom</span>
+                </button>
+              </div>
+            ) : (
+              <div className="aspect-square rounded-xl bg-slate-950 border border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-500 text-xs p-4 text-center">
+                <AlertCircle size={24} className="mb-1 text-slate-600" />
+                <span>No customer photo uploaded</span>
+              </div>
+            )}
+          </div>
+
+          {originalPhotoUrl && (
+            <button
+              onClick={() => onDownloadAsset(originalPhotoUrl, originalDownloadName)}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition"
+            >
+              <Download size={13} />
+              <span>Download Customer Photo</span>
+            </button>
+          )}
+        </div>
+
+        {/* Step 2: Cute 3D Keepsake Version (ChatGPT / Midjourney) */}
+        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="h-4 w-4 rounded-full bg-sky-950 text-sky-300 border border-sky-800/60 flex items-center justify-center text-[10px]">
+                  2
+                </span>
+                <span>Cute 3D Keepsake Render</span>
+              </span>
+
+              {cuteImageUrl && (
+                <button
+                  onClick={() => onOpenCompare(item)}
+                  className="text-[10px] text-sky-300 hover:text-white flex items-center gap-1 font-semibold hover:underline"
+                >
+                  <Eye size={11} />
+                  <span>Compare</span>
+                </button>
+              )}
+            </div>
+
+            {cuteImageUrl ? (
+              <div className="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 aspect-square flex items-center justify-center group">
+                <img
+                  src={assetUrl(cuteImageUrl)}
+                  alt="Cute 3D version"
+                  className="max-h-full max-w-full object-contain cursor-pointer transition group-hover:scale-105 duration-300"
+                  onClick={() => onZoom(cuteImageUrl)}
+                />
+                <button
+                  onClick={() => onZoom(cuteImageUrl)}
+                  className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white text-[10px] flex items-center gap-1 transition"
+                >
+                  <Eye size={12} />
+                  <span>Zoom</span>
+                </button>
+              </div>
+            ) : (
+              <label
+                htmlFor={cuteInputId}
+                className="aspect-square rounded-xl bg-slate-950 border-2 border-dashed border-slate-800 hover:border-sky-500/60 flex flex-col items-center justify-center p-4 text-center cursor-pointer group transition"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <img
-                    src={assetUrl(s.originalImage?.url)}
-                    alt="Original"
-                    className="w-12 h-12 rounded-xl object-cover bg-slate-950 border border-slate-800 shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-white truncate font-mono">
-                      {s.storageKey}
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      {new Date(s.createdAt).toLocaleDateString()} • {new Date(s.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+                <div className="p-2.5 rounded-xl bg-slate-900 text-sky-400 group-hover:scale-110 transition duration-300 mb-2">
+                  <Upload size={20} />
+                </div>
+                <div className="text-xs font-bold text-white">Upload Cute 3D Render</div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  Stylized in ChatGPT / Midjourney
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">PNG, JPG, WebP</div>
+              </label>
+            )}
+
+            <input
+              id={cuteInputId}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUploadCuteImage(order._id, item.itemIndex, file);
+              }}
+              disabled={isUpdatingCute}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {cuteImageUrl ? (
+              <>
+                <button
+                  onClick={() => onDownloadAsset(cuteImageUrl, cuteDownloadName)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs font-bold transition"
+                >
+                  <Download size={13} />
+                  <span>Download Cute Render</span>
+                </button>
+                <label
+                  htmlFor={cuteInputId}
+                  className="cursor-pointer px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition"
+                  title="Replace with new render"
+                >
+                  <RefreshCw size={13} className={isUpdatingCute ? "animate-spin" : ""} />
+                </label>
+              </>
+            ) : (
+              <label
+                htmlFor={cuteInputId}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition cursor-pointer shadow-md shadow-sky-950/50"
+              >
+                <Upload size={13} />
+                <span>Upload Cute Design</span>
+              </label>
+            )}
+          </div>
+        </div>
+
+        {/* Step 3: Tripo 3D Model File (.3mf / .obj / .stl) */}
+        <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="h-4 w-4 rounded-full bg-purple-950 text-purple-300 border border-purple-800/60 flex items-center justify-center text-[10px]">
+                  3
+                </span>
+                <span>Tripo 3D Model File</span>
+              </span>
+
+              <a
+                href="https://platform.tripo3d.ai"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] text-purple-300 hover:text-white flex items-center gap-1 font-semibold hover:underline"
+              >
+                <span>Tripo.ai</span>
+                <ExternalLink size={10} />
+              </a>
+            </div>
+
+            {model3dUrl ? (
+              <div className="aspect-square rounded-xl bg-slate-950 border border-purple-900/50 p-4 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-3 rounded-2xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
+                  <Box size={28} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white truncate max-w-[190px]" title={c.model3dFilename}>
+                    {c.model3dFilename || "3d_model.3mf"}
+                  </div>
+                  <div className="text-[10px] text-purple-300 font-mono mt-0.5">
+                    {c.model3dSize ? `${(c.model3dSize / (1024 * 1024)).toFixed(1)} MB • ` : ""}
+                    Bambu Ready
                   </div>
                 </div>
-
-                {/* 4 Mini Thumbnails */}
-                <div className="grid grid-cols-4 gap-1.5 mb-3 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                  <img src={assetUrl(s.views?.front?.url)} alt="Front" className="w-full h-8 object-contain rounded" />
-                  <img src={assetUrl(s.views?.left?.url)} alt="Left" className="w-full h-8 object-contain rounded" />
-                  <img src={assetUrl(s.views?.right?.url)} alt="Right" className="w-full h-8 object-contain rounded" />
-                  <img src={assetUrl(s.views?.back?.url)} alt="Back" className="w-full h-8 object-contain rounded" />
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]">
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                    <CheckCircle2 size={12} />
-                    <span>4 Views Ready</span>
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownloadZip(s);
-                    }}
-                    className="text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 hover:underline"
-                  >
-                    <Download size={11} />
-                    <span>ZIP</span>
-                  </button>
+                <div className="text-[10px] text-slate-500">
+                  Uploaded{" "}
+                  {c.model3dUploadedAt
+                    ? new Date(c.model3dUploadedAt).toLocaleDateString()
+                    : "recently"}
                 </div>
               </div>
-            ))}
+            ) : (
+              <label
+                htmlFor={modelInputId}
+                className="aspect-square rounded-xl bg-slate-950 border-2 border-dashed border-slate-800 hover:border-purple-500/60 flex flex-col items-center justify-center p-4 text-center cursor-pointer group transition"
+              >
+                <div className="p-2.5 rounded-xl bg-slate-900 text-purple-400 group-hover:scale-110 transition duration-300 mb-2">
+                  <FileCode size={20} />
+                </div>
+                <div className="text-xs font-bold text-white">Attach 3D Model File</div>
+                <div className="text-[11px] text-slate-400 mt-1">Generated via Tripo Studio</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">.3mf, .obj, .stl, .glb, .zip</div>
+              </label>
+            )}
+
+            <input
+              id={modelInputId}
+              type="file"
+              accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUploadModelFile(order._id, item.itemIndex, file);
+              }}
+              disabled={isUpdatingModel}
+            />
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            {model3dUrl ? (
+              <>
+                <button
+                  onClick={() => onDownloadAsset(model3dUrl, modelDownloadName)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold transition"
+                >
+                  <Download size={13} />
+                  <span>Download .3MF / Model</span>
+                </button>
+                <label
+                  htmlFor={modelInputId}
+                  className="cursor-pointer px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition"
+                  title="Replace with updated 3D model"
+                >
+                  <RefreshCw size={13} className={isUpdatingModel ? "animate-spin" : ""} />
+                </label>
+              </>
+            ) : (
+              <label
+                htmlFor={modelInputId}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition cursor-pointer shadow-md shadow-purple-950/50"
+              >
+                <Upload size={13} />
+                <span>Upload 3D Model (.3MF)</span>
+              </label>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Workshop Controls & Slicing Notes Bar */}
+      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="font-semibold text-slate-300 whitespace-nowrap">Production Stage:</span>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:border-rose-500"
+            >
+              <option value="pending_design">1. Awaiting 3D Stylization</option>
+              <option value="cute_ready">2. Cute 3D Design Ready</option>
+              <option value="model_ready">3. 3D Model Attached</option>
+              <option value="queued_for_print">4. Queued for Bambu A1 Print</option>
+              <option value="printed">5. Completed & Printed</option>
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-[220px]">
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Workshop notes: e.g. Bambu A1 0.4mm, 0.16mm layer, Silk Rose Gold PLA"
+              className="w-full px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-rose-500"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={() => onUpdateStatus(order._id, item.itemIndex, selectedStatus, notes)}
+          disabled={isUpdatingStatus}
+          className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shrink-0 disabled:opacity-50"
+        >
+          <Save size={13} />
+          <span>{isUpdatingStatus ? "Saving..." : "Save Status"}</span>
+        </button>
       </div>
     </div>
   );

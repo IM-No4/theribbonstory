@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "react-hot-toast";
 import { Loader2, Sparkles } from "lucide-react";
@@ -9,6 +9,7 @@ import CartDrawer from "./components/CartDrawer";
 import WishlistDrawer from "./components/WishlistDrawer";
 import FloatingHelp from "./components/FloatingHelp";
 import { useAuthStore } from "./store/authStore";
+import { useConfigStore } from "./store/configStore";
 
 // Lazy-Loaded Storefront Pages (High-Speed Code Splitting)
 const Home = lazy(() => import("./pages/Home"));
@@ -70,24 +71,27 @@ function ScrollToTop() {
 function App() {
   const { pathname, search } = useLocation();
   const restoreSession = useAuthStore((s) => s.restoreSession);
+  const fetchConfig = useConfigStore((s) => s.fetchConfig);
+  const config = useConfigStore((s) => s.config);
+  const isConfigLoaded = useConfigStore((s) => s.loaded);
 
-  // Confirm the cookie session once on load (the cached user may be stale)
+  // Confirm the cookie session and load backend public configuration
   useEffect(() => {
     restoreSession();
-  }, [restoreSession]);
+    fetchConfig();
+  }, [restoreSession, fetchConfig]);
+
   const isAdminPath = pathname.startsWith("/admin");
   const isAuthPath =
     ["/login", "/register", "/forgot-password"].includes(pathname) ||
     pathname.startsWith("/reset-password");
 
   // Coming Soon Flag Evaluation:
-  // 1. Set VITE_COMING_SOON=true in .env to turn on site-wide coming soon mode
-  // 2. Or pass ?preview=coming-soon or ?coming_soon=true in the URL
+  // 1. Dynamic flag delivered by backend API (/api/config, controlled via COMING_SOON in backend/.env)
+  // 2. Or pass ?preview=coming-soon or ?coming_soon=true in the URL for developer preview
   // 3. To preview the full store while flag is on: ?preview=store or ?bypass=true
   const searchParams = new URLSearchParams(search);
-  const isComingSoonEnv =
-    import.meta.env.VITE_COMING_SOON === "true" ||
-    import.meta.env.VITE_COMING_SOON === "1";
+  const isComingSoonBackend = Boolean(config?.comingSoon);
   const forceComingSoon =
     searchParams.get("preview") === "coming-soon" ||
     searchParams.get("coming_soon") === "true";
@@ -96,11 +100,19 @@ function App() {
     searchParams.get("bypass") === "true";
 
   const isComingSoonActive =
-    (isComingSoonEnv || forceComingSoon || pathname === "/coming-soon") &&
+    (isComingSoonBackend || forceComingSoon || pathname === "/coming-soon") &&
     !forceBypass &&
     !isAdminPath;
 
   const isIsolatedLayout = isAdminPath || isAuthPath || isComingSoonActive;
+
+  if (!isConfigLoaded && !isAdminPath) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-cream-50">
+        <PageLoader />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-cream-50">
@@ -164,7 +176,7 @@ function App() {
               <Route path="/admin" element={<AdminRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
-                  <Route path="3d-studio" element={<Admin3DStudio />} />
+                  <Route path="3d-studio" element={<Navigate to="/admin/orders" replace />} />
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="collections" element={<AdminCollections />} />
                   <Route path="orders" element={<AdminOrders />} />

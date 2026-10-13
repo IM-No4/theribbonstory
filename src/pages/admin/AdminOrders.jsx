@@ -16,6 +16,8 @@ import {
   Box,
   Sparkles,
   RefreshCw,
+  Upload,
+  FileCode,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../../api/client";
@@ -50,28 +52,86 @@ export default function AdminOrders() {
   const [refundReason, setRefundReason] = useState("Customer requested cancellation");
   const [refunding, setRefunding] = useState(false);
 
-  // 3D Reference Generation State
-  const [generating3D, setGenerating3D] = useState(false);
+  // Personalized Keepsake Asset States
+  const [uploadingItemKey, setUploadingItemKey] = useState(null);
+  const [generatingChibiKey, setGeneratingChibiKey] = useState(null);
+  const [zoomImage, setZoomImage] = useState(null);
 
-  const handleGenerate3DForOrder = async (orderId) => {
-    setGenerating3D(true);
+  const handleGenerateChibi = async (orderId, itemIndex) => {
+    const key = `${orderId}-${itemIndex}`;
+    setGeneratingChibiKey(key);
+    const toastId = toast.loading("Generating 3D Chibi figurine via Qwen Turbo AI...");
     try {
-      toast.loading("Gemini AI: Synthesizing 4-view 3D references for Meshy/Tripo...", { id: "3d-gen" });
-      const { data } = await api.post(`/3d-agent/order/${orderId}/generate`);
-      if (data.success) {
-        toast.success(data.message || "3D References generated!", { id: "3d-gen" });
-        await fetchOrders();
-        // Update currently selected order view if open
-        if (selectedOrder && selectedOrder._id === orderId) {
-          const { data: updatedOrderData } = await api.get(`/orders/${orderId}`);
-          if (updatedOrderData) setSelectedOrder(updatedOrderData);
-        }
+      const { data } = await api.post(`/chibi/orders/${orderId}/items/${itemIndex}/generate`);
+      toast.success("Cute 3D Chibi figurine generated successfully!", { id: toastId });
+      if (data.order) {
+        setSelectedOrder(data.order);
+        setOrders((prev) => prev.map((o) => (o._id === orderId ? data.order : o)));
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to generate 3D references", { id: "3d-gen" });
+      console.error("Chibi generation failed:", err);
+      toast.error(err.response?.data?.error || "AI Chibi generation failed. Please try again.", { id: toastId });
     } finally {
-      setGenerating3D(false);
+      setGeneratingChibiKey(null);
     }
+  };
+
+  const handleUploadCuteImage = async (orderId, itemIndex, file) => {
+    if (!file) return;
+    const key = `${orderId}-${itemIndex}-cute`;
+    setUploadingItemKey(key);
+    const formData = new FormData();
+    formData.append("image", file);
+    const toastId = toast.loading("Uploading cute version image...");
+    try {
+      const { data } = await api.post(
+        `/3d-studio/orders/${orderId}/items/${itemIndex}/upload-cute`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success("Cute version image uploaded!", { id: toastId });
+      if (data.order) {
+        setSelectedOrder(data.order);
+        setOrders((prev) => prev.map((o) => (o._id === orderId ? data.order : o)));
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to upload cute image", { id: toastId });
+    } finally {
+      setUploadingItemKey(null);
+    }
+  };
+
+  const handleUploadModelFile = async (orderId, itemIndex, file) => {
+    if (!file) return;
+    const key = `${orderId}-${itemIndex}-model`;
+    setUploadingItemKey(key);
+    const formData = new FormData();
+    formData.append("model", file);
+    const toastId = toast.loading("Attaching 3D model file...");
+    try {
+      const { data } = await api.post(
+        `/3d-studio/orders/${orderId}/items/${itemIndex}/upload-model`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      toast.success("3D model file attached (Internal use)!", { id: toastId });
+      if (data.order) {
+        setSelectedOrder(data.order);
+        setOrders((prev) => prev.map((o) => (o._id === orderId ? data.order : o)));
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to upload 3D model file", { id: toastId });
+    } finally {
+      setUploadingItemKey(null);
+    }
+  };
+
+  const handleDownloadAsset = (fileUrl, downloadName) => {
+    if (!fileUrl) return;
+    const downloadEndpoint = `${api.defaults.baseURL || "/api"}/3d-studio/download?fileUrl=${encodeURIComponent(
+      fileUrl
+    )}&downloadName=${encodeURIComponent(downloadName)}`;
+    window.open(downloadEndpoint, "_blank");
   };
 
   const fetchOrders = useCallback(async () => {
@@ -572,281 +632,386 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              {/* Order Items & Uploaded Customizations */}
+              {/* Order Items: Generic vs Personalized Keepsake Requests */}
               <div className="space-y-3">
-                <div className="font-semibold text-white uppercase tracking-wider text-[11px]">
-                  Ordered Keepsakes & Custom Details
+                <div className="font-semibold text-white uppercase tracking-wider text-[11px] flex items-center justify-between">
+                  <span>Order Items & Keepsake Requests</span>
+                  <span className="text-slate-500 font-mono text-[10px]">
+                    ({selectedOrder.items?.length || 0} {selectedOrder.items?.length === 1 ? "item" : "items"})
+                  </span>
                 </div>
-                <div className="space-y-3">
-                  {selectedOrder.items?.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row gap-4 justify-between"
-                    >
-                      <div className="flex gap-3">
-                        <img
-                          src={assetUrl(item.image || "/images/photo-magnet.webp")}
-                          alt={item.name}
-                          className="w-14 h-14 rounded-xl object-cover bg-slate-950 border border-slate-700 shrink-0"
-                        />
-                        <div className="space-y-1">
-                          <div className="font-bold text-white text-sm">{item.name}</div>
-                          <div className="text-slate-400">
-                            Qty: {item.quantity} × ₹{item.price}
+
+                <div className="space-y-4">
+                  {selectedOrder.items?.map((item, idx) => {
+                    const c = item.customization || {};
+                    const isPersonalized = Boolean(c.photoUrl || c.cuteImageUrl || c.model3dUrl);
+                    const originalPhotoUrl = c.photoUrl;
+                    const cuteImageUrl = c.cuteImageUrl || c.reference3D?.approvedPreview;
+                    const model3dUrl = c.model3dUrl;
+
+                    const isCuteUploading = uploadingItemKey === `${selectedOrder._id}-${idx}-cute`;
+                    const isModelUploading = uploadingItemKey === `${selectedOrder._id}-${idx}-model`;
+
+                    const originalDownloadName = `Order_${String(selectedOrder._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}_Customer_Photo.webp`;
+                    const cuteDownloadName = `Order_${String(selectedOrder._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}_Cute_Render.webp`;
+                    const modelDownloadName = c.model3dFilename || `Order_${String(selectedOrder._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}.3mf`;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-sm"
+                      >
+                        {/* Item Header: Product details & Generic vs Personalized badge */}
+                        <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                          <div className="flex gap-3 items-center">
+                            <img
+                              src={assetUrl(item.image || "/images/photo-magnet.webp")}
+                              alt={item.name}
+                              className="w-12 h-12 rounded-xl object-cover bg-slate-950 border border-slate-700 shrink-0"
+                            />
+                            <div>
+                              <div className="font-bold text-white text-sm flex items-center gap-2">
+                                <span>{item.name}</span>
+                                <span className="text-xs text-slate-400 font-normal">× {item.quantity}</span>
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                ₹{item.price} each • Line total: ₹{item.price * item.quantity}
+                              </div>
+                            </div>
                           </div>
 
-                          {/* Production print file attached to this product (admin only) */}
-                          {item.printFile && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                downloadPrintFile(item.product, item.printFile.originalName).catch(async (err) =>
-                                  toast.error(await blobErrorMessage(err, "Could not download print file"))
-                                )
-                              }
-                              className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/50 text-[11px] font-semibold cursor-pointer"
-                              title={item.printFile.originalName}
-                            >
-                              <Download size={12} />
-                              <span>Download print file</span>
-                              <span className="text-emerald-500/80 font-normal">{formatBytes(item.printFile.size)}</span>
-                            </button>
-                          )}
-
-                          {/* Selected Options */}
-                          {item.selectedOptions?.length > 0 && (
-                            <div className="flex flex-wrap gap-1 pt-1">
-                              {item.selectedOptions.map((opt, oIdx) => (
-                                <span
-                                  key={oIdx}
-                                  className="px-2 py-0.5 rounded-md bg-slate-950 text-rose-300 text-[10px] font-mono border border-slate-800"
-                                >
-                                  {opt.name}: {opt.value} {opt.priceDelta > 0 && `(+₹${opt.priceDelta})`}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Customer Photo, Custom Note & 3D Reference Agent */}
-                      <div className="border-t sm:border-t-0 sm:border-l border-slate-800 pt-3 sm:pt-0 sm:pl-4 min-w-[240px] space-y-3">
-                        {item.customization?.photoUrl ? (
-                          <div className="space-y-2">
-                            <div>
-                              <span className="text-[10px] font-semibold uppercase text-rose-400 block mb-1">
-                                Uploaded Customer Photo:
+                          <div className="flex items-center gap-2">
+                            {isPersonalized ? (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-950/80 text-rose-300 border border-rose-800/60 flex items-center gap-1.5">
+                                <Sparkles size={11} className="text-rose-400" />
+                                <span>Personalized Keepsake</span>
                               </span>
-                              <a
-                                href={assetUrl(item.customization.photoUrl)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-2 p-1.5 bg-slate-950 rounded-xl border border-rose-900/40 hover:border-rose-500 transition group"
-                              >
-                                <img
-                                  src={assetUrl(item.customization.photoUrl)}
-                                  alt="Custom photo"
-                                  className="w-12 h-12 rounded-lg object-cover"
-                                />
-                                <span className="text-[11px] text-rose-300 group-hover:underline flex items-center gap-1">
-                                  View Original <ExternalLink size={11} />
-                                </span>
-                              </a>
-                            </div>
-
-                            {/* The design the customer saw and approved: print this */}
-                            {item.customization?.reference3D?.approvedPreview && (
-                              <div>
-                                <span className="text-[10px] font-semibold uppercase text-emerald-400 block mb-1">
-                                  Customer-Approved 3D Design (print this):
-                                </span>
-                                <a
-                                  href={assetUrl(item.customization.reference3D.approvedPreview)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-2 p-1.5 bg-slate-950 rounded-xl border border-emerald-900/50 hover:border-emerald-500 transition group"
-                                >
-                                  <img
-                                    src={assetUrl(item.customization.reference3D.approvedPreview)}
-                                    alt="Approved 3D design"
-                                    className="w-20 h-20 rounded-lg object-contain bg-white"
-                                  />
-                                  <span className="text-[11px] text-emerald-300 group-hover:underline flex flex-col gap-0.5">
-                                    <span className="flex items-center gap-1">
-                                      View Design <ExternalLink size={11} />
-                                    </span>
-                                    {item.customization.reference3D.approvedAt && (
-                                      <span className="text-[9px] text-slate-500 no-underline">
-                                        Approved {new Date(item.customization.reference3D.approvedAt).toLocaleString("en-IN")}
-                                      </span>
-                                    )}
-                                  </span>
-                                </a>
-                              </div>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-950 text-slate-400 border border-slate-800">
+                                Generic Item
+                              </span>
                             )}
 
-                            {/* 3D Reference Generation Status & Controls */}
-                            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1">
-                                  <Box size={12} />
-                                  <span>Meshy / Tripo 3D Views</span>
+                            {/* Production print template if linked */}
+                            {item.printFile && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  downloadPrintFile(item.product, item.printFile.originalName).catch(async (err) =>
+                                    toast.error(await blobErrorMessage(err, "Could not download print file"))
+                                  )
+                                }
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 text-[10px] font-semibold transition"
+                                title={item.printFile.originalName}
+                              >
+                                <Download size={11} />
+                                <span>Print Template</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Selected Options & Customer Inscription / Notes */}
+                        {(item.selectedOptions?.length > 0 || c.customName || c.customDate || c.note) && (
+                          <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-800/60 text-xs">
+                            {item.selectedOptions?.map((opt, oIdx) => (
+                              <span
+                                key={oIdx}
+                                className="px-2 py-0.5 rounded-md bg-slate-950 text-rose-300 text-[10px] font-mono border border-slate-800"
+                              >
+                                {opt.name}: {opt.value} {opt.priceDelta > 0 && `(+₹${opt.priceDelta})`}
+                              </span>
+                            ))}
+                            {c.customName && (
+                              <span className="px-2 py-0.5 rounded-md bg-slate-950 text-amber-300 text-[10px] border border-slate-800">
+                                Inscription: <strong>{c.customName}</strong>
+                              </span>
+                            )}
+                            {c.customDate && (
+                              <span className="px-2 py-0.5 rounded-md bg-slate-950 text-amber-300 text-[10px] border border-slate-800">
+                                Date: {c.customDate}
+                              </span>
+                            )}
+                            {c.note && (
+                              <span className="px-2 py-0.5 rounded-md bg-slate-950 text-slate-300 text-[10px] border border-slate-800 italic">
+                                Note: &quot;{c.note}&quot;
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Personalized Request Action Row (Customer Photo | Cute Version | 3D Model File) */}
+                        {isPersonalized && (
+                          <div className="pt-2 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {/* 1. Customer Source Photo */}
+                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                              <div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-1.5">
+                                  1. Customer Source Photo
                                 </span>
-                                {item.customization?.reference3D?.status === "completed" ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[9px] font-bold border border-emerald-800">
-                                    4 Views Ready
-                                  </span>
-                                ) : item.customization?.reference3D?.status === "approved" ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-sky-950 text-sky-400 text-[9px] font-bold border border-sky-800">
-                                    Building Views…
-                                  </span>
-                                ) : item.customization?.reference3D?.status === "failed" ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-400 text-[9px] font-bold border border-rose-800">
-                                    Failed: Retry
-                                  </span>
+                                {originalPhotoUrl ? (
+                                  <div className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-800 h-28 flex items-center justify-center group">
+                                    <img
+                                      src={assetUrl(originalPhotoUrl)}
+                                      alt="Customer photo"
+                                      className="max-h-full max-w-full object-contain cursor-pointer transition group-hover:scale-105"
+                                      onClick={() => setZoomImage(originalPhotoUrl)}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setZoomImage(originalPhotoUrl)}
+                                      className="absolute bottom-1.5 right-1.5 p-1 rounded bg-black/70 hover:bg-black text-white text-[9px] flex items-center gap-1 transition"
+                                    >
+                                      <Eye size={10} />
+                                      <span>Zoom</span>
+                                    </button>
+                                  </div>
                                 ) : (
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 text-[9px] font-bold border border-amber-800">
-                                    Not Generated
-                                  </span>
+                                  <div className="h-28 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 flex items-center justify-center text-slate-500 text-xs">
+                                    No photo attached
+                                  </div>
                                 )}
                               </div>
 
-                              {item.customization?.reference3D?.status === "completed" ? (
-                                <div className="space-y-2">
-                                  {/* 4 Mini Angle Thumbnails */}
-                                  <div className="grid grid-cols-4 gap-1">
-                                    <a
-                                      href={assetUrl(item.customization.reference3D.front)}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title="Front (0°)"
-                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
-                                    >
-                                      <img
-                                        src={assetUrl(item.customization.reference3D.front)}
-                                        alt="Front"
-                                        className="h-9 w-full object-contain"
-                                      />
-                                      <span className="text-[8px] text-center block text-slate-400 font-mono">0°</span>
-                                    </a>
-                                    <a
-                                      href={assetUrl(item.customization.reference3D.left)}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title="Left (+45°)"
-                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
-                                    >
-                                      <img
-                                        src={assetUrl(item.customization.reference3D.left)}
-                                        alt="Left"
-                                        className="h-9 w-full object-contain"
-                                      />
-                                      <span className="text-[8px] text-center block text-slate-400 font-mono">+45°</span>
-                                    </a>
-                                    <a
-                                      href={assetUrl(item.customization.reference3D.right)}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title="Right (-45°)"
-                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
-                                    >
-                                      <img
-                                        src={assetUrl(item.customization.reference3D.right)}
-                                        alt="Right"
-                                        className="h-9 w-full object-contain"
-                                      />
-                                      <span className="text-[8px] text-center block text-slate-400 font-mono">-45°</span>
-                                    </a>
-                                    <a
-                                      href={assetUrl(item.customization.reference3D.back)}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title="Back (180°)"
-                                      className="p-1 bg-slate-900 rounded border border-slate-700 hover:border-rose-500 transition"
-                                    >
-                                      <img
-                                        src={assetUrl(item.customization.reference3D.back)}
-                                        alt="Back"
-                                        className="h-9 w-full object-contain"
-                                      />
-                                      <span className="text-[8px] text-center block text-slate-400 font-mono">180°</span>
-                                    </a>
-                                  </div>
-
-                                  {/* Download & Regenerate Action Buttons */}
-                                  <div className="flex items-center gap-1.5">
-                                    <a
-                                      href={assetUrl(item.customization.reference3D.zipUrl)}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="flex-1 py-1 px-2 rounded-lg bg-rose-900/60 hover:bg-rose-900 text-rose-200 border border-rose-700/60 text-[10px] font-bold text-center flex items-center justify-center gap-1 transition"
-                                    >
-                                      <Download size={11} />
-                                      <span>Download ZIP</span>
-                                    </a>
-                                    <button
-                                      onClick={() => handleGenerate3DForOrder(selectedOrder._id)}
-                                      disabled={generating3D}
-                                      title="Re-generate 3D references"
-                                      className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition"
-                                    >
-                                      <RefreshCw size={11} className={generating3D ? "animate-spin" : ""} />
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
+                              {originalPhotoUrl && (
                                 <button
-                                  onClick={() => handleGenerate3DForOrder(selectedOrder._id)}
-                                  disabled={generating3D}
-                                  className="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-rose-600 to-ribbon-700 hover:from-rose-500 hover:to-ribbon-600 disabled:opacity-50 text-white text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-md shadow-rose-950/40 transition"
+                                  type="button"
+                                  onClick={() => handleDownloadAsset(originalPhotoUrl, originalDownloadName)}
+                                  className="w-full py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition"
                                 >
-                                  {generating3D ? (
-                                    <>
-                                      <RefreshCw size={11} className="animate-spin" />
-                                      <span>Generating 4 Views...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Sparkles size={11} />
-                                      <span>Generate 4-View 3D References</span>
-                                    </>
-                                  )}
+                                  <Download size={12} />
+                                  <span>Download Customer Photo</span>
                                 </button>
                               )}
                             </div>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-500 italic block">
-                            No custom photo attached
-                          </span>
-                        )}
 
-                        {(item.customization?.customName || item.customization?.customDate) && (
-                          <div>
-                            <span className="text-[10px] font-semibold uppercase text-rose-400 block">
-                              Inscription:
-                            </span>
-                            <p className="text-[11px] text-slate-200 bg-slate-950 p-2 rounded-lg border border-slate-800 mt-1">
-                              {[item.customization.customName, item.customization.customDate].filter(Boolean).join(" · ")}
-                            </p>
-                          </div>
-                        )}
+                            {/* 2. Cute Version Image */}
+                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400">
+                                    2. Cute Version Image
+                                  </span>
+                                  {sourcePhotoUrl && (
+                                    <button
+                                      type="button"
+                                      disabled={generatingChibiKey === `${selectedOrder._id}-${idx}`}
+                                      onClick={() => handleGenerateChibi(selectedOrder._id, idx)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-400 hover:text-rose-300 transition cursor-pointer disabled:opacity-50"
+                                      title="Generate with Qwen Turbo ZeroGPU"
+                                    >
+                                      {generatingChibiKey === `${selectedOrder._id}-${idx}` ? (
+                                        <>
+                                          <RefreshCw size={10} className="animate-spin" />
+                                          <span>Generating...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Sparkles size={10} />
+                                          <span>AI Generate</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
 
-                        {item.customization?.note && item.customization.note !== item.customization.customName && (
-                          <div>
-                            <span className="text-[10px] font-semibold uppercase text-rose-400 block">
-                              Custom Note / Caption:
-                            </span>
-                            <p className="text-[11px] text-slate-200 bg-slate-950 p-2 rounded-lg border border-slate-800 mt-1 italic">
-                              &quot;{item.customization.note}&quot;
-                            </p>
+                                {cuteImageUrl ? (
+                                  <div className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-800 h-28 flex items-center justify-center group">
+                                    <img
+                                      src={assetUrl(cuteImageUrl)}
+                                      alt="Cute version"
+                                      className="max-h-full max-w-full object-contain cursor-pointer transition group-hover:scale-105"
+                                      onClick={() => setZoomImage(cuteImageUrl)}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setZoomImage(cuteImageUrl)}
+                                      className="absolute bottom-1.5 right-1.5 p-1 rounded bg-black/70 hover:bg-black text-white text-[9px] flex items-center gap-1 transition"
+                                    >
+                                      <Eye size={10} />
+                                      <span>Zoom</span>
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {sourcePhotoUrl && (
+                                      <button
+                                        type="button"
+                                        disabled={generatingChibiKey === `${selectedOrder._id}-${idx}`}
+                                        onClick={() => handleGenerateChibi(selectedOrder._id, idx)}
+                                        className="w-full py-3 px-2 rounded-lg bg-gradient-to-r from-rose-600 to-ribbon-700 hover:from-rose-500 hover:to-ribbon-600 text-white text-xs font-bold flex flex-col items-center justify-center gap-0.5 shadow-md shadow-rose-950/40 transition cursor-pointer disabled:opacity-60"
+                                      >
+                                        <div className="flex items-center gap-1.5">
+                                          {generatingChibiKey === `${selectedOrder._id}-${idx}` ? (
+                                            <RefreshCw size={14} className="animate-spin" />
+                                          ) : (
+                                            <Sparkles size={14} />
+                                          )}
+                                          <span>
+                                            {generatingChibiKey === `${selectedOrder._id}-${idx}`
+                                              ? "Generating 3D Chibi..."
+                                              : "Generate AI Chibi"}
+                                          </span>
+                                        </div>
+                                        <span className="text-[9px] text-rose-200 font-normal">
+                                          Qwen Turbo ZeroGPU
+                                        </span>
+                                      </button>
+                                    )}
+                                    <label className="h-12 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 hover:border-sky-500/60 flex items-center justify-center p-2 text-center cursor-pointer group transition gap-2">
+                                      <Upload size={14} className="text-sky-400 group-hover:scale-110 transition" />
+                                      <div className="text-left">
+                                        <span className="text-[11px] font-bold text-white block">Or Upload Manually</span>
+                                        <span className="text-[9px] text-slate-400 block">PNG, JPG, WebP</span>
+                                      </div>
+                                      <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handleUploadCuteImage(selectedOrder._id, idx, file);
+                                        }}
+                                        disabled={isCuteUploading}
+                                      />
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+
+                              {cuteImageUrl ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadAsset(cuteImageUrl, cuteDownloadName)}
+                                    className="flex-1 py-1.5 px-2 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold flex items-center justify-center gap-1 transition"
+                                  >
+                                    <Download size={12} />
+                                    <span>Download</span>
+                                  </button>
+                                  {sourcePhotoUrl && (
+                                    <button
+                                      type="button"
+                                      disabled={generatingChibiKey === `${selectedOrder._id}-${idx}`}
+                                      onClick={() => handleGenerateChibi(selectedOrder._id, idx)}
+                                      className="py-1.5 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                                      title="Regenerate with AI"
+                                    >
+                                      <Sparkles size={11} className={generatingChibiKey === `${selectedOrder._id}-${idx}` ? "animate-spin" : ""} />
+                                      <span>Regen</span>
+                                    </button>
+                                  )}
+                                  <label className="cursor-pointer py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition">
+                                    <RefreshCw size={11} className={isCuteUploading ? "animate-spin" : ""} />
+                                    <span>Replace</span>
+                                    <input
+                                      type="file"
+                                      accept="image/png,image/jpeg,image/webp"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadCuteImage(selectedOrder._id, idx, file);
+                                      }}
+                                      disabled={isCuteUploading}
+                                    />
+                                  </label>
+                                </div>
+                              ) : null}
+                            </div>
+
+                            {/* 3. Optional 3D Model File (Internal Use Only) */}
+                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
+                                    3. 3D Model File
+                                  </span>
+                                  <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">
+                                    Internal Use Only
+                                  </span>
+                                </div>
+
+                                {model3dUrl ? (
+                                  <div className="h-28 rounded-lg bg-slate-900 border border-purple-900/50 p-3 flex flex-col items-center justify-center text-center space-y-1">
+                                    <Box size={22} className="text-purple-300" />
+                                    <div className="text-xs font-bold text-white truncate max-w-[170px]" title={c.model3dFilename}>
+                                      {c.model3dFilename || "3d_model.3mf"}
+                                    </div>
+                                    <div className="text-[10px] text-purple-300 font-mono">
+                                      {c.model3dSize ? `${(c.model3dSize / (1024 * 1024)).toFixed(1)} MB • ` : ""}
+                                      Bambu Ready
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <label className="h-28 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 hover:border-purple-500/60 flex flex-col items-center justify-center p-2 text-center cursor-pointer group transition">
+                                    <FileCode size={18} className="text-purple-400 mb-1 group-hover:scale-110 transition" />
+                                    <span className="text-xs font-bold text-white">Attach 3D Model</span>
+                                    <span className="text-[10px] text-slate-400 mt-0.5">.3mf, .obj, .stl, .glb</span>
+                                    <span className="text-[9px] text-slate-500 mt-0.5">Optional for workshop</span>
+                                    <input
+                                      type="file"
+                                      accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadModelFile(selectedOrder._id, idx, file);
+                                      }}
+                                      disabled={isModelUploading}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+
+                              {model3dUrl ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadAsset(model3dUrl, modelDownloadName)}
+                                    className="flex-1 py-1.5 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1 transition"
+                                  >
+                                    <Download size={12} />
+                                    <span>Download .3MF</span>
+                                  </button>
+                                  <label className="cursor-pointer py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition">
+                                    <RefreshCw size={11} className={isModelUploading ? "animate-spin" : ""} />
+                                    <span>Replace</span>
+                                    <input
+                                      type="file"
+                                      accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadModelFile(selectedOrder._id, idx, file);
+                                      }}
+                                      disabled={isModelUploading}
+                                    />
+                                  </label>
+                                </div>
+                              ) : (
+                                <label className="w-full py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-md shadow-purple-950/40">
+                                  <Upload size={12} />
+                                  <span>Attach 3D Model</span>
+                                  <input
+                                    type="file"
+                                    accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleUploadModelFile(selectedOrder._id, idx, file);
+                                    }}
+                                    disabled={isModelUploading}
+                                  />
+                                </label>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
+
 
               {/* Shiprocket Logistics Fulfillment Section */}
               <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-900/50 space-y-3">
@@ -1232,6 +1397,30 @@ export default function AdminOrders() {
           </div>
         </div>
       )}
+
+      {/* Full Image Zoom Modal */}
+      {zoomImage && (
+        <div
+
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setZoomImage(null)}
+              className="absolute -top-3 -right-3 p-2 rounded-full bg-slate-900 text-white border border-slate-700 shadow-xl hover:bg-slate-800 transition"
+            >
+              <X size={18} />
+            </button>
+            <img
+              src={assetUrl(zoomImage)}
+              alt="Zoomed"
+              className="max-h-[85vh] max-w-full object-contain rounded-2xl border border-slate-800 shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

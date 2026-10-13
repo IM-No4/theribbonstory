@@ -1,0 +1,435 @@
+/* ==========================================================================
+   Admin Light Theme Design System
+   Provides a crisp, luxurious, high-contrast light theme for TRS Admin
+   (Inspired by Stripe & Shopify Merchant Dashboards)
+   ========================================================================== */
+
+.admin-theme-light {
+  --admin-page-bg: #f1f5f9; /* Slate 100 canvas for clear card separation */
+  --admin-card-bg: #ffffff;
+  --admin-subtle-bg: #f8fafc;
+  --admin-border: #e2e8f0;
+  --admin-border-strong: #cbd5e1;
+  --admin-text-main: #0f172a;
+  --admin-text-body: #334155;
+  --admin-text-muted: #64748b;
+
+  background-color: var(--admin-page-bg) !important;
+  color: var(--admin-text-body) !important;
+}
+
+/* Page Backgrounds & Canvas */
+.admin-theme-light,
+.admin-theme-light .admin-main-bg,
+.admin-theme-light main,
+.admin-theme-light div.bg-slate-900:not(button):not(a):not(nav):not(aside) {
+  background-color: var(--admin-page-bg) !important;
+}
+
+/* Sidebar */
+.admin-theme-light aside {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 0 16px 0 rgba(15, 23, 42, 0.03) !important;
+}
+
+.admin-theme-light aside div[class*="border-b"],
+.admin-theme-light aside div[class*="border-t"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Sidebar Admin Center Badge */
+.admin-theme-light aside [class*="bg-rose-950"] {
+  background-color: #ffe4e6 !important;
+  color: #e11d48 !important;
+  border-color: #fecdd3 !important;
+  box-shadow: none !important;
+}
+
+/* Sidebar Navigation Items */
+.admin-theme-light nav a:not([class*="from-rose-"]) {
+  color: #475569 !important;
+}
+
+.admin-theme-light nav a:not([class*="from-rose-"]):hover {
+  color: #0f172a !important;
+  background-color: #f1f5f9 !important;
+}
+
+/* Sidebar User Profile Box */
+.admin-theme-light aside [class*="bg-slate-950/40"],
+.admin-theme-light aside [class*="bg-slate-950"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.admin-theme-light aside [class*="bg-rose-900"] {
+  background-color: #ffe4e6 !important;
+  color: #e11d48 !important;
+  border-color: #fecdd3 !important;
+}
+
+/* Primary Cards, Panels & Containers (Pure White on Slate-100 Canvas) */
+.admin-theme-light [class*="bg-slate-950"]:not(aside):not(header):not([class*="bg-rose-950"]):not([class*="bg-emerald-950"]):not([class*="bg-amber-950"]):not([class*="bg-indigo-950"]):not([class*="bg-blue-950"]):not([class*="bg-purple-950"]),
+.admin-theme-light .bg-slate-950:not(aside):not(header) {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* All Plain bg-slate-900 elements in Light Mode */
+.admin-theme-light .bg-slate-900:not(button):not(a):not(span):not(nav):not(aside),
+.admin-theme-light [class*="bg-slate-900"]:not(button):not(a):not(span):not(nav):not(aside):not([class*="from-rose-"]) {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Secondary Panels, Sub-cards & Wells */
+.admin-theme-light [class*="bg-slate-900/"],
+.admin-theme-light [class*="bg-slate-950/"]:not(aside):not([class*="bg-rose-950"]) {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Image Thumbnails in Tables */
+.admin-theme-light img[class*="bg-slate-900"],
+.admin-theme-light img[class*="bg-slate-950"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Collection & Category Badges in Tables (e.g. 3D Keepsakes, Gift Hampers) */
+.admin-theme-light td span[class*="bg-slate-900"],
+.admin-theme-light td span.bg-slate-900,
+.admin-theme-light span[class*="bg-slate-900"][class*="text-rose-"],
+.admin-theme-light span.bg-slate-900[class*="text-rose-"],
+.admin-theme-light .admin-collection-pill {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border: 1px solid #fecdd3 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px 0 rgba(225, 29, 72, 0.06) !important;
+}
+
+/* Generic Span Badges with dark slate background */
+.admin-theme-light span[class*="bg-slate-900"]:not([class*="text-rose-"]):not([class*="from-rose-"]),
+.admin-theme-light span.bg-slate-900:not([class*="text-rose-"]) {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.admin-theme-light span[class*="bg-slate-800"] {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Borders */
+.admin-theme-light [class*="border-slate-800"],
+.admin-theme-light [class*="border-slate-700"],
+.admin-theme-light [class*="border-slate-900"] {
+  border-color: #e2e8f0 !important;
+}
+
+.admin-theme-light .divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]),
+.admin-theme-light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #f1f5f9 !important;
+}
+
+/* Typography Overrides */
+.admin-theme-light h1,
+.admin-theme-light h2,
+.admin-theme-light h3,
+.admin-theme-light h4,
+.admin-theme-light .text-white {
+  color: #0f172a !important;
+}
+
+.admin-theme-light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+.admin-theme-light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.admin-theme-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+.admin-theme-light .text-slate-400 {
+  color: #64748b !important;
+}
+
+.admin-theme-light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* High Contrast Accent Colors in Light Mode */
+.admin-theme-light .text-rose-400,
+.admin-theme-light .text-rose-300 {
+  color: #e11d48 !important;
+}
+
+.admin-theme-light .text-emerald-400,
+.admin-theme-light .text-emerald-300 {
+  color: #059669 !important;
+}
+
+.admin-theme-light .text-amber-400,
+.admin-theme-light .text-amber-300 {
+  color: #d97706 !important;
+}
+
+.admin-theme-light .text-blue-400,
+.admin-theme-light .text-blue-300 {
+  color: #2563eb !important;
+}
+
+.admin-theme-light .text-indigo-400,
+.admin-theme-light .text-indigo-300 {
+  color: #4f46e5 !important;
+}
+
+.admin-theme-light .text-purple-400,
+.admin-theme-light .text-purple-300 {
+  color: #9333ea !important;
+}
+
+/* Solid & Gradient Primary Buttons - Always White Text! */
+.admin-theme-light [class*="from-rose-600"],
+.admin-theme-light [class*="from-rose-500"],
+.admin-theme-light [class*="bg-rose-600"],
+.admin-theme-light [class*="bg-rose-500"],
+.admin-theme-light [class*="bg-emerald-600"],
+.admin-theme-light [class*="bg-emerald-500"],
+.admin-theme-light [class*="bg-blue-600"],
+.admin-theme-light [class*="bg-indigo-600"],
+.admin-theme-light [class*="bg-purple-600"],
+.admin-theme-light [class*="from-rose-600"] *,
+.admin-theme-light [class*="from-rose-500"] *,
+.admin-theme-light [class*="bg-rose-600"] *,
+.admin-theme-light [class*="bg-rose-500"] * {
+  color: #ffffff !important;
+}
+
+/* Action Buttons (Edit, Download, Table Icon Buttons) */
+.admin-theme-light button.bg-slate-900,
+.admin-theme-light button[class*="bg-slate-900"],
+.admin-theme-light a.bg-slate-900,
+.admin-theme-light a[class*="bg-slate-900"],
+.admin-theme-light button.bg-slate-950,
+.admin-theme-light button[class*="bg-slate-950"],
+.admin-theme-light a[class*="border-slate-700"],
+.admin-theme-light button[class*="border-slate-700"],
+.admin-theme-light a[class*="border-slate-800"],
+.admin-theme-light button[class*="border-slate-800"] {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.admin-theme-light button.bg-slate-900:hover,
+.admin-theme-light button[class*="bg-slate-900"]:hover,
+.admin-theme-light a.bg-slate-900:hover,
+.admin-theme-light button.bg-slate-950:hover,
+.admin-theme-light a[class*="border-slate-700"]:hover,
+.admin-theme-light button[class*="border-slate-700"]:hover,
+.admin-theme-light [class*="hover:bg-slate-800"]:hover,
+.admin-theme-light [class*="hover:bg-slate-900"]:hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Delete / Destructive Action Buttons */
+.admin-theme-light button[class*="bg-rose-950"],
+.admin-theme-light button[class*="hover:bg-rose-900"] {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+.admin-theme-light button[class*="bg-rose-950"]:hover {
+  background-color: #ffe4e6 !important;
+  color: #9f1239 !important;
+}
+
+/* Time Range Tablist (Today | 7 days | 30 days) */
+.admin-theme-light [role="tablist"] {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.admin-theme-light [role="tablist"] button {
+  color: #64748b !important;
+}
+
+.admin-theme-light [role="tablist"] button:hover {
+  color: #0f172a !important;
+}
+
+.admin-theme-light [role="tablist"] button[class*="bg-rose-600"] {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgba(225, 29, 72, 0.3) !important;
+}
+
+/* Chart Gridlines & Dashboard Visualizations */
+.admin-theme-light [class*="border-dashed"],
+.admin-theme-light [class*="border-slate-800/70"] {
+  border-color: #e2e8f0 !important;
+}
+
+.admin-theme-light .border-slate-700 {
+  border-color: #cbd5e1 !important;
+}
+
+/* Form Inputs, Selects & Search Bars */
+.admin-theme-light input,
+.admin-theme-light select,
+.admin-theme-light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  color-scheme: light !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+.admin-theme-light input::placeholder,
+.admin-theme-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.admin-theme-light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.admin-theme-light input:focus,
+.admin-theme-light select:focus,
+.admin-theme-light textarea:focus {
+  border-color: #e11d48 !important;
+  outline: 2px solid rgba(225, 29, 72, 0.15) !important;
+}
+
+/* Tables */
+.admin-theme-light table {
+  background-color: #ffffff !important;
+}
+
+.admin-theme-light thead,
+.admin-theme-light thead.bg-slate-900\/80 {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.admin-theme-light thead th {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+.admin-theme-light tbody tr {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.admin-theme-light tbody tr:hover,
+.admin-theme-light tbody tr[class*="hover:bg-slate-900"]:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Status Badges & Pills */
+.admin-theme-light [class*="bg-emerald-950"],
+.admin-theme-light span.bg-emerald-950 {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.admin-theme-light [class*="bg-amber-950"],
+.admin-theme-light span.bg-amber-950 {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+
+.admin-theme-light [class*="bg-rose-950"]:not(aside *),
+.admin-theme-light span.bg-rose-950 {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+.admin-theme-light [class*="bg-indigo-950"],
+.admin-theme-light span.bg-indigo-950 {
+  background-color: #eef2ff !important;
+  color: #4338ca !important;
+  border: 1px solid #c7d2fe !important;
+}
+
+.admin-theme-light [class*="bg-blue-950"],
+.admin-theme-light span.bg-blue-950 {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.admin-theme-light [class*="bg-purple-950"],
+.admin-theme-light span.bg-purple-950 {
+  background-color: #faf5ff !important;
+  color: #7e22ce !important;
+  border: 1px solid #e9d5ff !important;
+}
+
+/* Modal Backdrops & Overlays */
+.admin-theme-light .fixed.inset-0.bg-black\/70,
+.admin-theme-light .fixed.inset-0.bg-black\/60,
+.admin-theme-light .fixed.inset-0.bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.admin-theme-light .fixed.inset-0 [class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15) !important;
+}
+
+.admin-theme-light .fixed.inset-0 [class*="bg-slate-900"] {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Skeletons */
+.admin-theme-light .animate-pulse {
+  background-color: #e2e8f0 !important;
+}
+
+/* Mobile Header Bar */
+.admin-theme-light header.md\:hidden {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.admin-theme-light header.md\:hidden button {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Scrollbars */
+.admin-theme-light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.admin-theme-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.admin-theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

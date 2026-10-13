@@ -79,17 +79,12 @@ export default function CartDrawer() {
                       key={item.id}
                       className="p-4 rounded-2xl bg-white border border-blush-200/80 shadow-xs flex gap-4 transition-all hover:border-ribbon-300"
                     >
-                      <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-cream-100 border border-blush-100">
+                      <div className="relative h-24 w-20 shrink-0 rounded-xl overflow-hidden bg-white border border-rose-100 flex items-center justify-center p-1 shadow-2xs">
                         <img
-                          src={assetUrl(item.customization?.reference3D ? item.image : item.customization?.photoUrl || item.image)}
+                          src={assetUrl(item.customization?.cuteImageUrl || item.customization?.reference3D?.approvedPreview || item.image || item.customization?.photoUrl)}
                           alt={item.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
-                        {item.customization?.photoUrl && (
-                          <span className="absolute bottom-1 right-1 bg-burgundy-900/80 text-white text-[9px] px-1.5 py-0.5 rounded font-medium backdrop-blur-xs">
-                            Custom
-                          </span>
-                        )}
                       </div>
 
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
