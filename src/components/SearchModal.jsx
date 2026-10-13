@@ -52,7 +52,7 @@ export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search keepsakes, photo magnets, 3D pet gifts..."
+              placeholder="Search articulated dragons, animals, planters, 3D figurines..."
               className="w-full bg-transparent text-base text-burgundy-900 placeholder:text-espresso-300 focus:outline-none"
               autoFocus
             />
@@ -133,15 +133,15 @@ export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
             ) : (
               <div className="py-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-espresso-400 mb-3">
-                  Popular Keepsake Searches
+                  Popular 3D Searches
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {["3D Pet Magnet", "Polaroid Magnet", "Custom Couple Keepsake", "Travel Memory Magnet", "Gift Hamper"].map(
+                  {["Articulated Dragon", "Geometric Planter", "Custom 3D Keepsake", "Desk Lion", "Lotus Tealight", "Ganesha Idol"].map(
                     (term) => (
                       <button
                         key={term}
                         onClick={() => setQuery(term)}
-                        className="px-3 py-1.5 rounded-full bg-white border border-blush-200 text-xs text-burgundy-800 hover:border-ribbon-400 hover:bg-blush-50 transition flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-full bg-white border border-blush-200 text-xs text-burgundy-800 hover:border-ribbon-400 hover:bg-blush-50 transition flex items-center gap-1.5 cursor-pointer"
                       >
                         <Sparkles size={12} className="text-ribbon-500" />
                         {term}

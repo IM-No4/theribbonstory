@@ -7,26 +7,26 @@ export default function HowItWorksPage() {
   const steps = [
     {
       num: "01",
-      title: "Choose Your Piece",
-      desc: "Pick from photo magnets, polaroid keepsakes, 3D pet & couple magnets, or curated luxury gift hampers.",
-      detail: "Select the shape, size, and material finish that best captures your memory.",
+      title: "Choose Ready 3D or Personalize",
+      desc: "Choose between ready-to-ship 3D printed creations (articulated dragons, wildlife, planters, candle holders) or create a custom 3D figurine.",
+      detail: "Select colors, sizes, or upload your photo for a bespoke 3D sculpted keepsake.",
     },
     {
       num: "02",
       title: "Personalize in Studio",
-      desc: "Upload high-resolution photos directly from your phone, add names, special dates, or handwritten notes.",
-      detail: "Our live customizer gives you an instant preview before finalizing your order.",
+      desc: "For custom figurines, upload any photo from your phone. Add optional engraved base stand text and studio notes.",
+      detail: "Our studio sculpts a cute stylized chibi 3D figurine with solid, pattern-free colors.",
     },
     {
       num: "03",
-      title: "Handcrafted & Printed",
-      desc: "Our studio technicians precision 3D-sculpt, acrylic seal, and hand-polish your unique keepsake.",
-      detail: "Every piece passes strict quality checks for vivid colors and smooth scratch-proof durability.",
+      title: "Precision 3D Printed",
+      desc: "Our studio technicians precision slice and 3D-print your model using Bambu Lab multi-color FDM printers.",
+      detail: "Every model is hand-inspected for crisp layer adhesion, smooth surfaces, and durable bio-PLA strength.",
     },
     {
       num: "04",
-      title: "Luxury Ribbon Unboxing",
-      desc: "Packed with premium tissue paper, signature ribbon, and a personalized thank-you note card.",
+      title: "Shockproof Delivery",
+      desc: "Packed with protective custom foam cushioning, signature ribbon, and personalized care note.",
       detail: "Express pan-India delivery arrives safely at your doorstep within 3-5 business days.",
     },
   ];

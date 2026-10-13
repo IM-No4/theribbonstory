@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { SlidersHorizontal } from "lucide-react";
 import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
@@ -17,19 +17,31 @@ const sorts = [
 ];
 
 export default function Shop() {
-  useSeo({ title: "Shop All Keepsakes & Gifts", description: "Browse personalised photo magnets, 3D keepsakes, polaroid art and gift hampers. Handcrafted in India with express delivery." });
+  useSeo({
+    title: "Shop 3D Printed Models & Personalized Keepsakes",
+    description: "Browse articulated flexi dragons, geometric planters, animals, candle holders, and custom photo-to-3D figurines.",
+  });
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const category = params.get("category") || "all";
   const occasion = params.get("occasion") || "";
   const search = params.get("search") || "";
   const sort = params.get("sort") || "";
 
-  const [categories, setCategories] = useState([{ slug: "all", name: "All Keepsakes" }]);
+  const [categories, setCategories] = useState([{ slug: "all", name: "All 3D Creations" }]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [, setFiltersOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  const handlePersonalize = (p) => {
+    if (p.category === "personalized-3d" || p.slug === "custom-3d-keepsake-figurine") {
+      navigate("/personalized");
+    } else {
+      setSelectedProduct(p);
+    }
+  };
 
   // Fetch dynamic categories from DB
   useEffect(() => {
@@ -37,7 +49,7 @@ export default function Shop() {
       .get("/categories")
       .then(({ data }) => {
         if (data.categories && data.categories.length > 0) {
-          setCategories([{ slug: "all", name: "All Keepsakes" }, ...data.categories]);
+          setCategories([{ slug: "all", name: "All 3D Creations" }, ...data.categories]);
         }
       })
       .catch((err) => console.error("Failed to load collections:", err));
@@ -68,8 +80,8 @@ export default function Shop() {
 
   const heading = useMemo(() => {
     if (search) return `Results for "${search}"`;
-    if (occasionMeta) return `Keepsakes for ${occasionMeta.name}`;
-    return categories.find((c) => c.slug === category)?.name || "All Keepsakes";
+    if (occasionMeta) return `3D Models for ${occasionMeta.name}`;
+    return categories.find((c) => c.slug === category)?.name || "All 3D Creations";
   }, [category, search, occasionMeta, categories]);
 
   return (
@@ -77,10 +89,10 @@ export default function Shop() {
       <div className="container-page">
         {/* Header */}
         <div className="space-y-2 mb-8">
-          <span className="section-eyebrow">The Keepsake Collection</span>
+          <span className="section-eyebrow">3D Printed Collections</span>
           <h1 className="font-display text-4xl sm:text-5xl font-bold text-burgundy-900">{heading}</h1>
           <p className="text-sm text-espresso-400">
-            Physical representations of your favorite moments, thoughtfully designed and crafted.
+            Ready-to-ship physical 3D creations and custom photo-to-3D figurine keepsakes.
           </p>
         </div>
 
@@ -198,7 +210,7 @@ export default function Shop() {
                     product={p}
                     index={i}
                     onQuickView={setQuickViewProduct}
-                    onPersonalize={setSelectedProduct}
+                    onPersonalize={handlePersonalize}
                   />
                 ))}
               </div>
@@ -220,7 +232,7 @@ export default function Shop() {
         product={quickViewProduct}
         isOpen={!!quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
-        onOpenCustomizer={setSelectedProduct}
+        onOpenCustomizer={handlePersonalize}
       />
     </div>
   );

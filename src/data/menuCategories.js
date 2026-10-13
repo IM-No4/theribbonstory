@@ -1,332 +1,291 @@
 export const MENU_CATEGORIES = [
   {
-    id: "3d-keepsakes",
-    title: "3D Keepsakes",
-    badge: "Hot",
-    badgeColor: "bg-rose-500",
-    to: "/3d-keepsakes",
-    columns: [
-      {
-        title: "3D Miniatures & Sculptures",
-        links: [
-          { label: "3D Couple Figurine", to: "/product/3d-couple-magnet" },
-          { label: "3D Pet Miniature (Dog & Cat)", to: "/product/3d-pet-magnet" },
-          { label: "Family Keepsake Sculpture", to: "/product/custom-3d-family-magnet" },
-          { label: "Baby Hand & Foot Castings", to: "/product/3d-baby-hand-foot-cast-keepsake" },
-        ],
-      },
-      {
-        title: "Display & Base Options",
-        links: [
-          { label: "Handcrafted Mahogany Base", to: "/3d-keepsakes" },
-          { label: "Polished Marble Plinth", to: "/3d-keepsakes" },
-          { label: "Strong Magnet Backing", to: "/3d-keepsakes" },
-          { label: "Illuminated Shadow Box Frame", to: "/3d-keepsakes" },
-        ],
-      },
-      {
-        title: "Occasions",
-        links: [
-          { label: "1st Anniversary Keepsake", to: "/shop?occasion=anniversary" },
-          { label: "Pet Memorial & Remembrance", to: "/3d-keepsakes" },
-          { label: "Wedding & Engagement Gift", to: "/shop?occasion=wedding" },
-          { label: "Baby Welcome & Milestones", to: "/3d-keepsakes" },
-        ],
-      },
-    ],
-    promo: {
-      tag: "100% Handcrafted",
-      title: "Custom 3D Figurines",
-      subtitle: "Handcrafted miniature sculpts from your favorite photos",
-      img: "/images/3d-couple-keepsake.webp",
-      cta: "Explore 3D Gifts",
-      to: "/3d-keepsakes",
-    },
-  },
-  {
-    id: "photo-magnets",
-    title: "Photo Magnets",
+    id: "articulated",
+    title: "Articulated & Flexi",
     badge: "Trending",
-    badgeColor: "bg-amber-500",
-    to: "/shop?category=photo-magnets",
-    columns: [
-      {
-        title: "Acrylic & Crystal Styles",
-        links: [
-          { label: "Crystal Acrylic Photo Magnet", to: "/product/personalized-photo-magnet" },
-          { label: "Heart & Arch Cut Acrylics", to: "/shop?category=photo-magnets" },
-          { label: "Custom Name & Date Plaques", to: "/product/custom-name-date-magnet" },
-          { label: "Collage Story Magnets", to: "/shop?category=photo-magnets" },
-        ],
-      },
-      {
-        title: "Value Bundles",
-        links: [
-          { label: "Pack of 4 Memory Magnets", to: "/shop?category=photo-magnets" },
-          { label: "Pack of 8 Fridge Gallery Wall", to: "/shop?category=photo-magnets" },
-          { label: "Deluxe Keepsake Gift Set", to: "/shop" },
-        ],
-      },
-      {
-        title: "Top Themes",
-        links: [
-          { label: "Vacation & Travel Souvenirs", to: "/product/travel-memory-magnet" },
-          { label: "Anniversary & Couple Memories", to: "/shop?occasion=anniversary" },
-          { label: "Best Friends Friendship Snaps", to: "/shop" },
-        ],
-      },
-    ],
-    promo: {
-      tag: "Best Seller",
-      title: "Crystal Acrylic Magnets",
-      subtitle: "Vibrant, high-gloss scratch-proof memory keepsakes",
-      img: "/images/photo-magnet.webp",
-      cta: "Shop Magnets",
-      to: "/shop?category=photo-magnets",
-    },
-  },
-  {
-    id: "polaroid-magnets",
-    title: "Polaroid Art",
-    badge: "New",
-    badgeColor: "bg-indigo-500",
-    to: "/shop?category=polaroid-magnets",
-    columns: [
-      {
-        title: "Retro Polaroid Styles",
-        links: [
-          { label: "Classic Polaroid Memory Magnets", to: "/product/polaroid-memory-magnet" },
-          { label: "Custom Handwritten Caption Prints", to: "/product/polaroid-memory-magnet" },
-          { label: "Mini Polaroid Keychains", to: "/product/personalized-keepsake-keychain" },
-        ],
-      },
-      {
-        title: "Memory Sets",
-        links: [
-          { label: "Set of 4 Polaroid Pack", to: "/shop?category=polaroid-magnets" },
-          { label: "Set of 9 Milestone Story Wall", to: "/shop?category=polaroid-magnets" },
-          { label: "Romantic Storyline Box", to: "/shop" },
-        ],
-      },
-      {
-        title: "Occasions",
-        links: [
-          { label: "Birthday Memories", to: "/shop?occasion=birthday" },
-          { label: "Roadtrip & Holiday Captures", to: "/shop" },
-          { label: "Graduation & Milestones", to: "/shop" },
-        ],
-      },
-    ],
-    promo: {
-      tag: "Vintage Charm",
-      title: "Retro Polaroid Sets",
-      subtitle: "Capture real nostalgia with custom caption magnets",
-      img: "/images/polaroid-art.webp",
-      cta: "Create Polaroid Set",
-      to: "/shop?category=polaroid-magnets",
-    },
-  },
-  {
-    id: "build-a-box",
-    title: "🎁 Build A Hamper",
-    badge: "Custom",
     badgeColor: "bg-emerald-600",
-    to: "/build-a-box",
+    to: "/shop?category=articulated",
     columns: [
       {
-        title: "Interactive Hamper Studio",
+        title: "Mythical & Dragons",
         links: [
-          { label: "Step 1: Choose Luxury Gift Box", to: "/build-a-box" },
-          { label: "Step 2: Add Custom 3D Keepsake", to: "/build-a-box" },
-          { label: "Step 3: Add Chocolates & Lights", to: "/build-a-box" },
-          { label: "Step 4: Free Handwritten Card", to: "/build-a-box" },
+          { label: "Articulated Crystal Dragon", to: "/shop?category=articulated&tag=dragon" },
+          { label: "Imperial Chinese Dragon", to: "/shop?category=articulated&tag=dragon" },
+          { label: "Wyvern Winged Flexi", to: "/shop?category=articulated" },
         ],
       },
       {
-        title: "Signature Hampers",
+        title: "Animals & Creatures",
         links: [
-          { label: "Cosy Evenings Gift Hamper", to: "/product/cosy-evenings-gift-hamper" },
-          { label: "Celebration Sweets & Keepsake Box", to: "/product/celebration-sweets-keepsake-box" },
-          { label: "Romantic Ribbon Hamper", to: "/shop?occasion=anniversary" },
+          { label: "Flexi Gecko & Chameleon", to: "/shop?category=articulated&tag=reptile" },
+          { label: "Articulated Axolotl", to: "/shop?category=articulated" },
+          { label: "Flexi Shark & Octopus", to: "/shop?category=articulated" },
         ],
       },
       {
-        title: "Unboxing Experience",
+        title: "Sensory & Fidgets",
         links: [
-          { label: "Signature Crimson Ribbon Bow", to: "/build-a-box" },
-          { label: "Warm Fairy Light Illumination", to: "/build-a-box" },
-          { label: "Artisan Belgian Truffles", to: "/build-a-box" },
+          { label: "Infinite Fidget Cubes", to: "/shop?category=articulated" },
+          { label: "Flexi Slug & Caterpillar", to: "/shop?category=articulated" },
+          { label: "Pocket Stress Relievers", to: "/shop?category=articulated" },
         ],
       },
     ],
     promo: {
-      tag: "100% Bespoke",
-      title: "Luxury Hamper Studio",
-      subtitle: "Hand-tie your custom gifts in an artisanal satin ribbon box",
-      img: "/images/luxury-ribbon-hamper.webp",
-      cta: "Start Building",
-      to: "/build-a-box",
-    },
-  },
-  {
-    id: "birthday",
-    title: "Birthday",
-    badge: "Popular",
-    badgeColor: "bg-rose-500",
-    to: "/shop?occasion=birthday",
-    columns: [
-      {
-        title: "By Recipient",
-        links: [
-          { label: "Birthday Gifts for Her", to: "/shop?occasion=birthday&tag=for-her" },
-          { label: "Birthday Gifts for Him", to: "/shop?occasion=birthday&tag=for-him" },
-          { label: "Birthday Gifts for Best Friend", to: "/shop?occasion=birthday&tag=for-friend" },
-          { label: "Birthday Gifts for Kids", to: "/shop?occasion=birthday&tag=for-kids" },
-        ],
-      },
-      {
-        title: "Top Birthday Keepsakes",
-        links: [
-          { label: "3D Birthday Figurine", to: "/3d-keepsakes" },
-          { label: "Birthday Photo Magnets", to: "/shop?category=photo-magnets" },
-          { label: "Personalized Keepsake Keychain", to: "/product/personalized-keepsake-keychain" },
-        ],
-      },
-      {
-        title: "By Budget",
-        links: [
-          { label: "Gifts Under ₹499", to: "/shop?maxPrice=499" },
-          { label: "Gifts Under ₹999", to: "/shop?maxPrice=999" },
-          { label: "Luxury Keepsakes (₹1499+)", to: "/shop?minPrice=1499" },
-        ],
-      },
-    ],
-    promo: {
-      tag: "Birthday Special",
-      title: "Make Birthdays Unforgettable",
-      subtitle: "Turn childhood and bestie photos into lasting keepsakes",
+      tag: "Print-in-Place Magic",
+      title: "Articulated Flexi Beasts",
+      subtitle: "Multi-jointed movable prints with silky dual-tone sheen",
       img: "/images/3d-dog-keepsake.webp",
-      cta: "Explore Birthday Gifts",
-      to: "/shop?occasion=birthday",
+      cta: "Explore Flexi Models",
+      to: "/shop?category=articulated",
     },
   },
   {
-    id: "anniversary",
-    title: "Anniversary",
-    to: "/shop?occasion=anniversary",
+    id: "animals",
+    title: "Animals & Wildlife",
+    badge: "Popular",
+    badgeColor: "bg-amber-500",
+    to: "/shop?category=animals",
     columns: [
       {
-        title: "Romantic Keepsakes",
+        title: "Desk Companions",
         links: [
-          { label: "3D Couple Miniature Sculpt", to: "/product/3d-couple-magnet" },
-          { label: "Anniversary Photo Magnet Set", to: "/shop?occasion=anniversary" },
-          { label: "Custom Name & Date Plaque", to: "/product/custom-name-date-magnet" },
+          { label: "Low-Poly Geometric Lion", to: "/shop?category=animals" },
+          { label: "Majestic Howling Wolf", to: "/shop?category=animals" },
+          { label: "Minimalist Origami Elephant", to: "/shop?category=animals" },
         ],
       },
       {
-        title: "Milestone Years",
+        title: "Cute Pet Figurines",
         links: [
-          { label: "1st Anniversary Gifts", to: "/shop?occasion=anniversary" },
-          { label: "5th Wooden Plaque Keepsakes", to: "/shop?occasion=anniversary" },
-          { label: "10th & 25th Silver Jubilee Gifts", to: "/shop?occasion=anniversary" },
+          { label: "Playful Golden Retriever", to: "/shop?category=animals" },
+          { label: "Sleeping Cat Sculpture", to: "/shop?category=animals" },
+          { label: "French Bulldog Desk Statuette", to: "/shop?category=animals" },
         ],
       },
       {
-        title: "Combos & Hampers",
+        title: "Wildlife Art",
         links: [
-          { label: "Couple Figurine + Truffles Hamper", to: "/build-a-box" },
-          { label: "Our Story Polaroid Box", to: "/shop?category=polaroid-magnets" },
+          { label: "Eagle Soaring Crest", to: "/shop?category=animals" },
+          { label: "Geometric Bear Figurine", to: "/shop?category=animals" },
+          { label: "Safari Animal Collectibles", to: "/shop?category=animals" },
         ],
       },
     ],
     promo: {
-      tag: "Couples Choice",
-      title: "3D Couple Keepsake",
-      subtitle: "Celebrate your love story with a hand-painted couple sculpt",
+      tag: "Nature Sculpted",
+      title: "Animal Statuettes",
+      subtitle: "Geometric and realistic wildlife figurines for your home and desk",
+      img: "/images/pet-keepsake.webp",
+      cta: "View Animals",
+      to: "/shop?category=animals",
+    },
+  },
+  {
+    id: "pots-planters",
+    title: "Pots & Planters",
+    badge: "Home Decor",
+    badgeColor: "bg-teal-600",
+    to: "/shop?category=pots-planters",
+    columns: [
+      {
+        title: "Succulent & Mini Pots",
+        links: [
+          { label: "Geometric Faceted Planter", to: "/shop?category=pots-planters" },
+          { label: "Cute Animal Succulent Pots", to: "/shop?category=pots-planters" },
+          { label: "Head Planter & Face Vase", to: "/shop?category=pots-planters" },
+        ],
+      },
+      {
+        title: "Functional Planters",
+        links: [
+          { label: "Self-Watering Reservoir Pot", to: "/shop?category=pots-planters" },
+          { label: "Drainage Tray Matching Sets", to: "/shop?category=pots-planters" },
+          { label: "Hanging Air Plant Pods", to: "/shop?category=pots-planters" },
+        ],
+      },
+      {
+        title: "Vases & Vessels",
+        links: [
+          { label: "Vortex Spiral Twisted Vase", to: "/shop?category=pots-planters" },
+          { label: "Fluted Ribbed Accent Vase", to: "/shop?category=pots-planters" },
+          { label: "Modern Origami Bud Vase", to: "/shop?category=pots-planters" },
+        ],
+      },
+    ],
+    promo: {
+      tag: "Botanical Design",
+      title: "Modern 3D Planters",
+      subtitle: "Watertight and bio-friendly geometric homes for your indoor plants",
+      img: "/images/gifts-for-housewarming.webp",
+      cta: "Explore Planters",
+      to: "/shop?category=pots-planters",
+    },
+  },
+  {
+    id: "candle-holders",
+    title: "Candle Holders",
+    badge: "Atmosphere",
+    badgeColor: "bg-rose-500",
+    to: "/shop?category=candle-holders",
+    columns: [
+      {
+        title: "Tea Light Holders",
+        links: [
+          { label: "Lotus Petal Tea Light Pedestal", to: "/shop?category=candle-holders" },
+          { label: "Geometric Faceted Candle Cup", to: "/shop?category=candle-holders" },
+          { label: "Voronoi Lattice Glow Lantern", to: "/shop?category=candle-holders" },
+        ],
+      },
+      {
+        title: "Shadow & Lithophane",
+        links: [
+          { label: "Architectural Shadow Lantern", to: "/shop?category=candle-holders" },
+          { label: "Custom Lithophane Lamp", to: "/shop?category=candle-holders" },
+          { label: "Moon & Starry Night Lantern", to: "/shop?category=candle-holders" },
+        ],
+      },
+      {
+        title: "Pillar & Taper",
+        links: [
+          { label: "Modern Ribbed Pillar Stand", to: "/shop?category=candle-holders" },
+          { label: "Wavy Arch Candelabra", to: "/shop?category=candle-holders" },
+          { label: "Stackable Modular Holders", to: "/shop?category=candle-holders" },
+        ],
+      },
+    ],
+    promo: {
+      tag: "Warm Ambient Glow",
+      title: "Tea Light Lanterns",
+      subtitle: "Cast mesmerizing patterned shadows with heat-resistant designs",
+      img: "/images/anniversary.webp",
+      cta: "Shop Candle Holders",
+      to: "/shop?category=candle-holders",
+    },
+  },
+  {
+    id: "festival",
+    title: "Festival & Cultural",
+    badge: "Festive",
+    badgeColor: "bg-amber-600",
+    to: "/shop?category=festival",
+    columns: [
+      {
+        title: "Traditional & Festive",
+        links: [
+          { label: "Ornate Diwali Diya Lamps", to: "/shop?category=festival" },
+          { label: "Rangoli Modular Tealight Trays", to: "/shop?category=festival" },
+          { label: "Mandir Toran & Hanging Bells", to: "/shop?category=festival" },
+        ],
+      },
+      {
+        title: "Cultural Idols & Art",
+        links: [
+          { label: "Modern Low-Poly Ganesha", to: "/shop?category=festival" },
+          { label: "Meditating Buddha Sculpture", to: "/shop?category=festival" },
+          { label: "Sacred Om & Swastik Plaque", to: "/shop?category=festival" },
+        ],
+      },
+      {
+        title: "Seasonal Celebrations",
+        links: [
+          { label: "Festive Tree Ornaments", to: "/shop?category=festival" },
+          { label: "New Year Milestone Plaques", to: "/shop?category=festival" },
+          { label: "Gift Keepsake Baubles", to: "/shop?category=festival" },
+        ],
+      },
+    ],
+    promo: {
+      tag: "Cultural Celebrations",
+      title: "Festive 3D Art",
+      subtitle: "Celebrate traditions with contemporary 3D crafted centerpieces",
+      img: "/images/gifts-for-parents.webp",
+      cta: "Discover Festive Art",
+      to: "/shop?category=festival",
+    },
+  },
+  {
+    id: "desk-accessories",
+    title: "Desk & Gadgets",
+    badge: "Functional",
+    badgeColor: "bg-blue-600",
+    to: "/shop?category=desk-accessories",
+    columns: [
+      {
+        title: "Tech Stands",
+        links: [
+          { label: "Headphone Desk Hook & Stand", to: "/shop?category=desk-accessories" },
+          { label: "Ergonomic Phone / iPad Stand", to: "/shop?category=desk-accessories" },
+          { label: "Watch & Wireless Charger Dock", to: "/shop?category=desk-accessories" },
+        ],
+      },
+      {
+        title: "Organization",
+        links: [
+          { label: "Hexagonal Modular Pen Caddy", to: "/shop?category=desk-accessories" },
+          { label: "Magnetic Cable Catchers", to: "/shop?category=desk-accessories" },
+          { label: "SD Card & USB Drive Vault", to: "/shop?category=desk-accessories" },
+        ],
+      },
+      {
+        title: "Mechanical & Fidgets",
+        links: [
+          { label: "Gear-Driven Card Dispenser", to: "/shop?category=desk-accessories" },
+          { label: "Kinetic Desk Spinner", to: "/shop?category=desk-accessories" },
+          { label: "Miniature Vise Grip Paperweight", to: "/shop?category=desk-accessories" },
+        ],
+      },
+    ],
+    promo: {
+      tag: "Productive Spaces",
+      title: "Desk & Tech Upgrades",
+      subtitle: "Precision 3D printed organization and smart desktop tools",
+      img: "/images/gifts-for-him.webp",
+      cta: "Shop Desk Gear",
+      to: "/shop?category=desk-accessories",
+    },
+  },
+  {
+    id: "personalized",
+    title: "✨ Personalized 3D",
+    badge: "Bespoke",
+    badgeColor: "bg-rose-500",
+    to: "/personalized",
+    columns: [
+      {
+        title: "Photo-to-3D Keepsakes",
+        links: [
+          { label: "Turn Any Photo into 3D Figurine", to: "/personalized" },
+          { label: "Couple & Anniversary Keepsakes", to: "/personalized" },
+          { label: "Family & Milestone Sculptures", to: "/personalized" },
+          { label: "Pet Memorial & Cute Minis", to: "/personalized" },
+        ],
+      },
+      {
+        title: "Crafting & Details",
+        links: [
+          { label: "Custom Engraved Base Inscription", to: "/personalized" },
+          { label: "Multi-Color FDM Precision Slicing", to: "/personalized" },
+          { label: "Bambu Lab High-Precision Finish", to: "/personalized" },
+          { label: "Studio Artisan Inspection", to: "/personalized" },
+        ],
+      },
+      {
+        title: "Sizes & Display",
+        links: [
+          { label: "Small (3.5\" / 9 cm Desk Size)", to: "/personalized" },
+          { label: "Classic Studio (5.5\" / 14 cm)", to: "/personalized" },
+          { label: "Grande Collector (8.0\" / 20 cm)", to: "/personalized" },
+        ],
+      },
+    ],
+    promo: {
+      tag: "100% Unique to You",
+      title: "Custom 3D Figurine Studio",
+      subtitle: "Upload your photo and our studio crafts your cute 3D figurine ready to print",
       img: "/images/3d-couple-keepsake.webp",
-      cta: "Create Couple Keepsake",
-      to: "/product/3d-couple-magnet",
-    },
-  },
-  {
-    id: "recipients",
-    title: "Gifts By Relation",
-    to: "/shop",
-    columns: [
-      {
-        title: "For Loved Ones",
-        links: [
-          { label: "Gifts for Her / Wife / Girlfriend", to: "/shop?tag=for-her" },
-          { label: "Gifts for Him / Husband / Boyfriend", to: "/shop?tag=for-him" },
-          { label: "Gifts for Parents / Mom & Dad", to: "/shop?tag=for-parents" },
-          { label: "Gifts for Best Friends", to: "/shop?tag=for-friend" },
-        ],
-      },
-      {
-        title: "Family & Pets",
-        links: [
-          { label: "Family Silhouette 3D Sculpt", to: "/product/custom-3d-family-magnet" },
-          { label: "3D Pet Miniature Keepsake", to: "/product/3d-pet-magnet" },
-          { label: "Baby Hand & Foot Castings", to: "/product/3d-baby-hand-foot-cast-keepsake" },
-        ],
-      },
-      {
-        title: "Special Occasions",
-        links: [
-          { label: "Long Distance Couples", to: "/shop?occasion=couples" },
-          { label: "Housewarming & New Home", to: "/shop" },
-          { label: "Corporate Gifting", to: "/contact" },
-        ],
-      },
-    ],
-    promo: {
-      tag: "Family Memories",
-      title: "Family 3D Keepsake",
-      subtitle: "Immortalize the bond of your family in realistic 3D",
-      img: "/images/3d-family-keepsake.webp",
-      cta: "View Family Keepsakes",
-      to: "/product/custom-3d-family-magnet",
-    },
-  },
-  {
-    id: "express",
-    title: "⚡ Same Day",
-    badge: "Express",
-    badgeColor: "bg-emerald-600",
-    to: "/shop?tag=express",
-    columns: [
-      {
-        title: "Fast-Track Keepsakes",
-        links: [
-          { label: "Same-Day Dispatch Photo Magnets", to: "/shop?category=photo-magnets" },
-          { label: "Express Polaroid Sets", to: "/shop?category=polaroid-magnets" },
-          { label: "Ready-to-Ship Gift Hampers", to: "/shop" },
-        ],
-      },
-      {
-        title: "Top Metro Cities",
-        links: [
-          { label: "Bengaluru (Same Day)", to: "/shop?tag=express" },
-          { label: "Mumbai & Pune (Next Day)", to: "/shop?tag=express" },
-          { label: "Delhi NCR (Next Day)", to: "/shop?tag=express" },
-          { label: "Hyderabad & Chennai (24-48h)", to: "/shop?tag=express" },
-        ],
-      },
-      {
-        title: "Assurance",
-        links: [
-          { label: "Pincode Delivery Check", to: "/track-order" },
-          { label: "Live Courier Tracking", to: "/track-order" },
-        ],
-      },
-    ],
-    promo: {
-      tag: "Speedy Delivery",
-      title: "Last Minute Gifting?",
-      subtitle: "Lightning-fast handcrafted gifts dispatched within hours",
-      img: "/images/same-day-delivery.webp",
-      cta: "Explore Express Gifts",
-      to: "/shop?tag=express",
+      cta: "Start Personalizing",
+      to: "/personalized",
     },
   },
 ];

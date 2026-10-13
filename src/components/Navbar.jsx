@@ -141,7 +141,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onClick={() => setSearchOpen(true)}
-                placeholder="Search for 3D Keepsakes, Photo Magnets, Hampers..."
+                placeholder="Search for Articulated Dragons, Animals, Planters, 3D Keepsakes..."
                 className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
               />
               <button
@@ -323,8 +323,8 @@ export default function Navbar() {
               onClick={() => navigate("/personalized")}
               className="btn-primary hidden md:inline-flex py-2 px-3.5 xl:px-4 text-xs font-bold uppercase tracking-wider gap-1.5 shadow-xs shrink-0"
             >
-              <Sparkles size={13} className="text-rose-100" />
-              <span>Personalize</span>
+              <Sparkles size={13} className="text-amber-300" />
+              <span>Create Personalized 3D</span>
             </button>
 
             {/* Mobile Hamburger Menu */}

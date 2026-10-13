@@ -32,10 +32,10 @@ export default function About() {
               The Ribbon Story was born out of a simple belief: our most cherished memories deserve more than staying buried inside a phone camera roll.
             </p>
             <p className="text-espresso-500 text-base leading-relaxed">
-              What started as a small passion studio crafting personalized acrylic photo magnets evolved into a D2C keepsake brand. Today, we turn pet photos into 3D figurine magnets, couple portraits into 3D sculpts, travel moments into passport stamps, and milestone days into physical objects that live permanently on your fridge door.
+              What started as an artisan passion studio has grown into a modern 3D printing atelier. Today, we specialize in high-precision 3D printed creations—from fluid articulated dragons, geometric planters, and ambient candle lanterns to bespoke photo-to-3D figurine keepsakes and cultural festive decor.
             </p>
             <p className="text-espresso-500 text-base italic font-script text-xl text-ribbon-600">
-              &quot;Little memories. Beautiful keepsakes.&quot;
+              &quot;Little memories. Beautiful 3D keepsakes.&quot;
             </p>
 
             <div className="pt-2">
