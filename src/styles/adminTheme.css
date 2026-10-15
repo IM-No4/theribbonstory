@@ -199,19 +199,30 @@
 }
 
 /* Solid & Gradient Primary Buttons - Always White Text! */
-.admin-theme-light [class*="from-rose-600"],
-.admin-theme-light [class*="from-rose-500"],
-.admin-theme-light [class*="bg-rose-600"],
-.admin-theme-light [class*="bg-rose-500"],
-.admin-theme-light [class*="bg-emerald-600"],
-.admin-theme-light [class*="bg-emerald-500"],
-.admin-theme-light [class*="bg-blue-600"],
-.admin-theme-light [class*="bg-indigo-600"],
-.admin-theme-light [class*="bg-purple-600"],
-.admin-theme-light [class*="from-rose-600"] *,
-.admin-theme-light [class*="from-rose-500"] *,
-.admin-theme-light [class*="bg-rose-600"] *,
-.admin-theme-light [class*="bg-rose-500"] * {
+.admin-theme-light button[class*="from-rose-"],
+.admin-theme-light a[class*="from-rose-"],
+.admin-theme-light button[class*="bg-rose-600"],
+.admin-theme-light button[class*="bg-rose-500"],
+.admin-theme-light a[class*="bg-rose-600"],
+.admin-theme-light a[class*="bg-rose-500"],
+.admin-theme-light button[class*="bg-emerald-600"],
+.admin-theme-light button[class*="bg-emerald-500"],
+.admin-theme-light a[class*="bg-emerald-600"],
+.admin-theme-light a[class*="bg-emerald-500"],
+.admin-theme-light button[class*="bg-blue-600"],
+.admin-theme-light a[class*="bg-blue-600"],
+.admin-theme-light button[class*="bg-indigo-600"],
+.admin-theme-light a[class*="bg-indigo-600"],
+.admin-theme-light button[class*="bg-purple-600"],
+.admin-theme-light a[class*="bg-purple-600"],
+.admin-theme-light button[class*="from-rose-"] *,
+.admin-theme-light a[class*="from-rose-"] *,
+.admin-theme-light button[class*="bg-rose-600"] *,
+.admin-theme-light button[class*="bg-rose-500"] *,
+.admin-theme-light a[class*="bg-rose-600"] *,
+.admin-theme-light a[class*="bg-rose-500"] *,
+.admin-theme-light .btn-primary,
+.admin-theme-light .btn-primary * {
   color: #ffffff !important;
 }
 

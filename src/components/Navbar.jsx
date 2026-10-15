@@ -11,10 +11,8 @@ import {
   ChevronDown,
   Heart,
   Truck,
-  PhoneCall,
-  Flame,
   ArrowRight,
-  ShieldCheck,
+  Layers,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogoMark } from "./Logo";
@@ -22,211 +20,364 @@ import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import SearchModal from "./SearchModal";
-import MegaMenu from "./MegaMenu";
-import { MENU_CATEGORIES } from "../data/menuCategories";
-
-const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+import { api } from "../api/client";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeMegaCategory, setActiveMegaCategory] = useState(null);
+  const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
+  const [keepsakeDropdownOpen, setKeepsakeDropdownOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
-  const menuTimeoutRef = useRef(null);
+  const [categories, setCategories] = useState([]);
+  const [keepsakeCategories, setKeepsakeCategories] = useState([]);
+  const shopTimeoutRef = useRef(null);
+  const keepsakeTimeoutRef = useRef(null);
 
   const routerLocation = useLocation();
   const isDashboard = routerLocation.pathname.startsWith("/account");
 
-  const { totalItems, subtotal, openCart } = useCartStore();
+  const { totalItems, openCart } = useCartStore();
   const { items: wishlistItems, openDrawer: openWishlist } = useWishlistStore();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
+  // Fetch dynamic collections from database
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 15);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    let active = true;
+    api
+      .get("/categories")
+      .then(({ data }) => {
+        if (active && data.categories) {
+          setCategories(data.categories);
+        }
+      })
+      .catch((err) => console.error("Failed to load nav categories:", err));
+
+    api
+      .get("/keepsake-categories")
+      .then(({ data }) => {
+        if (active && data.categories) {
+          setKeepsakeCategories(data.categories);
+        }
+      })
+      .catch((err) => console.error("Failed to load keepsake categories:", err));
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleMouseEnterCategory = (catId) => {
-    if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current);
-    setActiveMegaCategory(catId);
+  // Close dropdowns on route change
+  useEffect(() => {
+    setMobileOpen(false);
+    setShopDropdownOpen(false);
+    setKeepsakeDropdownOpen(false);
+    setAccountDropdownOpen(false);
+  }, [routerLocation.pathname, routerLocation.search]);
+
+  const handleShopMouseEnter = () => {
+    if (shopTimeoutRef.current) clearTimeout(shopTimeoutRef.current);
+    setShopDropdownOpen(true);
   };
 
-  const handleMouseLeaveCategory = () => {
-    menuTimeoutRef.current = setTimeout(() => {
-      setActiveMegaCategory(null);
-    }, 150);
+  const handleShopMouseLeave = () => {
+    shopTimeoutRef.current = setTimeout(() => {
+      setShopDropdownOpen(false);
+    }, 180);
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-    }
+  const handleKeepsakeMouseEnter = () => {
+    if (keepsakeTimeoutRef.current) clearTimeout(keepsakeTimeoutRef.current);
+    setKeepsakeDropdownOpen(true);
+  };
+
+  const handleKeepsakeMouseLeave = () => {
+    keepsakeTimeoutRef.current = setTimeout(() => {
+      setKeepsakeDropdownOpen(false);
+    }, 180);
   };
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white transition-shadow duration-300 shadow-sm border-b border-slate-100">
-        {/* 1. TOP ANNOUNCEMENT & UTILITY BAR */}
-        <div className="bg-slate-50 border-b border-slate-200/70 text-slate-600 text-[11px] font-medium py-1.5 px-4 sm:px-6 lg:px-10">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            {/* Left: Nationwide Express Delivery Info */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-slate-800 font-semibold">
-                <Truck size={13} className="text-ribbon-500 shrink-0" />
-                <span>
-                  Pan-India Express Delivery <span className="font-normal text-slate-500">(29,000+ Pincodes Covered)</span>
-                </span>
-              </div>
-
-              <span className="hidden sm:inline-block text-slate-300">|</span>
-
-              <div className="hidden sm:flex items-center gap-1.5 text-slate-500">
-                <span>🇮🇳 India (INR ₹)</span>
-              </div>
-            </div>
-
-            {/* Right: Quick Links (Track, Help, Corporate) */}
-            <div className="flex items-center gap-4 text-[11px]">
-              <Link
-                to="/track-order"
-                className="hover:text-ribbon-500 transition-colors hidden md:inline-flex items-center gap-1"
-              >
-                <Truck size={12} className="text-ribbon-500" />
-                <span>Track Order</span>
-              </Link>
-              <span className="hidden md:inline-block text-slate-300">|</span>
-              <Link
-                to="/contact"
-                className="hover:text-ribbon-500 transition-colors hidden sm:inline-flex items-center gap-1"
-              >
-                <Sparkles size={11} className="text-amber-500" />
-                <span>Corporate Gifts</span>
-              </Link>
-              <span className="hidden sm:inline-block text-slate-300">|</span>
-              <a
-                href="https://wa.me/919876543210"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-emerald-700 text-emerald-600 font-semibold flex items-center gap-1"
-              >
-                <PhoneCall size={11} />
-                <span>Help: +91 98765 43210</span>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. MAIN HEADER BAR: BRAND, RICH SEARCH & ACTIONS */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-3.5 flex items-center justify-between gap-4 sm:gap-6">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-stone-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all duration-200">
+        {/* STREAMLINED SINGLE-ROW LUXURY NAVBAR */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center shrink-0">
             <LogoMark to="/" size="compact" />
           </div>
 
-          {/* Desktop Rich Search Bar (IGP Style) */}
-          <div className="hidden lg:flex flex-1 max-w-md xl:max-w-lg mx-2 xl:mx-6">
-            <form
-              onSubmit={handleSearchSubmit}
-              className="w-full flex items-center bg-slate-50 border border-slate-200 rounded-full px-4 py-2 hover:border-ribbon-300 focus-within:border-ribbon-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-rose-100 transition-all shadow-xs"
+          {/* Clean Desktop Navigation Links (Centered, Elegant) */}
+          <nav className="hidden md:flex items-center gap-1 lg:gap-1.5">
+            {/* Shop Models with Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={handleShopMouseEnter}
+              onMouseLeave={handleShopMouseLeave}
             >
-              <Search size={17} className="text-ribbon-500 shrink-0 mr-2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onClick={() => setSearchOpen(true)}
-                placeholder="Search for Articulated Dragons, Animals, Planters, 3D Keepsakes..."
-                className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                className="px-3.5 py-1.5 bg-ribbon-500 hover:bg-ribbon-600 text-white rounded-full text-[11px] font-bold uppercase tracking-wider transition ml-1 shadow-xs shrink-0"
+              <Link
+                to="/shop"
+                onClick={(e) => {
+                  if (routerLocation.pathname === "/shop") {
+                    e.preventDefault();
+                    setShopDropdownOpen((prev) => !prev);
+                  }
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs lg:text-[13px] font-medium tracking-wide transition flex items-center gap-1 ${
+                  routerLocation.pathname === "/shop"
+                    ? "text-stone-950 font-bold bg-stone-100"
+                    : "text-stone-600 hover:text-stone-950 hover:bg-stone-100/70"
+                }`}
               >
-                Search
-              </button>
-            </form>
-          </div>
+                <span>Shop 3D Models</span>
+                <ChevronDown
+                  size={12}
+                  className={`text-stone-400 transition-transform duration-200 ${
+                    shopDropdownOpen ? "rotate-180 text-stone-950" : ""
+                  }`}
+                />
+              </Link>
 
-          {/* Right Action Icons & Badges */}
-          <div className="flex items-center gap-2 xl:gap-3 shrink-0">
-            {/* Mobile Search Button */}
+              {/* Minimalist Shop Dropdown */}
+              <AnimatePresence>
+                {shopDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.18 }}
+                    className="absolute top-full left-0 mt-1.5 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 p-2 z-50 text-left"
+                  >
+                    <div className="px-3 py-2 border-b border-stone-100 mb-1">
+                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                        3D Printed Catalog
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5 max-h-72 overflow-y-auto">
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat._id || cat.slug}
+                          to={`/shop?category=${cat.slug}`}
+                          onClick={() => setShopDropdownOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-stone-700 hover:text-rose-600 hover:bg-rose-50/70 transition"
+                        >
+                          <span className="font-semibold">{cat.name}</span>
+                          <span className="text-[10px] text-stone-400">
+                            {cat.badge || (cat.productCount !== undefined ? `${cat.productCount} models` : "")}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+
+                    <div className="pt-2 mt-1 border-t border-stone-100 px-3 pb-1">
+                      <Link
+                        to="/shop"
+                        onClick={() => setShopDropdownOpen(false)}
+                        className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center justify-between"
+                      >
+                        <span>View All Models</span>
+                        <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Personalize 3D with Subject Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={handleKeepsakeMouseEnter}
+              onMouseLeave={handleKeepsakeMouseLeave}
+            >
+              <Link
+                to="/personalized"
+                onClick={(e) => {
+                  if (routerLocation.pathname === "/personalized") {
+                    e.preventDefault();
+                    setKeepsakeDropdownOpen((prev) => !prev);
+                  }
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs lg:text-[13px] font-medium tracking-wide transition flex items-center gap-1.5 ${
+                  routerLocation.pathname === "/personalized"
+                    ? "text-rose-600 font-bold bg-rose-50"
+                    : "text-stone-600 hover:text-stone-950 hover:bg-stone-100/70"
+                }`}
+              >
+                <Sparkles size={13} className="text-rose-500" />
+                <span>Personalize 3D</span>
+                <ChevronDown
+                  size={12}
+                  className={`text-stone-400 transition-transform duration-200 ${
+                    keepsakeDropdownOpen ? "rotate-180 text-rose-600" : ""
+                  }`}
+                />
+              </Link>
+
+              {/* Minimalist Keepsake Subject Dropdown */}
+              <AnimatePresence>
+                {keepsakeDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.18 }}
+                    className="absolute top-full left-0 mt-1.5 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 p-2 z-50 text-left"
+                  >
+                    <div className="px-3 py-2 border-b border-stone-100 mb-1 flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                        Keepsake Subjects
+                      </span>
+                      <span className="text-[10px] text-rose-500 font-semibold">Custom 3D</span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      {(keepsakeCategories.length > 0 ? keepsakeCategories : [
+                        { name: "Single", slug: "single", icon: "👤", tagline: "Individual portraits & solos" },
+                        { name: "Couple", slug: "couple", icon: "👩‍❤️‍👨", tagline: "Anniversaries & romance" },
+                        { name: "Family", slug: "family", icon: "👨‍👩‍👧", tagline: "Cherished moments together" },
+                        { name: "Kid & Baby", slug: "kid-baby", icon: "👶", tagline: "Little milestones & toddlers" },
+                        { name: "Pet", slug: "pet", icon: "🐾", tagline: "Dogs, cats & furry companions" },
+                      ]).map((cat) => (
+                        <Link
+                          key={cat._id || cat.slug}
+                          to={`/personalized?category=${cat.slug}`}
+                          onClick={() => setKeepsakeDropdownOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-stone-700 hover:text-rose-600 hover:bg-rose-50/70 transition group"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-base leading-none">{cat.icon || "👤"}</span>
+                            <div>
+                              <div className="font-semibold text-stone-800 group-hover:text-rose-600">
+                                {cat.name}
+                              </div>
+                              {cat.tagline && (
+                                <div className="text-[10px] text-stone-400 line-clamp-1">
+                                  {cat.tagline}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <ArrowRight
+                            size={12}
+                            className="text-stone-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition"
+                          />
+                        </Link>
+                      ))}
+                    </div>
+
+                    <div className="pt-2 mt-1 border-t border-stone-100 px-3 pb-1">
+                      <Link
+                        to="/personalized"
+                        onClick={() => setKeepsakeDropdownOpen(false)}
+                        className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center justify-between"
+                      >
+                        <span>Open 3D Personalizer</span>
+                        <ArrowRight size={12} />
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* How It Works */}
+            <NavLink
+              to="/how-it-works"
+              className={({ isActive }) =>
+                `px-3.5 py-2 rounded-full text-xs lg:text-[13px] font-semibold transition ${
+                  isActive
+                    ? "text-ribbon-600 bg-rose-50 font-bold"
+                    : "text-stone-700 hover:text-stone-900 hover:bg-stone-50"
+                }`
+              }
+            >
+              How It Works
+            </NavLink>
+
+            {/* About */}
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `px-3.5 py-2 rounded-full text-xs lg:text-[13px] font-semibold transition ${
+                  isActive
+                    ? "text-ribbon-600 bg-rose-50 font-bold"
+                    : "text-stone-700 hover:text-stone-900 hover:bg-stone-50"
+                }`
+              }
+            >
+              About Studio
+            </NavLink>
+          </nav>
+
+          {/* Right Action Icons & Direct CTA */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Search Trigger */}
             <button
               onClick={() => setSearchOpen(true)}
-              aria-label="Search"
-              className="lg:hidden p-2 rounded-full text-slate-600 hover:bg-rose-50 hover:text-ribbon-500 transition-colors"
+              aria-label="Search Catalog"
+              className="p-2 sm:p-2.5 rounded-full text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
               title="Search"
             >
-              <Search size={20} />
+              <Search size={18} />
             </button>
 
-            {/* Wishlist Button (Hidden when viewing user dashboard to prevent redundancy) */}
+            {/* Wishlist Trigger */}
             {!isDashboard && (
               <button
                 onClick={openWishlist}
-                aria-label="My Wishlist"
-                className="relative p-2 rounded-full text-slate-600 hover:bg-rose-50 hover:text-ribbon-500 transition-colors flex items-center gap-1.5"
-                title="My Wishlist"
+                aria-label="Wishlist"
+                className="relative p-2 sm:p-2.5 rounded-full text-stone-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Wishlist"
               >
-                <div className="relative">
-                  <Heart size={20} className={wishlistItems.length > 0 ? "text-ribbon-500 fill-ribbon-500" : ""} />
-                  {wishlistItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ribbon-500 px-1 text-[10px] font-bold text-white shadow-xs">
-                      {wishlistItems.length}
-                    </span>
-                  )}
-                </div>
-                <span className="hidden xl:inline-block text-xs font-semibold text-slate-700">My Wishlist</span>
+                <Heart size={18} className={wishlistItems.length > 0 ? "fill-rose-500 text-rose-500" : ""} />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute 1 top-1 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-2xs">
+                    {wishlistItems.length}
+                  </span>
+                )}
               </button>
             )}
 
-            {/* Account / User Menu - Prominent and Clear */}
+            {/* Account Trigger */}
             <div className="relative">
               <button
                 onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
                 onBlur={() => setTimeout(() => setAccountDropdownOpen(false), 200)}
                 aria-label="Account"
-                className="px-2.5 py-1.5 rounded-full hover:bg-rose-50 text-slate-700 hover:text-ribbon-500 transition-colors flex items-center gap-2 border border-slate-200/80 bg-white shadow-2xs"
-                title={user ? user.name : "Sign In / Register"}
+                className="p-2 sm:p-2.5 rounded-full text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors flex items-center"
+                title={user ? user.name : "Sign In"}
               >
-                <div className="h-6 w-6 rounded-full bg-rose-100 flex items-center justify-center text-ribbon-600 font-bold text-xs shrink-0">
-                  {user ? user.name.charAt(0).toUpperCase() : <User size={14} />}
-                </div>
-                <div className="flex flex-col text-left leading-tight pr-1">
-                  <span className="text-[10px] text-slate-400 font-medium">{user ? "Hi," : "Welcome"}</span>
-                  <span className="text-xs font-bold text-slate-900 truncate max-w-[85px]">
-                    {user ? user.name.split(" ")[0] : "Sign In"}
-                  </span>
-                </div>
-                <ChevronDown size={11} className="text-slate-400" />
+                {user ? (
+                  <div className="h-6 w-6 rounded-full bg-rose-100 flex items-center justify-center text-rose-700 font-bold text-xs">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                ) : (
+                  <User size={18} />
+                )}
               </button>
 
               {/* Account Dropdown */}
               <AnimatePresence>
                 {accountDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 text-left"
+                    exit={{ opacity: 0, y: 6 }}
+                    className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-2 z-50 text-left"
                   >
                     {user ? (
                       <>
-                        <div className="px-4 py-2 border-b border-slate-100">
-                          <p className="text-xs text-slate-400">Signed in as</p>
-                          <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
+                        <div className="px-4 py-2 border-b border-stone-100">
+                          <p className="text-[10px] text-stone-400 uppercase font-bold">Signed in as</p>
+                          <p className="text-sm font-semibold text-stone-900 truncate">{user.name}</p>
                         </div>
                         {user.role === "admin" && (
                           <Link
                             to="/admin"
                             onClick={() => setAccountDropdownOpen(false)}
-                            className="flex items-center justify-between px-4 py-2 text-xs font-bold text-rose-700 bg-rose-50/80 hover:bg-rose-100/80 transition"
+                            className="flex items-center justify-between px-4 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 transition"
                           >
                             <span>⚡ Admin Dashboard</span>
                             <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-rose-200 text-rose-800">
@@ -237,18 +388,18 @@ export default function Navbar() {
                         <Link
                           to="/account"
                           onClick={() => setAccountDropdownOpen(false)}
-                          className="block px-4 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-ribbon-500"
+                          className="block px-4 py-2 text-xs text-stone-700 hover:bg-rose-50 hover:text-rose-600"
                         >
                           My Profile &amp; Orders
                         </Link>
                         <Link
                           to="/account?tab=wishlist"
                           onClick={() => setAccountDropdownOpen(false)}
-                          className="flex items-center justify-between px-4 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-ribbon-500"
+                          className="flex items-center justify-between px-4 py-2 text-xs text-stone-700 hover:bg-rose-50 hover:text-rose-600"
                         >
                           <span>My Wishlist</span>
                           {wishlistItems.length > 0 && (
-                            <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-ribbon-600 font-bold text-[10px]">
+                            <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 font-bold text-[10px]">
                               {wishlistItems.length}
                             </span>
                           )}
@@ -265,7 +416,7 @@ export default function Navbar() {
                       </>
                     ) : (
                       <>
-                        <div className="p-3 border-b border-slate-100">
+                        <div className="p-3 border-b border-stone-100">
                           <Link
                             to="/login"
                             onClick={() => setAccountDropdownOpen(false)}
@@ -277,16 +428,9 @@ export default function Navbar() {
                         <Link
                           to="/track-order"
                           onClick={() => setAccountDropdownOpen(false)}
-                          className="block px-4 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-ribbon-500"
+                          className="block px-4 py-2 text-xs text-stone-700 hover:bg-rose-50 hover:text-rose-600"
                         >
-                          Track Live Order
-                        </Link>
-                        <Link
-                          to="/how-it-works"
-                          onClick={() => setAccountDropdownOpen(false)}
-                          className="block px-4 py-2 text-xs text-slate-700 hover:bg-rose-50 hover:text-ribbon-500"
-                        >
-                          How Customization Works
+                          Track Order
                         </Link>
                       </>
                     )}
@@ -295,108 +439,30 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            {/* Cart Button with Total Value */}
+            {/* Cart Button: Clean Icon with Count Badge (No Overlapping Text) */}
             <button
               onClick={openCart}
-              aria-label="Cart"
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-full bg-slate-50 hover:bg-rose-50 border border-slate-200 text-slate-700 hover:text-ribbon-500 transition-colors flex items-center gap-2"
+              aria-label="Shopping Bag"
+              className="relative p-2 sm:p-2.5 rounded-full text-stone-700 hover:text-stone-900 hover:bg-stone-100 transition-colors"
               title="Cart"
             >
-              <div className="relative">
-                <ShoppingBag size={19} className="text-ribbon-500" />
-                {totalItems() > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ribbon-500 px-1 text-[10px] font-bold text-white shadow-xs">
-                    {totalItems()}
-                  </span>
-                )}
-              </div>
-              <div className="hidden sm:flex flex-col text-left leading-none pr-1">
-                <span className="text-[10px] text-slate-400">Cart</span>
-                <span className="text-xs font-bold text-slate-900">
-                  {subtotal() > 0 ? formatPrice(subtotal()) : "₹0"}
+              <ShoppingBag size={19} />
+              {totalItems() > 0 && (
+                <span className="absolute top-1 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-2xs">
+                  {totalItems()}
                 </span>
-              </div>
-            </button>
-
-            {/* Primary CTA: Personalize Studio */}
-            <button
-              onClick={() => navigate("/personalized")}
-              className="btn-primary hidden md:inline-flex py-2 px-3.5 xl:px-4 text-xs font-bold uppercase tracking-wider gap-1.5 shadow-xs shrink-0"
-            >
-              <Sparkles size={13} className="text-amber-300" />
-              <span>Create Personalized 3D</span>
+              )}
             </button>
 
             {/* Mobile Hamburger Menu */}
             <button
               aria-label="Toggle Menu"
               onClick={() => setMobileOpen(true)}
-              className="p-2 rounded-full text-slate-600 hover:bg-rose-50 hover:text-ribbon-500 transition-colors lg:hidden"
+              className="p-2 rounded-full text-stone-700 hover:bg-stone-100 transition-colors md:hidden ml-1"
             >
               <Menu size={22} />
             </button>
           </div>
-        </div>
-
-        {/* 3. MULTI-TIER CATEGORY NAVIGATION BAR (IGP Style Mega-Nav) */}
-        <div
-          className="hidden lg:block bg-white border-t border-slate-100 relative w-full"
-          onMouseLeave={handleMouseLeaveCategory}
-        >
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-            <nav className="w-full flex items-center justify-between py-1 text-xs font-semibold tracking-tight">
-              {MENU_CATEGORIES.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="relative group shrink-0"
-                  onMouseEnter={() => handleMouseEnterCategory(cat.id)}
-                >
-                  <Link
-                    to={cat.to}
-                    className={`inline-flex items-center gap-1 px-2 xl:px-3 py-2 rounded-lg transition-all whitespace-nowrap text-xs xl:text-[13px] ${
-                      activeMegaCategory === cat.id
-                        ? "bg-rose-50 text-ribbon-600 font-bold"
-                        : "text-slate-700 hover:text-ribbon-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>{cat.title}</span>
-                    {cat.badge && (
-                      <span
-                        className={`text-[9px] font-extrabold text-white px-1.5 py-0.2 rounded-full uppercase tracking-tight shadow-2xs ${cat.badgeColor}`}
-                      >
-                        {cat.badge}
-                      </span>
-                    )}
-                    <ChevronDown size={11} className="text-slate-400 group-hover:rotate-180 transition-transform duration-200" />
-                  </Link>
-                </div>
-              ))}
-
-              <NavLink
-                to="/how-it-works"
-                className={({ isActive }) =>
-                  `px-2 xl:px-3 py-2 rounded-lg text-xs xl:text-[13px] font-semibold transition whitespace-nowrap shrink-0 ${
-                    isActive ? "text-ribbon-600 bg-rose-50 font-bold" : "text-slate-700 hover:text-ribbon-600 hover:bg-slate-50"
-                  }`
-                }
-              >
-                How It Works
-              </NavLink>
-            </nav>
-          </div>
-
-          {/* MegaMenu Dropdown Content */}
-          <AnimatePresence>
-            {activeMegaCategory && (
-              <MegaMenu
-                activeCategory={activeMegaCategory}
-                onMouseEnter={() => {
-                  if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current);
-                }}
-                onClose={() => setActiveMegaCategory(null)}
-              />
-            )}
-          </AnimatePresence>
         </div>
       </header>
 
@@ -415,7 +481,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-espresso-700/60 backdrop-blur-xs lg:hidden"
+              className="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-xs md:hidden"
               onClick={() => setMobileOpen(false)}
             >
               <motion.div
@@ -427,119 +493,121 @@ export default function Navbar() {
                 className="absolute left-0 top-0 h-full w-[85%] max-w-sm bg-white shadow-2xl flex flex-col justify-between overflow-y-auto"
               >
                 <div>
-                  {/* Mobile Header */}
-                  <div className="flex items-center justify-between p-5 border-b border-blush-200 bg-cream-100">
+                  {/* Drawer Header */}
+                  <div className="flex items-center justify-between p-5 border-b border-stone-100">
                     <LogoMark to="/" size="compact" />
                     <button
                       onClick={() => setMobileOpen(false)}
-                      className="p-2 rounded-full text-espresso-400 hover:text-burgundy-900"
+                      className="p-2 rounded-full text-stone-400 hover:text-stone-900"
                     >
                       <X size={20} />
                     </button>
                   </div>
 
-                  {/* Delivery Location Indicator in Mobile */}
-                  <div className="p-3.5 bg-rose-50/70 border-b border-slate-200">
-                    <div className="flex items-center gap-2 text-xs text-slate-800 font-semibold">
-                      <Truck size={15} className="text-ribbon-500" />
-                      <span>🚚 Pan-India Delivery (29,000+ Pincodes)</span>
-                    </div>
-                  </div>
-
-                  {/* Mobile Nav Links */}
+                  {/* Drawer Navigation Links */}
                   <div className="p-4 space-y-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-espresso-400 px-3 py-1">
-                      Gift Categories
-                    </p>
-                    {MENU_CATEGORIES.map((cat) => (
-                      <Link
-                        key={cat.id}
-                        to={cat.to}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center justify-between py-2.5 px-3 rounded-xl text-sm font-medium text-espresso-700 hover:bg-blush-50 hover:text-burgundy-900"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>{cat.title}</span>
-                          {cat.badge && (
-                            <span
-                              className={`text-[9px] font-bold text-white px-1.5 py-0.5 rounded-md ${cat.badgeColor}`}
-                            >
-                              {cat.badge}
-                            </span>
-                          )}
-                        </div>
-                        <ArrowRight size={14} className="text-espresso-300" />
-                      </Link>
-                    ))}
+                    <NavLink
+                      to="/shop"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-stone-800 hover:bg-stone-50"
+                    >
+                      <span>Shop 3D Models</span>
+                      <ArrowRight size={14} className="text-stone-400" />
+                    </NavLink>
 
-                    <div className="pt-3 border-t border-blush-100">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-espresso-400 px-3 py-1">
-                        Explore &amp; Help
-                      </p>
-                      <Link
+                    <div className="pl-3 pr-2 py-1 space-y-0.5 max-h-60 overflow-y-auto">
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat._id || cat.slug}
+                          to={`/shop?category=${cat.slug}`}
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center justify-between p-2 rounded-lg text-xs text-stone-600 hover:text-rose-600"
+                        >
+                          <span className="font-medium">{cat.name}</span>
+                          {cat.badge && (
+                            <span className="text-[10px] text-rose-500 font-semibold">{cat.badge}</span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+
+                    <div className="mt-2">
+                      <NavLink
                         to="/personalized"
                         onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2.5 py-2 px-3 rounded-xl text-sm font-medium text-espresso-700 hover:bg-blush-50"
+                        className="flex items-center justify-between p-3 rounded-xl text-sm font-bold text-rose-600 bg-rose-50"
                       >
-                        <Sparkles size={16} className="text-ribbon-500" />
-                        <span>Personalized Studio</span>
-                      </Link>
-                      <Link
-                        to="/3d-keepsakes"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2.5 py-2 px-3 rounded-xl text-sm font-medium text-espresso-700 hover:bg-blush-50"
-                      >
-                        <Flame size={16} className="text-coral-500" />
-                        <span>3D Sculptures &amp; Castings</span>
-                      </Link>
-                      <Link
-                        to="/how-it-works"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2.5 py-2 px-3 rounded-xl text-sm font-medium text-espresso-700 hover:bg-blush-50"
-                      >
-                        <ShieldCheck size={16} className="text-emerald-600" />
-                        <span>How It Works</span>
-                      </Link>
-                      <Link
-                        to="/account"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2.5 py-2 px-3 rounded-xl text-sm font-medium text-espresso-700 hover:bg-blush-50"
-                      >
-                        <Truck size={16} className="text-burgundy-900" />
-                        <span>Track My Order</span>
-                      </Link>
+                        <span className="flex items-center gap-2">
+                          <Sparkles size={16} />
+                          <span>Personalize 3D Keepsake</span>
+                        </span>
+                        <ArrowRight size={14} />
+                      </NavLink>
+
+                      <div className="pl-3 pr-2 py-1 space-y-0.5">
+                        {(keepsakeCategories.length > 0 ? keepsakeCategories : [
+                          { name: "Single", slug: "single", icon: "👤" },
+                          { name: "Couple", slug: "couple", icon: "👩‍❤️‍👨" },
+                          { name: "Family", slug: "family", icon: "👨‍👩‍👧" },
+                          { name: "Kid & Baby", slug: "kid-baby", icon: "👶" },
+                          { name: "Pet", slug: "pet", icon: "🐾" },
+                        ]).map((cat) => (
+                          <Link
+                            key={cat._id || cat.slug}
+                            to={`/personalized?category=${cat.slug}`}
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-center justify-between p-2 rounded-lg text-xs text-stone-600 hover:text-rose-600"
+                          >
+                            <span className="flex items-center gap-2">
+                              <span>{cat.icon || "👤"}</span>
+                              <span className="font-medium">{cat.name}</span>
+                            </span>
+                            <span className="text-[10px] text-stone-400">Personalize</span>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
+
+                    <NavLink
+                      to="/how-it-works"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-stone-800 hover:bg-stone-50"
+                    >
+                      <span>How It Works</span>
+                      <ArrowRight size={14} className="text-stone-400" />
+                    </NavLink>
+
+                    <NavLink
+                      to="/about"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-stone-800 hover:bg-stone-50"
+                    >
+                      <span>About Studio</span>
+                      <ArrowRight size={14} className="text-stone-400" />
+                    </NavLink>
+
+                    <NavLink
+                      to="/track-order"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between p-3 rounded-xl text-sm font-semibold text-stone-800 hover:bg-stone-50"
+                    >
+                      <span>Track Order</span>
+                      <ArrowRight size={14} className="text-stone-400" />
+                    </NavLink>
                   </div>
                 </div>
 
-                {/* Mobile Bottom User & CTA */}
-                <div className="p-4 border-t border-blush-200 bg-cream-50 space-y-2">
+                {/* Drawer Footer */}
+                <div className="p-4 border-t border-stone-100 bg-stone-50 space-y-2">
                   <button
                     onClick={() => {
                       setMobileOpen(false);
                       navigate("/personalized");
                     }}
-                    className="btn-primary w-full py-3 text-xs uppercase font-bold tracking-wider"
+                    className="btn-primary w-full py-3 text-xs"
                   >
-                    Personalize a Gift
+                    <span>Create 3D Figurine</span>
                   </button>
-                  <div className="flex items-center justify-between text-xs pt-1 px-1">
-                    <Link
-                      to={user ? "/account" : "/login"}
-                      onClick={() => setMobileOpen(false)}
-                      className="font-medium text-espresso-600 hover:text-burgundy-900"
-                    >
-                      {user ? `Account (${user.name})` : "Sign In / Register"}
-                    </Link>
-                    <a
-                      href="https://wa.me/919876543210"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-600 font-semibold"
-                    >
-                      WhatsApp Us
-                    </a>
-                  </div>
                 </div>
               </motion.div>
             </motion.div>

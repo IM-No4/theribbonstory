@@ -20,10 +20,12 @@ import {
   FileCode,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { createPortal } from "react-dom";
 import { api, assetUrl } from "../../api/client";
 import { blobErrorMessage, downloadPrintFile, formatBytes } from "../../utils/printFiles";
 import { downloadFromApi } from "../../utils/download";
 import InvoiceButton from "../../components/InvoiceButton";
+import { useAdminThemeStore } from "../../store/adminThemeStore";
 
 const STATUSES = [
   { value: "all", label: "All Orders" },
@@ -36,6 +38,7 @@ const STATUSES = [
 ];
 
 export default function AdminOrders() {
+  const { theme } = useAdminThemeStore();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -545,8 +548,8 @@ export default function AdminOrders() {
       </div>
 
       {/* Detailed Order Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto">
+      {selectedOrder && createPortal(
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150 ${theme === "dark" ? "dark" : ""}`}>
           <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl shadow-black/80 my-8">
             <div className="p-6 border-b border-slate-800 flex items-center justify-between">
               <div>
@@ -646,6 +649,7 @@ export default function AdminOrders() {
                     const c = item.customization || {};
                     const isPersonalized = Boolean(c.photoUrl || c.cuteImageUrl || c.model3dUrl);
                     const originalPhotoUrl = c.photoUrl;
+                    const sourcePhotoUrl = originalPhotoUrl;
                     const cuteImageUrl = c.cuteImageUrl || c.reference3D?.approvedPreview;
                     const model3dUrl = c.model3dUrl;
 
@@ -939,7 +943,7 @@ export default function AdminOrders() {
                                     </div>
                                     <div className="text-[10px] text-purple-300 font-mono">
                                       {c.model3dSize ? `${(c.model3dSize / (1024 * 1024)).toFixed(1)} MB • ` : ""}
-                                      Bambu Ready
+                                      Print Ready
                                     </div>
                                   </div>
                                 ) : (
@@ -1153,7 +1157,8 @@ export default function AdminOrders() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Interactive Admin Refund Processing Modal */}

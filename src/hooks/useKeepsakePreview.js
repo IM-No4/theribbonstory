@@ -96,15 +96,16 @@ export function useKeepsakePreview() {
         attempts: previewUrl ? [previewUrl] : [],
         selected: 0,
         attemptsLeft: 3,
-        error: "",
+        error: previewUrl ? "" : (data.error || data.message || "3D preview could not be generated"),
       }));
     } catch (err) {
       if (run !== photoRun.current) return;
-      console.warn("Chibi upload notice:", err);
+      console.warn("Chibi upload error:", err);
+      const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Generation request failed";
       setState((s) => ({
         ...s,
-        status: "unavailable",
-        error: "",
+        status: "error",
+        error: errMsg,
       }));
     }
   }, []);

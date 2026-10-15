@@ -20,7 +20,7 @@ export default function HowItWorksPage() {
     {
       num: "03",
       title: "Precision 3D Printed",
-      desc: "Our studio technicians precision slice and 3D-print your model using Bambu Lab multi-color FDM printers.",
+      desc: "Our studio technicians precision slice and 3D-print your model using industrial multi-color FDM printers.",
       detail: "Every model is hand-inspected for crisp layer adhesion, smooth surfaces, and durable bio-PLA strength.",
     },
     {

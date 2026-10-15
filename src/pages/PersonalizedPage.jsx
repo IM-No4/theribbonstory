@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -11,49 +11,82 @@ import {
   RefreshCw,
   Minus,
   Plus,
+  ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCartStore } from "../store/cartStore";
-import { assetUrl } from "../api/client";
+import { api, assetUrl } from "../api/client";
 import { useSeo } from "../utils/seo";
 import { useKeepsakePreview } from "../hooks/useKeepsakePreview";
 
-const SIZES = [
-  {
-    id: "small",
-    name: "Small",
-    dimensions: '3.5" (9 cm)',
-    price: 699,
-    mrp: 1299,
-    desc: "Desk & compact display",
-  },
-  {
-    id: "medium",
-    name: "Medium",
-    dimensions: '5.5" (14 cm)',
-    price: 1299,
-    mrp: 2199,
-    popular: true,
-    desc: "Most loved • Living room & gifts",
-  },
-  {
-    id: "large",
-    name: "Large",
-    dimensions: '8.0" (20 cm)',
-    price: 2199,
-    mrp: 3699,
-    desc: "Collector edition • High detail",
-  },
-];
+const CATEGORY_MESSAGE_SUGGESTIONS = {
+  single: [
+    "Dream Big ✨",
+    "Self Love First 💖",
+    "Living My Best Life ⭐",
+    "Born to Shine 💫",
+    "Class of 2026 🎓",
+    "One & Only 🌟",
+  ],
+  couple: [
+    "Forever & Always ❤️",
+    "Happy Anniversary 🥂",
+    "You & Me Always 💖",
+    "Better Together 💑",
+    "From Day One 💍",
+    "My Favorite Person ✨",
+  ],
+  family: [
+    "Family First 👨‍👩‍👧",
+    "Our Happy Place 🏡",
+    "Together is Beautiful 🤍",
+    "The Best Memories 🌻",
+    "Roots & Wings 🌳",
+    "Love Lives Here 💕",
+  ],
+  "kid-baby": [
+    "Our Little Wonder ✨",
+    "Tiny Hands, Big Heart 👣",
+    "First Steps 🍼",
+    "Pure Joy 🎈",
+    "Our Sunshine ☀️",
+    "Sweet Little One 🧸",
+  ],
+  kid: [
+    "Our Little Wonder ✨",
+    "Tiny Hands, Big Heart 👣",
+    "First Steps 🍼",
+    "Pure Joy 🎈",
+    "Our Sunshine ☀️",
+    "Sweet Little One 🧸",
+  ],
+  pet: [
+    "Best Friends 🐾",
+    "Forever in Our Hearts 🐶",
+    "Good Boy / Girl 🎾",
+    "Paws & Claws 🐾",
+    "Furry Little Monster 🐱",
+    "Unconditional Love 🦴",
+  ],
+};
 
-const MESSAGE_SUGGESTIONS = [
-  "Forever & Always ❤️",
-  "Best Friends 🐾",
-  "Happy Anniversary 🥂",
-  "Our Little Wonder ✨",
-  "Family First 👨‍👩‍👧",
-  "You & Me Always 💖",
-];
+const CATEGORY_PLACEHOLDERS = {
+  single: "e.g. Dream Big ✨ / Ethan",
+  couple: "e.g. Forever & Always ❤️ / Max & Emma",
+  family: "e.g. Family First 👨‍👩‍👧 / The Sharmas",
+  "kid-baby": "e.g. Our Little Wonder ✨ / Baby Liam",
+  kid: "e.g. Our Little Wonder ✨ / Baby Liam",
+  pet: "e.g. Best Friends 🐾 / Milo 🐶",
+};
+
+const CATEGORY_ARTISAN_PLACEHOLDERS = {
+  single: "e.g. Highlight blue jacket, keep glasses, casual posture",
+  couple: "e.g. Add anniversary date on side, match clothing colors, hold hands",
+  family: "e.g. Keep relative heights accurate, include mom's scarf",
+  "kid-baby": "e.g. Include favorite teddy bear, capture rosy cheeks",
+  kid: "e.g. Include favorite teddy bear, capture rosy cheeks",
+  pet: "e.g. Preserve ear spots, keep red collar with bell, fluffy tail",
+};
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -65,12 +98,91 @@ export default function PersonalizedPage() {
 
   const { addItem, openCart } = useCartStore();
   const fileInputRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
 
-  // Active Keepsake Builder State
-  const [selectedSize, setSelectedSize] = useState(SIZES[1]);
+  // Dynamic Keepsake Categories & Pricing from Admin
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Inscription & Builder State
   const [inscriptionText, setInscriptionText] = useState("");
   const [artisanNote, setArtisanNote] = useState("");
   const [quantity, setQuantity] = useState(1);
+
+  // Fetch admin-defined keepsake categories on mount
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .get("/keepsake-categories")
+      .then(({ data }) => {
+        if (!isMounted) return;
+        const cats = data?.categories || [];
+        setCategories(cats);
+        if (cats.length > 0) {
+          const targetSlug = categoryParam?.toLowerCase() || "couple";
+          const defaultCat =
+            cats.find((c) => c.slug.toLowerCase() === targetSlug) || cats[0];
+          setSelectedCategory(defaultCat);
+          const defaultOpt =
+            defaultCat.pricingOptions?.find((o) => o.isPopular) ||
+            defaultCat.pricingOptions?.[0] ||
+            null;
+          setSelectedOption(defaultOpt);
+        }
+      })
+      .catch((err) => {
+        console.error("Could not load keepsake categories", err);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingCategories(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync category when URL search parameter changes
+  useEffect(() => {
+    if (categories.length > 0 && categoryParam) {
+      const matching = categories.find(
+        (c) => c.slug.toLowerCase() === categoryParam.toLowerCase()
+      );
+      if (matching && matching.slug !== selectedCategory?.slug) {
+        setSelectedCategory(matching);
+        const defaultOpt =
+          matching.pricingOptions?.find((o) => o.isPopular) ||
+          matching.pricingOptions?.[0] ||
+          null;
+        setSelectedOption(defaultOpt);
+      }
+    }
+  }, [categoryParam, categories]);
+
+  const handleSelectCategory = (cat) => {
+    setSelectedCategory(cat);
+    setSearchParams({ category: cat.slug });
+    const defaultOpt =
+      cat.pricingOptions?.find((o) => o.isPopular) || cat.pricingOptions?.[0] || null;
+    setSelectedOption(defaultOpt);
+  };
+
+  // Dynamic Suggestions & Placeholders by Selected Keepsake Subject
+  const categorySlug = selectedCategory?.slug?.toLowerCase() || "couple";
+  const activeSuggestions =
+    selectedCategory?.engravingSuggestions && selectedCategory.engravingSuggestions.length > 0
+      ? selectedCategory.engravingSuggestions
+      : CATEGORY_MESSAGE_SUGGESTIONS[categorySlug] || CATEGORY_MESSAGE_SUGGESTIONS.couple;
+
+  const activePlaceholder =
+    CATEGORY_PLACEHOLDERS[categorySlug] || "e.g. Forever & Always ❤️ / Max & Emma";
+
+  const activeArtisanPlaceholder =
+    CATEGORY_ARTISAN_PLACEHOLDERS[categorySlug] ||
+    "e.g. Highlight blue jacket, preserve pet collar, keep glasses";
 
   // Photo -> 3D design preview
   const preview = useKeepsakePreview();
@@ -170,7 +282,15 @@ export default function PersonalizedPage() {
     setInscriptionText("");
     setArtisanNote("");
     setQuantity(1);
-    setSelectedSize(SIZES[1]);
+    if (categories.length > 0) {
+      const defaultCat = categories.find((c) => c.slug === "couple") || categories[0];
+      setSelectedCategory(defaultCat);
+      setSelectedOption(
+        defaultCat.pricingOptions?.find((o) => o.isPopular) ||
+        defaultCat.pricingOptions?.[0] ||
+        null
+      );
+    }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -182,11 +302,19 @@ export default function PersonalizedPage() {
       return;
     }
 
-    const currentSize = selectedSize || SIZES[1];
-    const unitPrice = currentSize.price;
-    const uniqueId = `custom-3d-${currentSize.id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const currentCat = selectedCategory;
+    const currentOpt = selectedOption;
+
+    if (!currentOpt) {
+      toast.error("Please select a size / dimension option");
+      return;
+    }
+
+    const unitPrice = currentOpt.price;
+    const uniqueId = `custom-3d-${currentCat?.slug || "keepsake"}-${currentOpt._id || currentOpt.name}-${Date.now()}`;
 
     const combinedNotes = [
+      currentCat ? `[Category: ${currentCat.name}]` : "",
       inscriptionText.trim() ? `[Base Engraving: ${inscriptionText.trim()}]` : "",
       artisanNote.trim() ? `[Note: ${artisanNote.trim()}]` : "",
       preview.note?.trim() ? `[AI Note: ${preview.note.trim()}]` : "",
@@ -199,27 +327,30 @@ export default function PersonalizedPage() {
 
     addItem({
       productId: uniqueId,
-      name: `Custom 3D Keepsake (${currentSize.name} - ${currentSize.dimensions})`,
+      name: `Custom 3D Keepsake (${currentCat?.name || "Personalized"} - ${currentOpt.name} ${currentOpt.dimensions})`,
       image: cuteImage,
       price: unitPrice,
-      sizeId: currentSize.id,
+      sizeId: currentOpt._id || currentOpt.name,
       quantity,
       selectedOptions: [
-        { name: "Keepsake Size", value: `${currentSize.name} (${currentSize.dimensions})`, priceDelta: 0 },
+        { name: "Keepsake Category", value: currentCat?.name || "Personalized", priceDelta: 0 },
+        { name: "Size & Dimensions", value: `${currentOpt.name} (${currentOpt.dimensions})`, priceDelta: 0 },
       ],
       customization: {
         ...design.customization,
+        category: currentCat?.name,
+        categorySlug: currentCat?.slug,
         cuteImageUrl: cuteImage,
         reference3D: { approvedPreview: cuteImage },
         photoUrl: originalPhoto,
-        size: currentSize.name,
-        dimensions: currentSize.dimensions,
+        size: currentOpt.name,
+        dimensions: currentOpt.dimensions,
         customName: inscriptionText.trim(),
         note: combinedNotes || undefined,
       },
     });
 
-    toast.success(`Added ${currentSize.name} keepsake to your bag!`);
+    toast.success(`Added ${currentCat?.name || ""} (${currentOpt.name}) keepsake to your bag!`);
 
     // Clear form and open cart
     handleResetForm();
@@ -230,50 +361,72 @@ export default function PersonalizedPage() {
   const displayCute = preview.approvedPreview ? assetUrl(preview.approvedPreview) : null;
 
   return (
-    <div className="bg-[#FAF7F5] min-h-screen pt-2 sm:pt-4 pb-8 relative">
+    <div className="bg-[#FAF8F5] min-h-screen pt-8 sm:pt-12 pb-16 relative overflow-hidden">
+      {/* Ambient Warm Studio Lighting Glows */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-rose-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-amber-100/25 rounded-full blur-3xl pointer-events-none -z-10" />
+
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        {/* Top Header - Compact */}
-        <div className="text-center mb-3">
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-burgundy-900 tracking-tight">
-            Personalize Your 3D Keepsake
+        {/* Top Header - Spacious & Luxury Atelier */}
+        <div className="text-center mb-8 sm:mb-10 max-w-2xl mx-auto">
+          {/* Eyebrow Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-stone-200/80 shadow-2xs text-[10px] sm:text-[11px] font-bold text-stone-700 tracking-wider uppercase mb-3">
+            <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+            <span>Personalized 3D Keepsakes</span>
+            <span className="text-stone-300">•</span>
+            <span className="text-stone-500 font-mono">Photo to Figurine</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold text-stone-900 tracking-tight">
+            Turn Your Memories Into 3D Keepsakes
           </h1>
+
+          <p className="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto mt-2 leading-relaxed">
+            Transform your favorite photograph into an adorable, personalized 3D-printed figurine—a unique keepsake made to celebrate the moments that matter most.
+          </p>
+
+          {/* 3-Step Guided Progress Indicator */}
+          <div className="flex items-center justify-center gap-1.5 sm:gap-3 mt-4 text-[10.5px] sm:text-xs font-semibold text-stone-600">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-2xs transition ${
+              hasPhoto ? "bg-rose-50 text-rose-700 border-rose-200 font-bold" : "bg-white text-stone-700 border-stone-200"
+            }`}>
+              <span className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold">1</span>
+              <span>Upload Photo</span>
+            </span>
+            <span className="text-stone-300">→</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 shadow-2xs">
+              <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 flex items-center justify-center text-[9px] font-bold">2</span>
+              <span>Choose Size & Inscription</span>
+            </span>
+            <span className="text-stone-300">→</span>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-2xs transition ${
+              hasPreview ? "bg-emerald-50 text-emerald-800 border-emerald-200 font-bold" : "bg-white text-stone-500 border-stone-100"
+            }`}>
+              <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 flex items-center justify-center text-[9px] font-bold">3</span>
+              <span>3D Preview</span>
+            </span>
+          </div>
         </div>
 
         {/* Main Two-Card Row (Uploaded Photo / Dropzone on Left, Preview or Size Pricing on Right) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-stretch mb-6">
           {/* LEFT CARD: Customer Photo Upload or Render */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-rose-100 flex flex-col justify-center items-center min-h-[440px] relative">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col justify-center items-center min-h-[440px] relative">
             {!hasPhoto ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-full flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-rose-200 hover:border-ribbon-500 bg-rose-50/20 hover:bg-rose-50/50 rounded-2xl text-center space-y-4 transition-all cursor-pointer group shadow-2xs min-h-[380px]"
+                className="w-full h-full flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-stone-300/80 hover:border-rose-400 bg-gradient-to-b from-stone-50/60 to-rose-50/20 hover:from-rose-50/30 hover:to-rose-50/50 rounded-2xl text-center space-y-4 transition-all cursor-pointer group shadow-2xs min-h-[380px]"
               >
-                <div className="h-16 w-16 rounded-2xl bg-rose-100 text-ribbon-600 flex items-center justify-center mx-auto transition-transform group-hover:scale-110 shadow-xs">
-                  <Upload size={28} />
+                <div className="h-16 w-16 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center mx-auto transition-transform group-hover:scale-110 shadow-xs">
+                  <Upload size={26} />
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-base sm:text-lg text-burgundy-900">
-                    Choose Your Photo
+                  <h3 className="font-display font-bold text-base sm:text-lg text-stone-900">
+                    Select Your Photo
                   </h3>
-                  <p className="text-xs text-espresso-400 mt-1 max-w-xs mx-auto">
-                    Portraits, couple memories, pets, or family photos.
+                  <p className="text-xs text-stone-500 mt-1 max-w-xs mx-auto">
+                    Clear portraits, memories, or everyday photos.
                   </p>
-                </div>
-
-                {/* Photo Guide Chips */}
-                <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-rose-200 text-[10px] font-semibold text-espresso-600">
-                    🐾 Pets
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-rose-200 text-[10px] font-semibold text-espresso-600">
-                    💑 Couples
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-rose-200 text-[10px] font-semibold text-espresso-600">
-                    👶 Babies
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-rose-200 text-[10px] font-semibold text-espresso-600">
-                    👨‍👩‍👧 Family
-                  </span>
                 </div>
 
                 <button
@@ -282,13 +435,13 @@ export default function PersonalizedPage() {
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
-                  className="btn-primary py-2.5 px-8 text-xs font-bold uppercase tracking-wider shadow-sm mt-1"
+                  className="btn-primary py-2.5 px-8 text-xs font-bold uppercase tracking-wider shadow-sm mt-1 cursor-pointer"
                 >
                   Select Photo
                 </button>
               </div>
             ) : (
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-white to-rose-50/40 border border-rose-100 shadow-sm flex items-center justify-center group">
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-white to-rose-50/40 border border-stone-200/90 shadow-sm flex items-center justify-center group">
                 <img
                   src={displayOriginal}
                   alt=""
@@ -318,11 +471,11 @@ export default function PersonalizedPage() {
             )}
           </div>
 
-          {/* RIGHT CARD: Size Pricing + Inscription & Notes (before generation) OR 3D Preview (during/after generation) */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-rose-100 flex flex-col justify-center items-center min-h-[440px] relative overflow-hidden">
+          {/* RIGHT CARD: Dimensions & Pricing + Inscription (before generation) */}
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col justify-center items-center min-h-[440px] relative overflow-hidden">
             <AnimatePresence mode="wait">
               {!hasPreview ? (
-                /* STATE 1: Before Generation -> Configure Size, Engraving & Artisan Notes, then Click Generate */
+                /* STATE 1: Before Generation -> Configure Size, Engraving & Notes, then Click Generate */
                 <motion.div
                   key="pricing-options-initial"
                   initial={{ opacity: 0, y: 10 }}
@@ -331,94 +484,101 @@ export default function PersonalizedPage() {
                   transition={{ duration: 0.25 }}
                   className="w-full h-full flex flex-col justify-center space-y-3.5"
                 >
-                  <div className="space-y-3">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-rose-50 pb-2">
-                      <div>
-                        <h3 className="font-display font-bold text-base text-burgundy-900">
-                          Configure Your 3D Keepsake
-                        </h3>
-                        <p className="text-[11px] text-espresso-400">
-                          These details will be sculpted into your 3D figurine
-                        </p>
+                  <div className="space-y-3.5">
+                    {/* Dimensions & Pricing Tiers for Selected Category */}
+                    <div>
+                      <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2.5">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-stone-900">
+                            Choose Size & Dimensions
+                          </label>
+                          <p className="text-[11px] text-stone-500">
+                            Dimensions for your <span className="font-semibold text-rose-600">{selectedCategory?.name || ""}</span> keepsake
+                          </p>
+                        </div>
+                        {selectedOption && (
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/80 font-mono">
+                            {selectedOption.dimensions}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 font-mono">
-                        3 Sizes
-                      </span>
-                    </div>
 
-                    {/* Three Size Pricing Cards */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
-                      {SIZES.map((size) => {
-                        const isSelected = selectedSize?.id === size.id;
-                        return (
-                          <button
-                            key={size.id}
-                            type="button"
-                            onClick={() => setSelectedSize(size)}
-                            className={`p-2.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
-                              isSelected
-                                ? "border-rose-500 bg-rose-50/90 shadow-sm ring-2 ring-rose-400/30 scale-[1.02]"
-                                : "border-slate-200 hover:border-slate-300 bg-white"
-                            }`}
-                          >
-                            {size.popular && (
-                              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider px-2 py-0.2 rounded-full bg-rose-500 text-white whitespace-nowrap shadow-2xs">
-                                Loved
-                              </span>
-                            )}
-                            <div>
-                              <div className={`font-display font-bold text-sm ${isSelected ? "text-rose-900" : "text-burgundy-900"}`}>
-                                {size.name}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {(selectedCategory?.pricingOptions || []).map((opt) => {
+                          const isSelected =
+                            (selectedOption?._id && selectedOption?._id === opt._id) ||
+                            selectedOption?.name === opt.name;
+                          return (
+                            <button
+                              key={opt._id || opt.name}
+                              type="button"
+                              onClick={() => setSelectedOption(opt)}
+                              className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                                isSelected
+                                  ? "border-rose-500 bg-rose-50/80 shadow-xs ring-2 ring-rose-400/20 scale-[1.02]"
+                                  : "border-stone-200 hover:border-stone-300 bg-white"
+                              }`}
+                            >
+                              {opt.isPopular && (
+                                <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[7.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-500 text-white whitespace-nowrap shadow-2xs">
+                                  Most Loved
+                                </span>
+                              )}
+                              <div>
+                                <div className={`font-display font-bold text-xs ${isSelected ? "text-rose-950" : "text-stone-900"}`}>
+                                  {opt.name}
+                                </div>
+                                <div className="text-[10px] font-semibold text-rose-600 mt-0.5">
+                                  {opt.dimensions}
+                                </div>
                               </div>
-                              <div className="text-[10px] font-semibold text-rose-600 mt-0.5">
-                                {size.dimensions}
-                              </div>
-                            </div>
 
-                            <div className="mt-2 pt-1.5 border-t border-slate-100 w-full">
-                              <div className="font-bold text-slate-900 text-xs font-mono">
-                                {formatPrice(size.price)}
+                              <div className="mt-2 pt-1 border-t border-stone-100 w-full">
+                                <div className="font-bold text-stone-900 text-xs font-mono">
+                                  {formatPrice(opt.price)}
+                                </div>
+                                {opt.compareAtPrice > opt.price && (
+                                  <div className="text-[9px] text-stone-400 line-through">
+                                    {formatPrice(opt.compareAtPrice)}
+                                  </div>
+                                )}
                               </div>
-                              <div className="text-[9px] text-slate-400 line-through">
-                                {formatPrice(size.mrp)}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Optional Message / Inscription with Suggestions */}
                     <div className="space-y-1.5 pt-0.5">
                       <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-burgundy-900">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-stone-900">
                           Engraved Base Text
                         </label>
-                        <span className="text-[10px] text-espresso-400 font-semibold">Optional</span>
+                        <span className="text-[10px] text-stone-400 font-semibold">Optional</span>
                       </div>
                       <input
                         type="text"
                         maxLength={60}
                         value={inscriptionText}
                         onChange={(e) => setInscriptionText(e.target.value)}
-                        placeholder="e.g. Forever & Always / Max 🐾"
-                        className="input-field text-xs py-2"
+                        placeholder={activePlaceholder}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white focus:border-stone-800 focus:ring-1 focus:ring-stone-800/20 text-xs text-stone-900 placeholder:text-stone-400 transition"
                       />
 
-                      {/* Clickable Suggestion Chips */}
-                      <div className="flex flex-wrap gap-1 pt-0.5">
-                        {MESSAGE_SUGGESTIONS.map((suggestion) => {
+                      {/* Clickable Category-Specific Suggestion Chips */}
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {activeSuggestions.map((suggestion) => {
                           const isCurrent = inscriptionText === suggestion;
                           return (
                             <button
                               key={suggestion}
                               type="button"
                               onClick={() => setInscriptionText(isCurrent ? "" : suggestion)}
-                              className={`px-2 py-0.5 rounded-full text-[10px] transition cursor-pointer font-medium border ${
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] transition cursor-pointer font-medium border ${
                                 isCurrent
                                   ? "bg-rose-500 text-white border-rose-500 shadow-xs"
-                                  : "bg-rose-50/70 hover:bg-rose-100/80 text-rose-800 border-rose-200/80"
+                                  : "bg-stone-100/80 hover:bg-rose-50 hover:text-rose-700 text-stone-700 border-stone-200/70"
                               }`}
                             >
                               {suggestion}
@@ -431,20 +591,20 @@ export default function PersonalizedPage() {
                     {/* Studio Artisan Notes */}
                     <div className="space-y-1 pt-1">
                       <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-burgundy-900">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-stone-900">
                           Studio Artisan Notes
                         </label>
-                        <span className="text-[10px] text-espresso-400 font-semibold">Optional</span>
+                        <span className="text-[10px] text-stone-400 font-semibold">Optional</span>
                       </div>
                       <input
                         type="text"
                         maxLength={150}
                         value={artisanNote}
                         onChange={(e) => setArtisanNote(e.target.value)}
-                        placeholder="e.g. Highlight blue jacket, preserve pet collar, keep glasses"
-                        className="input-field text-xs py-2"
+                        placeholder={activeArtisanPlaceholder}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white focus:border-stone-800 focus:ring-1 focus:ring-stone-800/20 text-xs text-stone-900 placeholder:text-stone-400 transition"
                       />
-                      <p className="text-[10px] text-espresso-400 leading-snug">
+                      <p className="text-[10px] text-stone-500 leading-snug">
                         Custom details our 3D studio will incorporate into your figurine.
                       </p>
                     </div>
@@ -457,10 +617,10 @@ export default function PersonalizedPage() {
                         disabled={!hasPhoto || preview.busy}
                         className={`w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 rounded-xl transition-all duration-200 select-none ${
                           !hasPhoto
-                            ? "bg-rose-100/60 text-rose-300 border border-rose-200/70 cursor-not-allowed shadow-none"
+                            ? "bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed shadow-none"
                             : preview.busy
-                            ? "bg-rose-400 text-white cursor-wait opacity-85 shadow-md"
-                            : "btn-primary shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                            ? "bg-rose-500 text-white cursor-wait opacity-85 shadow-md"
+                            : "btn-primary shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                         }`}
                       >
                         <Sparkles
@@ -470,16 +630,17 @@ export default function PersonalizedPage() {
                               ? "text-amber-300 animate-pulse"
                               : preview.busy
                               ? "animate-spin text-white"
-                              : "text-rose-300"
+                              : "text-stone-400"
                           }
                         />
-                        <span>{preview.busy ? "Sculpting 3D Figurine…" : "✨ Generate 3D Preview"}</span>
+                        <span>
+                          {!hasPhoto
+                            ? "Select Photo on Left to Generate Preview"
+                            : preview.busy
+                            ? "Sculpting 3D Figurine…"
+                            : "Generate 3D Preview"}
+                        </span>
                       </button>
-                      {!hasPhoto && (
-                        <p className="text-[10px] text-center text-rose-400 font-medium mt-1.5">
-                          Upload your photo on the left card to enable 3D preview generation
-                        </p>
-                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -599,17 +760,24 @@ export default function PersonalizedPage() {
                       </button>
                     </div>
                   ) : (
-                    /* Fallback: Reassuring luxury studio photo card when 3D preview is deferred or busy */
+                    /* Fallback: Show error or studio fallback when 3D preview failed */
                     <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-rose-50/70 via-white to-amber-50/30 border-2 border-rose-200/80 shadow-sm flex flex-col items-center justify-between p-5 text-center select-none">
                       {/* Ambient background glow */}
                       <div className="absolute -top-12 -left-12 w-44 h-44 bg-rose-200/30 rounded-full blur-3xl pointer-events-none" />
                       <div className="absolute -bottom-12 -right-12 w-44 h-44 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" />
 
-                      {/* Top Reassurance Badge */}
-                      <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[10.5px] font-bold shadow-2xs">
-                        <CheckCircle2 size={12} className="text-emerald-600" />
-                        <span>Photo Saved • Studio Crafting Ready</span>
-                      </div>
+                      {/* Error or Reassurance Badge */}
+                      {preview.error ? (
+                        <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[10.5px] font-bold shadow-2xs">
+                          <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                          <span>High Demand • Preview Queued</span>
+                        </div>
+                      ) : (
+                        <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[10.5px] font-bold shadow-2xs">
+                          <CheckCircle2 size={12} className="text-emerald-600" />
+                          <span>Photo Saved • Studio Crafting Ready</span>
+                        </div>
+                      )}
 
                       {/* Photo Thumbnail with Artisan Frame */}
                       {displayOriginal && (
@@ -622,14 +790,30 @@ export default function PersonalizedPage() {
                         </div>
                       )}
 
-                      {/* Informative Text */}
+                      {/* Error Message or Informative Text */}
                       <div className="relative z-10 space-y-1 max-w-xs">
-                        <h4 className="font-display font-bold text-sm sm:text-base text-burgundy-900">
-                          Handcrafted 3D Modeling
-                        </h4>
-                        <p className="text-[11px] sm:text-xs text-espresso-500 leading-relaxed">
-                          Our 3D artisans will personally sculpt and calibrate your keepsake directly from your photograph during production. Select your size below to add to bag!
-                        </p>
+                        {preview.error ? (
+                          <>
+                            <h4 className="font-display font-bold text-sm sm:text-base text-amber-900">
+                              Our Studio Is Experiencing High Demand
+                            </h4>
+                            <p className="text-[11px] sm:text-xs text-stone-600 leading-relaxed">
+                              Your instant 3D preview is temporarily unavailable due to high traffic. Don't worry — you can still place your order and our artisans will personally handcraft your keepsake from your photo!
+                            </p>
+                            <p className="text-[10px] text-stone-400 leading-snug mt-1">
+                              Tip: Try again in a few minutes for an instant preview.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <h4 className="font-display font-bold text-sm sm:text-base text-burgundy-900">
+                              Handcrafted 3D Modeling
+                            </h4>
+                            <p className="text-[11px] sm:text-xs text-espresso-500 leading-relaxed">
+                              Our 3D artisans will personally sculpt and calibrate your keepsake directly from your photograph during production. Select your size below to add to bag!
+                            </p>
+                          </>
+                        )}
                       </div>
 
                       {/* Action Buttons */}
@@ -681,67 +865,75 @@ export default function PersonalizedPage() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-rose-100 space-y-3.5"
             >
-              {/* SECTION 1: Keepsake Size & Pricing */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between border-b border-rose-50 pb-2">
+              {/* Dimensions & Pricing Tiers for Selected Category */}
+              <div>
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2 mb-2.5">
                   <div>
-                    <h2 className="font-display font-bold text-base text-burgundy-900">
-                      Choose Keepsake Size
-                    </h2>
-                    <p className="text-[11px] text-espresso-400 mt-0.5">
-                      Select dimensions for your 3D printed keepsake figurine.
+                    <h3 className="font-display font-bold text-sm sm:text-base text-stone-900">
+                      Choose Size & Dimensions
+                    </h3>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      Select dimensions and finish for your <span className="font-semibold text-rose-600">{selectedCategory?.name || ""}</span> keepsake.
                     </p>
                   </div>
 
-                  <span className="text-xs font-mono font-bold text-ribbon-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
-                    {selectedSize?.name} ({selectedSize?.dimensions})
-                  </span>
+                  {selectedOption && (
+                    <span className="text-xs font-mono font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/80">
+                      {selectedOption.name} ({selectedOption.dimensions})
+                    </span>
+                  )}
                 </div>
 
-                {/* Size Cards - Compact */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {SIZES.map((size) => {
-                    const isSelected = selectedSize?.id === size.id;
-                    return (
-                      <div
-                        key={size.id}
-                        onClick={() => setSelectedSize(size)}
-                        className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
-                          isSelected
-                            ? "border-rose-500 bg-rose-50/90 shadow-sm ring-2 ring-rose-400/30 scale-[1.01]"
-                            : "border-slate-200 hover:border-slate-300 bg-white"
-                        }`}
-                      >
-                        {size.popular && (
-                          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white whitespace-nowrap shadow-2xs">
-                            Most Loved
-                          </span>
-                        )}
-                        <div>
-                          <div className={`font-display font-bold text-sm ${isSelected ? "text-rose-900" : "text-burgundy-900"}`}>
-                            {size.name}
+                  {/* Size Cards - Compact */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {(selectedCategory?.pricingOptions || []).map((opt) => {
+                      const isSelected =
+                        (selectedOption?._id && selectedOption?._id === opt._id) ||
+                        selectedOption?.name === opt.name;
+                      return (
+                        <div
+                          key={opt._id || opt.name}
+                          onClick={() => setSelectedOption(opt)}
+                          className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                            isSelected
+                              ? "border-rose-500 bg-rose-50/90 shadow-sm ring-2 ring-rose-400/30 scale-[1.01]"
+                              : "border-slate-200 hover:border-slate-300 bg-white"
+                          }`}
+                        >
+                          {opt.isPopular && (
+                            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white whitespace-nowrap shadow-2xs">
+                              Most Loved
+                            </span>
+                          )}
+                          <div>
+                            <div className={`font-display font-bold text-sm ${isSelected ? "text-rose-900" : "text-burgundy-900"}`}>
+                              {opt.name}
+                            </div>
+                            <div className="text-[11px] font-semibold text-rose-600 mt-0.5">
+                              {opt.dimensions}
+                            </div>
+                            {opt.description && (
+                              <p className="text-[10px] text-espresso-400 mt-0.5 leading-snug">
+                                {opt.description}
+                              </p>
+                            )}
                           </div>
-                          <div className="text-[11px] font-semibold text-rose-600 mt-0.5">
-                            {size.dimensions}
-                          </div>
-                          <p className="text-[10px] text-espresso-400 mt-0.5 leading-snug">
-                            {size.desc}
-                          </p>
-                        </div>
 
-                        <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-center gap-2">
-                          <span className="font-bold text-slate-900 text-sm font-mono">
-                            {formatPrice(size.price)}
-                          </span>
-                          <span className="text-[10px] text-slate-400 line-through">
-                            {formatPrice(size.mrp)}
-                          </span>
+                          <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-center gap-2">
+                            <span className="font-bold text-slate-900 text-sm font-mono">
+                              {formatPrice(opt.price)}
+                            </span>
+                            {opt.compareAtPrice > opt.price && (
+                              <span className="text-[10px] text-slate-400 line-through">
+                                {formatPrice(opt.compareAtPrice)}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
               {/* Single Inline Row: Quantity + Total Price + Add to Bag */}
               <div className="pt-3 border-t border-rose-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -778,7 +970,7 @@ export default function PersonalizedPage() {
                   <div className="text-right">
                     <span className="text-[10px] text-espresso-400 block leading-tight">Total Price:</span>
                     <span className="font-mono font-bold text-burgundy-900 text-base sm:text-lg leading-tight">
-                      {formatPrice((selectedSize?.price || 1299) * quantity)}
+                      {formatPrice((selectedOption?.price || 1199) * quantity)}
                     </span>
                   </div>
 
@@ -805,6 +997,46 @@ export default function PersonalizedPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Atelier Craftsmanship & Reassurance Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 sm:mt-10">
+          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+            <span className="text-xl shrink-0">📸</span>
+            <div>
+              <h4 className="text-xs font-bold text-stone-900">Photo Privacy</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Never shared. Deleted permanently after order delivery.
+              </p>
+            </div>
+          </div>
+          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+            <span className="text-xl shrink-0">🪵</span>
+            <div>
+              <h4 className="text-xs font-bold text-stone-900">Engraved Stand</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Solid walnut wood display pedestal included free.
+              </p>
+            </div>
+          </div>
+          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+            <span className="text-xl shrink-0">🎨</span>
+            <div>
+              <h4 className="text-xs font-bold text-stone-900">Solid Studio Colors</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Clean solid colors with 0.08mm precision finish.
+              </p>
+            </div>
+          </div>
+          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+            <span className="text-xl shrink-0">📦</span>
+            <div>
+              <h4 className="text-xs font-bold text-stone-900">Crush-Proof Box</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Dense foam luxury packaging delivered pan-India.
+              </p>
+            </div>
+          </div>
+        </div>
 
       </div>
 

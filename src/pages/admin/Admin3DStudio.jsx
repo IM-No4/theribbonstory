@@ -34,7 +34,7 @@ const PRODUCTION_STAGES = [
   { key: "pending_design", label: "Awaiting 3D Stylization", color: "amber" },
   { key: "cute_ready", label: "Cute Design Ready", color: "sky" },
   { key: "model_ready", label: "3D Model Ready", color: "purple" },
-  { key: "queued_for_print", label: "Queued for Bambu A1 Print", color: "indigo" },
+  { key: "queued_for_print", label: "Queued for 3D Print", color: "indigo" },
   { key: "printed", label: "Completed & Printed", color: "emerald" },
 ];
 
@@ -198,14 +198,14 @@ export default function Admin3DStudio() {
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-white flex items-center gap-3">
             <span>Tripo 3D Keepsake Studio & Workshop</span>
             <span className="text-xs bg-rose-950/90 text-rose-300 border border-rose-800/60 px-3 py-1 rounded-full font-sans font-semibold">
-              Bambu Lab A1 Ready
+              Industrial FDM Ready
             </span>
           </h1>
           <p className="text-slate-400 text-sm mt-1 max-w-3xl leading-relaxed">
             Custom orders arrive with customer source photos intact. Download the photo, generate a stylized cute
             3D figurine with ChatGPT / Midjourney, upload the cute preview here against the product, convert to a 3D mesh
             in Tripo Studio, and archive the 3D model file (<code className="text-rose-300 text-xs font-mono">.3mf</code>,{" "}
-            <code className="text-rose-300 text-xs font-mono">.obj</code>) for Bambu Lab A1 3D printing.
+            <code className="text-rose-300 text-xs font-mono">.obj</code>) for precision 3D printing.
           </p>
         </div>
 
@@ -282,7 +282,7 @@ export default function Admin3DStudio() {
             <div>
               <div className="font-bold text-white mb-0.5">Attach .3MF & Print</div>
               <p className="text-slate-400 text-[11px] leading-relaxed">
-                Attach the generated .3mf / .obj file to keep track and send to Bambu Studio!
+                Attach the generated .3mf / .obj file to keep track and send to 3D slicer!
               </p>
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function Admin3DStudio() {
             <span className="text-2xl font-bold font-display text-emerald-400 mt-1 block">
               {stats.printedCount || 0}
             </span>
-            <span className="text-[11px] text-slate-500">Bambu Lab A1 fulfilled</span>
+            <span className="text-[11px] text-slate-500">Precision 3D fulfilled</span>
           </div>
         </div>
       )}
@@ -842,7 +842,7 @@ function KeepsakeItemRow({
                   </div>
                   <div className="text-[10px] text-purple-300 font-mono mt-0.5">
                     {c.model3dSize ? `${(c.model3dSize / (1024 * 1024)).toFixed(1)} MB • ` : ""}
-                    Bambu Ready
+                    Print Ready
                   </div>
                 </div>
                 <div className="text-[10px] text-slate-500">
@@ -923,7 +923,7 @@ function KeepsakeItemRow({
               <option value="pending_design">1. Awaiting 3D Stylization</option>
               <option value="cute_ready">2. Cute 3D Design Ready</option>
               <option value="model_ready">3. 3D Model Attached</option>
-              <option value="queued_for_print">4. Queued for Bambu A1 Print</option>
+              <option value="queued_for_print">4. Queued for 3D Print</option>
               <option value="printed">5. Completed & Printed</option>
             </select>
           </div>
@@ -933,7 +933,7 @@ function KeepsakeItemRow({
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Workshop notes: e.g. Bambu A1 0.4mm, 0.16mm layer, Silk Rose Gold PLA"
+              placeholder="Workshop notes: e.g. 0.4mm nozzle, 0.16mm layer, Silk Rose Gold PLA"
               className="w-full px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-rose-500"
             />
           </div>

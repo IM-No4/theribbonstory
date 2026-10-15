@@ -1,36 +1,39 @@
 import { Link } from "react-router-dom";
 
-export function LogoMark({ to = "/", size = "compact", light = false, className = "" }) {
+export function LogoMark({ to = "/", size = "compact", light = false, showTagline = true, className = "" }) {
   if (size === "compact") {
-    if (light) {
-      return (
-        <Link
-          to={to}
-          className={`inline-flex items-center select-none group rounded-2xl bg-white/95 p-2 border border-blush-100 shadow-xs hover:shadow-sm transition-all duration-300 ${className}`}
-          title="The Ribbon Story - Every Gift Tells a Story"
-        >
-          <img
-            src="/logo.png"
-            alt="The Ribbon Story - Every Gift Tells a Story"
-            className="h-14 sm:h-16 md:h-18 w-auto object-contain shrink-0 transition-transform duration-300 group-hover:scale-105"
-            draggable={false}
-          />
-        </Link>
-      );
-    }
-
     return (
       <Link
         to={to}
-        className={`inline-flex items-center select-none group py-0.5 ${className}`}
-        title="The Ribbon Story - Every Gift Tells a Story"
+        className={`inline-flex items-center gap-2.5 sm:gap-3 select-none group py-0.5 ${className}`}
+        title="The Ribbon Story - Bespoke 3D Keepsakes"
       >
-        <img
-          src="/logo.png"
-          alt="The Ribbon Story - Every Gift Tells a Story"
-          className="h-14 sm:h-16 md:h-20 w-auto object-contain shrink-0 transition-transform duration-300 group-hover:scale-105"
-          draggable={false}
-        />
+        <div className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/90 p-1 border border-stone-200/80 shadow-xs flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105 shrink-0">
+          <img
+            src="/logo.png"
+            alt="The Ribbon Story"
+            className="h-full w-full object-contain"
+            draggable={false}
+          />
+        </div>
+        <div className="flex flex-col text-left leading-none">
+          <span
+            className={`font-serif text-[14px] sm:text-[16px] font-bold tracking-[0.12em] uppercase transition-colors ${
+              light
+                ? "text-white group-hover:text-rose-300"
+                : "text-stone-900 group-hover:text-rose-600"
+            }`}
+          >
+            The Ribbon Story
+          </span>
+          <span
+            className={`text-[8.5px] sm:text-[9.5px] font-semibold tracking-[0.2em] uppercase mt-1 ${
+              light ? "text-rose-200/70" : "text-stone-400"
+            }`}
+          >
+            3D Keepsake Atelier
+          </span>
+        </div>
       </Link>
     );
   }

@@ -79,7 +79,7 @@ export default function CartDrawer() {
                       key={item.id}
                       className="p-4 rounded-2xl bg-white border border-blush-200/80 shadow-xs flex gap-4 transition-all hover:border-ribbon-300"
                     >
-                      <div className="relative h-24 w-20 shrink-0 rounded-xl overflow-hidden bg-white border border-rose-100 flex items-center justify-center p-1 shadow-2xs">
+                      <div className="relative h-24 shrink-0 rounded-xl overflow-hidden bg-white border border-rose-100 flex items-center justify-center shadow-2xs">
                         <img
                           src={assetUrl(item.customization?.cuteImageUrl || item.customization?.reference3D?.approvedPreview || item.image || item.customization?.photoUrl)}
                           alt={item.name}

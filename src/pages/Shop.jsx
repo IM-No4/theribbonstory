@@ -5,7 +5,6 @@ import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
-import RecentlyViewed from "../components/RecentlyViewed";
 import { OCCASIONS } from "../data/occasions";
 import { useSeo } from "../utils/seo";
 
@@ -217,9 +216,6 @@ export default function Shop() {
             )}
           </div>
         </div>
-
-        {/* Recently Viewed Keepsakes */}
-        <RecentlyViewed />
       </div>
 
       {/* Modals */}

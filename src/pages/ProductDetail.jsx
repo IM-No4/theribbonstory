@@ -17,12 +17,10 @@ import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
-import { useRecentlyViewedStore } from "../store/recentlyViewedStore";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import VirtualUnboxingModal from "../components/VirtualUnboxingModal";
-import RecentlyViewed from "../components/RecentlyViewed";
 import ShareProduct from "../components/ShareProduct";
 import { useSeo, absoluteUrl, SITE_NAME, SITE_URL } from "../utils/seo";
 
@@ -67,8 +65,6 @@ export default function ProductDetail() {
   // Pincode ETA Checker
   const [pincode, setPincode] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState(null);
-
-  const addRecentlyViewed = useRecentlyViewedStore((s) => s.addRecentlyViewed);
 
   const fetchReviews = async (productId) => {
     try {
@@ -116,7 +112,6 @@ export default function ProductDetail() {
       .get(`/products/${slug}`)
       .then(({ data }) => {
         setProduct(data.product);
-        addRecentlyViewed(data.product);
 
         // Set default options
         const defaults = {};
@@ -133,7 +128,7 @@ export default function ProductDetail() {
       .then(({ data }) => setRelated((data.products || []).filter((p) => p.slug !== slug).slice(0, 3)))
       .catch(() => toast.error("Couldn't load this keepsake"))
       .finally(() => setLoading(false));
-  }, [slug, addRecentlyViewed]);
+  }, [slug]);
 
   useSeo({
     title: product ? `${product.name} — ${formatPrice(product.price)}` : undefined,
@@ -658,9 +653,6 @@ export default function ProductDetail() {
             </div>
           </section>
         )}
-
-        {/* Recently Viewed Keepsakes */}
-        <RecentlyViewed currentProductId={product._id || product.slug} />
       </div>
 
       {/* Write a Review Modal */}

@@ -37,16 +37,17 @@ export default function AdminLayout() {
     { to: "/admin/orders", label: "Customer Orders", icon: ShoppingBag },
     { to: "/admin/products", label: "Products & Pricing", icon: Package },
     { to: "/admin/collections", label: "Collections", icon: Layers },
+    { to: "/admin/keepsakes", label: "Keepsake Pricing & Sizes", icon: Sparkles },
     { to: "/admin/coupons", label: "Coupons & Discounts", icon: Tag },
     { to: "/admin/reviews", label: "Reviews & Feedback", icon: MessageSquare },
   ];
 
   return (
     <div
-      className={`min-h-screen flex flex-col md:flex-row transition-colors duration-200 ${
+      className={`h-screen max-h-screen overflow-hidden flex flex-col md:flex-row transition-colors duration-200 ${
         theme === "light"
           ? "admin-theme-light bg-slate-50 text-slate-800"
-          : "admin-theme-dark bg-slate-900 text-slate-100"
+          : "admin-theme-dark dark bg-slate-900 text-slate-100"
       }`}
     >
       {/* Mobile Sidebar Overlay */}
@@ -59,7 +60,7 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:max-h-screen md:translate-x-0 shrink-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-950/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out md:static md:h-full md:max-h-full md:translate-x-0 shrink-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -132,19 +133,6 @@ export default function AdminLayout() {
           </Link>
         </nav>
 
-        {/* Theme Appearance Mode in Sidebar */}
-        <div className="p-4 border-t border-slate-800/80 shrink-0">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Appearance
-            </span>
-            <span className="text-[10px] text-slate-400 capitalize font-medium">
-              {theme} mode
-            </span>
-          </div>
-          <AdminThemeToggle variant="segmented" />
-        </div>
-
         {/* Admin User Profile & Logout */}
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 shrink-0">
           <div className="flex items-center gap-3 px-2 mb-3">
@@ -167,9 +155,9 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-900 admin-main-bg">
+      <div className="flex-1 flex flex-col min-w-0 h-full max-h-full overflow-hidden bg-slate-900 admin-main-bg">
         {/* Mobile Header Bar */}
-        <header className="md:hidden bg-slate-950 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30">
+        <header className="md:hidden bg-slate-950 border-b border-slate-800 p-4 flex items-center justify-between shrink-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
@@ -189,7 +177,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-0 focus:outline-none">
           <Outlet />
         </main>
       </div>

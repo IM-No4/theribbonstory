@@ -170,7 +170,7 @@ export default function KeepsakeDesignPreview({ preview, onZoom, className = "" 
             <div>
               <p className="font-bold">This exact cute design will be saved with your order!</p>
               <p className="text-emerald-700 mt-0.5 text-[10.5px]">
-                Our 3D studio will use this image to sculpt your precise 3D model and print it on Bambu Lab printers.
+                Our 3D studio will use this image to sculpt your precise 3D model and print it on precision multi-color 3D printers.
               </p>
             </div>
           </div>
