@@ -21,11 +21,13 @@ import {
   ArrowRight,
   ShoppingBag,
   Info,
+  Receipt,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
+import { useLocationStore } from "../store/locationStore";
 import { useSeo } from "../utils/seo";
 
 const formatPrice = (n) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
@@ -51,6 +53,19 @@ const emptyAddress = {
   phone: "",
 };
 
+const emptyBillingAddress = {
+  name: "",
+  company: "",
+  gstin: "",
+  line1: "",
+  line2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "India",
+  phone: "",
+};
+
 export default function Checkout() {
   useSeo({ title: "Checkout", noindex: true });
   const navigate = useNavigate();
@@ -65,6 +80,8 @@ export default function Checkout() {
 
   // Address State
   const [address, setAddress] = useState(emptyAddress);
+  const [sameAsShipping, setSameAsShipping] = useState(true);
+  const [billingAddress, setBillingAddress] = useState(emptyBillingAddress);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedSavedIdx, setSelectedSavedIdx] = useState(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -90,14 +107,16 @@ export default function Checkout() {
   const [couponInput, setCouponInput] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  // Dynamic Shipping Calculation from Shiprocket API
+  // Dynamic Shipping Calculation & Single Printer Queue Option
+  const [selectedDeliveryTier, setSelectedDeliveryTier] = useState("standard"); // "standard" | "express"
   const isFreeDeliveryQualified = subtotal >= 999;
-  // Flat fee — must match the server's pricing (services/pricingService.js)
-  const shippingFee = isFreeDeliveryQualified ? 0 : 79;
+  const baseShippingFee = isFreeDeliveryQualified ? 0 : 79;
+  const expressPriorityFee = selectedDeliveryTier === "express" ? 199 : 0;
+  const shippingFee = baseShippingFee + expressPriorityFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
   const total = Math.max(0, subtotal + shippingFee - discount);
 
-  // Fetch Shiprocket Serviceability & Courier Rates automatically
+  // Fetch Shiprocket Serviceability, Printer Queue & Delivery Options
   const fetchShiprocketRates = async (pinCode) => {
     const cleanPin = (pinCode || "").trim().replace(/\D/g, "");
     if (cleanPin.length !== 6) {
@@ -109,6 +128,7 @@ export default function Checkout() {
     try {
       const { data } = await api.post("/shipping/check-serviceability", {
         pincode: cleanPin,
+        items,
         weight: 0.5,
         cod: paymentMethod === "cod" ? 1 : 0,
       });
@@ -186,8 +206,28 @@ export default function Checkout() {
           if (first.postalCode) {
             fetchShiprocketRates(first.postalCode);
           }
+        } else {
+          // No saved addresses -> auto-populate from consistent pincode
+          const storedPin =
+            localStorage.getItem("ribbon_delivery_pincode") ||
+            useLocationStore.getState().location?.pincode ||
+            "";
+          if (storedPin && /^\d{6}$/.test(storedPin)) {
+            setAddress((prev) => ({ ...prev, postalCode: storedPin }));
+            fetchShiprocketRates(storedPin);
+          }
         }
       });
+    } else {
+      // Guest user -> auto-populate from consistent pincode
+      const storedPin =
+        localStorage.getItem("ribbon_delivery_pincode") ||
+        useLocationStore.getState().location?.pincode ||
+        "";
+      if (storedPin && /^\d{6}$/.test(storedPin)) {
+        setAddress((prev) => ({ ...prev, postalCode: storedPin }));
+        fetchShiprocketRates(storedPin);
+      }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -206,6 +246,10 @@ export default function Checkout() {
     };
     setAddress(newAddr);
     if (addr.postalCode) {
+      try {
+        localStorage.setItem("ribbon_delivery_pincode", addr.postalCode);
+        useLocationStore.getState().setPincode(addr.postalCode);
+      } catch {}
       fetchShiprocketRates(addr.postalCode);
     }
     toast.success(`Selected: ${addr.label || "Saved Address"}`);
@@ -215,6 +259,10 @@ export default function Checkout() {
     const val = e.target.value.replace(/\D/g, "").slice(0, 6);
     setAddress({ ...address, postalCode: val });
     if (val.length === 6) {
+      try {
+        localStorage.setItem("ribbon_delivery_pincode", val);
+        useLocationStore.getState().setPincode(val);
+      } catch {}
       fetchShiprocketRates(val);
     }
   };
@@ -240,6 +288,25 @@ export default function Checkout() {
     if (!address.postalCode?.trim() || address.postalCode.length !== 6) {
       toast.error("Please enter a valid 6-digit Indian PIN code");
       return;
+    }
+
+    if (!sameAsShipping) {
+      if (!billingAddress.name?.trim()) {
+        toast.error("Please enter billing contact name");
+        return;
+      }
+      if (!billingAddress.line1?.trim()) {
+        toast.error("Please enter billing address line 1");
+        return;
+      }
+      if (!billingAddress.city?.trim() || !billingAddress.state?.trim()) {
+        toast.error("Please enter billing city and state");
+        return;
+      }
+      if (!billingAddress.postalCode?.trim() || billingAddress.postalCode.length !== 6) {
+        toast.error("Please enter a valid 6-digit PIN code for billing address");
+        return;
+      }
     }
 
     if (savingAddressToProfile && isAddingNew) {
@@ -313,8 +380,15 @@ export default function Checkout() {
   const buildOrderPayload = () => ({
     items: buildOrderItems(),
     shippingAddress: address,
+    billingAddress: sameAsShipping ? address : billingAddress,
+    deliverySlot:
+      selectedDeliveryTier === "express"
+        ? shippingEstimate?.express?.slotName || "⚡ Express Priority Delivery"
+        : shippingEstimate?.standard?.slotName || "Standard Delivery",
     courierPartner:
-      shippingEstimate?.recommendedCourier?.courier_name || "BlueDart Air Express (Shiprocket)",
+      selectedDeliveryTier === "express"
+        ? shippingEstimate?.express?.courierName || "BlueDart Air Express (Priority)"
+        : shippingEstimate?.standard?.courierName || "BlueDart Express (Shiprocket)",
     couponCode: appliedCoupon?.code,
     giftOptions: giftOptions.isGift ? giftOptions : undefined,
   });
@@ -330,6 +404,12 @@ export default function Checkout() {
 
     if (!address.line1 || !address.city || !address.postalCode || !address.phone) {
       toast.error("Please complete delivery address first");
+      setActiveStep(1);
+      return;
+    }
+
+    if (!sameAsShipping && (!billingAddress.line1 || !billingAddress.city || !billingAddress.postalCode)) {
+      toast.error("Please complete billing address first");
       setActiveStep(1);
       return;
     }
@@ -740,25 +820,276 @@ export default function Checkout() {
                     </form>
                   )}
 
-                  {/* Shiprocket Live Serviceability Pill */}
+                  {/* Studio 3D Printer Queue & Delivery Options Card */}
                   {shippingEstimate && (
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50/50 to-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs"
+                      className="p-4 rounded-3xl bg-gradient-to-b from-stone-50/80 to-white border border-stone-200/90 shadow-xs space-y-3"
                     >
-                      <div className="flex items-center gap-2.5 text-emerald-950 font-semibold">
-                        <Truck size={17} className="text-emerald-700 shrink-0" />
-                        <span>
-                          Shiprocket Express Delivery: Estimated arrival by{" "}
-                          <strong className="text-emerald-800">{shippingEstimate.formattedEDD}</strong>
+                      {/* Studio Single Printer Status Notice (Only for 3D keepsakes) */}
+                      {shippingEstimate.hasCustom3D && (
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                            <span className="font-semibold text-amber-950">
+                              Studio 3D Printer Queue:
+                            </span>
+                            <span className="text-amber-800 font-medium">
+                              {shippingEstimate.queueStats?.totalQueueItemsAhead || 0} keepsake{shippingEstimate.queueStats?.totalQueueItemsAhead === 1 ? "" : "s"} ahead in production
+                            </span>
+                          </div>
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full self-start sm:self-auto">
+                            Single Studio Printer
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-0.5">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-stone-900">
+                          Select Delivery Method
+                        </label>
+                        <span className="text-[11px] font-semibold text-stone-500">
+                          PIN {shippingEstimate.deliveryPincode} Serviceable
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-2.5 py-0.5 rounded-full shadow-xs">
-                        {isFreeDeliveryQualified ? "FREE Express" : "PIN Serviceable"}
-                      </span>
+
+                      {/* Selectable Cards: Standard vs Express Priority */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* 1. STANDARD DELIVERY */}
+                        <div
+                          onClick={() => setSelectedDeliveryTier("standard")}
+                          className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                            selectedDeliveryTier === "standard"
+                              ? "border-rose-500 bg-rose-50/50 ring-2 ring-rose-400/20 shadow-xs"
+                              : "border-stone-200 hover:border-stone-300 bg-white"
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-stone-900">
+                                Standard Delivery
+                              </span>
+                              <span className="text-xs font-mono font-bold text-stone-900">
+                                {isFreeDeliveryQualified ? (
+                                  <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                    FREE
+                                  </span>
+                                ) : (
+                                  "₹79"
+                                )}
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-semibold text-rose-700 flex items-center gap-1">
+                              <Truck size={12} className="shrink-0" />
+                              <span>Arrives by <strong>{shippingEstimate.standard?.formattedEDD || shippingEstimate.formattedEDD}</strong></span>
+                            </div>
+                            <p className="text-[10px] text-stone-500 leading-snug">
+                              {shippingEstimate.standard?.breakdown || "Standard queue & courier delivery"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 2. EXPRESS PRIORITY DELIVERY */}
+                        <div
+                          onClick={() => setSelectedDeliveryTier("express")}
+                          className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
+                            selectedDeliveryTier === "express"
+                              ? "border-amber-500 bg-amber-50/50 ring-2 ring-amber-400/20 shadow-xs"
+                              : "border-stone-200 hover:border-stone-300 bg-white"
+                          }`}
+                        >
+                          <span className="absolute -top-2 right-3 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-2xs">
+                            Queue Priority ⚡
+                          </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-amber-950 flex items-center gap-1">
+                                <span>Express Priority</span>
+                              </span>
+                              <span className="text-xs font-mono font-bold text-stone-900">
+                                {isFreeDeliveryQualified ? "+₹199" : "₹278"}
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                              <Sparkles size={12} className="text-amber-500 shrink-0" />
+                              <span>Arrives by <strong>{shippingEstimate.express?.formattedEDD || shippingEstimate.formattedEDD}</strong></span>
+                            </div>
+                            <p className="text-[10px] text-stone-600 leading-snug">
+                              {shippingEstimate.hasCustom3D
+                                ? "⚡ Priority Queue: Jumps ahead of standard orders to print next + Air Express"
+                                : "⚡ Priority packaging & BlueDart Air Express"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </motion.div>
                   )}
+
+                  {/* Billing Address Configuration */}
+                  <div className="pt-4 border-t border-slate-200/80 space-y-3">
+                    <label className="flex items-start gap-2.5 cursor-pointer select-none group">
+                      <input
+                        type="checkbox"
+                        checked={sameAsShipping}
+                        onChange={(e) => setSameAsShipping(e.target.checked)}
+                        className="mt-0.5 rounded text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
+                      />
+                      <div>
+                        <span className="text-xs font-bold text-burgundy-900 group-hover:text-ribbon-700 transition">
+                          Billing address is the same as delivery address
+                        </span>
+                        <span className="text-[11px] text-espresso-400 block mt-0.5">
+                          Uncheck if you need the tax invoice billed to a different person, office, or company GSTIN.
+                        </span>
+                      </div>
+                    </label>
+
+                    {!sameAsShipping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-4"
+                      >
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-200 text-burgundy-900">
+                          <Receipt size={16} className="text-ribbon-600" />
+                          <span className="text-xs font-bold uppercase tracking-wider">
+                            Billing Address &amp; GST Details
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              Billing Name / Contact Person *
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.name}
+                              onChange={(e) => setBillingAddress({ ...billingAddress, name: e.target.value })}
+                              placeholder="e.g. Rahul Verma or Accounts Dept"
+                              className="input-field text-xs py-3 bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              Billing Contact Phone
+                            </label>
+                            <input
+                              type="tel"
+                              value={billingAddress.phone}
+                              onChange={(e) => setBillingAddress({ ...billingAddress, phone: e.target.value })}
+                              placeholder="10-digit mobile number"
+                              className="input-field text-xs py-3 font-mono bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              Company Name (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.company}
+                              onChange={(e) => setBillingAddress({ ...billingAddress, company: e.target.value })}
+                              placeholder="e.g. Acme Innovations Pvt Ltd"
+                              className="input-field text-xs py-3 bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              GSTIN (Optional, for Tax Credit)
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={15}
+                              value={billingAddress.gstin}
+                              onChange={(e) =>
+                                setBillingAddress({ ...billingAddress, gstin: e.target.value.toUpperCase() })
+                              }
+                              placeholder="15-digit GSTIN (e.g. 29ABCDE1234F1Z5)"
+                              className="input-field text-xs py-3 font-mono uppercase bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                            Billing Address Line 1 *
+                          </label>
+                          <input
+                            type="text"
+                            value={billingAddress.line1}
+                            onChange={(e) => setBillingAddress({ ...billingAddress, line1: e.target.value })}
+                            placeholder="Flat / Office no., Building Name, Street"
+                            className="input-field text-xs py-3 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                            Billing Address Line 2
+                          </label>
+                          <input
+                            type="text"
+                            value={billingAddress.line2}
+                            onChange={(e) => setBillingAddress({ ...billingAddress, line2: e.target.value })}
+                            placeholder="Area, Locality, Landmark"
+                            className="input-field text-xs py-3 bg-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              PIN Code *
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={6}
+                              value={billingAddress.postalCode}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                setBillingAddress({ ...billingAddress, postalCode: val });
+                              }}
+                              placeholder="6 digits"
+                              className="input-field text-xs py-3 font-mono font-bold bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              City *
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.city}
+                              onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
+                              placeholder="e.g. Mumbai"
+                              className="input-field text-xs py-3 bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                              State *
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.state}
+                              onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })}
+                              placeholder="e.g. Maharashtra"
+                              className="input-field text-xs py-3 bg-white"
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
 
                   {/* Confirm Address Button */}
                   <div className="pt-2 flex items-center justify-end">
@@ -796,15 +1127,32 @@ export default function Checkout() {
                       {address.line1}, {address.line2 && `${address.line2}, `}
                       {address.city}, {address.state} - <strong className="font-mono">{address.postalCode}</strong>
                     </div>
+                    {!sameAsShipping && billingAddress.line1 && (
+                      <div className="text-[11px] text-espresso-500 pt-1 mt-1 border-t border-rose-100 flex items-center gap-1.5">
+                        <Receipt size={12} className="text-ribbon-500 shrink-0" />
+                        <span>
+                          <strong>Billed to:</strong> {billingAddress.company ? `${billingAddress.company} · ` : ""}{billingAddress.name} ({billingAddress.city} - {billingAddress.postalCode})
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {shippingEstimate && (
                     <div className="text-right sm:border-l sm:border-slate-200 sm:pl-4 text-emerald-800">
                       <div className="text-[11px] font-semibold flex items-center gap-1 justify-end">
                         <Truck size={13} />
-                        <span>Shiprocket Express</span>
+                        <span>
+                          {selectedDeliveryTier === "express" ? "⚡ Express Priority" : "Standard Delivery"}
+                        </span>
                       </div>
-                      <div className="text-[10px] text-espresso-500">ETA: {shippingEstimate.formattedEDD}</div>
+                      <div className="text-[10px] text-espresso-600 font-medium">
+                        ETA:{" "}
+                        <strong className="text-emerald-900">
+                          {selectedDeliveryTier === "express"
+                            ? shippingEstimate.express?.formattedEDD || shippingEstimate.formattedEDD
+                            : shippingEstimate.standard?.formattedEDD || shippingEstimate.formattedEDD}
+                        </strong>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1297,10 +1645,19 @@ export default function Checkout() {
 
                   <div className="flex justify-between items-center">
                     <div>
-                      <span>Shiprocket Delivery</span>
+                      <span className="font-medium text-slate-800">
+                        {selectedDeliveryTier === "express"
+                          ? "⚡ Express Priority Delivery"
+                          : "Standard Delivery"}
+                      </span>
                       {shippingEstimate && (
-                        <span className="block text-[10px] text-espresso-400">
-                          Estimated ETA: {shippingEstimate.formattedEDD}
+                        <span className="block text-[10px] text-espresso-500">
+                          Estimated ETA:{" "}
+                          <strong className="text-stone-700">
+                            {selectedDeliveryTier === "express"
+                              ? shippingEstimate.express?.formattedEDD || shippingEstimate.formattedEDD
+                              : shippingEstimate.standard?.formattedEDD || shippingEstimate.formattedEDD}
+                          </strong>
                         </span>
                       )}
                     </div>

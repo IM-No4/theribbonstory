@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Upload,
   FileCode,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
@@ -32,10 +33,57 @@ const STATUSES = [
   { value: "pending", label: "Pending" },
   { value: "confirmed", label: "Confirmed" },
   { value: "processing", label: "Processing" },
+  { value: "ready", label: "Ready to Ship" },
   { value: "shipped", label: "Shipped" },
   { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
 ];
+
+const VALID_TRANSITIONS = {
+  pending: [
+    { value: "confirmed", label: "Confirm Order" },
+    { value: "cancelled", label: "Cancel Order" },
+  ],
+  confirmed: [
+    { value: "processing", label: "Start Processing (Crafting)" },
+    { value: "ready", label: "Mark as Ready to Ship" },
+    { value: "cancelled", label: "Cancel Order" },
+  ],
+  processing: [
+    { value: "ready", label: "Mark as Ready to Ship" },
+    { value: "cancelled", label: "Cancel Order" },
+  ],
+  ready: [
+    { value: "shipped", label: "Mark as Shipped" },
+    { value: "processing", label: "Return to Processing" },
+    { value: "cancelled", label: "Cancel Order" },
+  ],
+  shipped: [
+    { value: "delivered", label: "Mark as Delivered" },
+  ],
+  delivered: [],
+  cancelled: [],
+};
+
+const getStatusBadgeStyle = (status) => {
+  switch (status) {
+    case "delivered":
+      return "bg-emerald-950 text-emerald-300 border-emerald-800";
+    case "shipped":
+      return "bg-blue-950 text-blue-300 border-blue-800";
+    case "ready":
+      return "bg-purple-950 text-purple-300 border-purple-700 ring-1 ring-purple-500/40";
+    case "processing":
+      return "bg-sky-950 text-sky-300 border-sky-800";
+    case "cancelled":
+      return "bg-red-950 text-red-300 border-red-800";
+    case "confirmed":
+      return "bg-amber-950 text-amber-300 border-amber-800";
+    default:
+      return "bg-slate-800 text-slate-300 border-slate-700";
+  }
+};
+
 
 export default function AdminOrders() {
   const { theme } = useAdminThemeStore();
@@ -277,8 +325,8 @@ export default function AdminOrders() {
         setSelectedOrder(data.order);
       }
       fetchOrders();
-    } catch {
-      toast.error("Failed to update status");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status");
     } finally {
       setUpdating(false);
     }
@@ -487,27 +535,33 @@ export default function AdminOrders() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <select
-                          value={order.status}
-                          disabled={updating}
-                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                          className={`text-[11px] font-bold uppercase rounded-lg px-2.5 py-1 border cursor-pointer ${
-                            order.status === "delivered"
-                              ? "bg-emerald-950 text-emerald-300 border-emerald-800"
-                              : order.status === "shipped"
-                              ? "bg-blue-950 text-blue-300 border-blue-800"
-                              : order.status === "cancelled"
-                              ? "bg-red-950 text-red-300 border-red-800"
-                              : "bg-amber-950 text-amber-300 border-amber-800"
-                          }`}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                        {(VALID_TRANSITIONS[order.status] || []).length > 0 ? (
+                          <select
+                            value={order.status}
+                            disabled={updating}
+                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                            className={`text-[11px] font-bold uppercase rounded-lg px-2.5 py-1 border cursor-pointer ${getStatusBadgeStyle(
+                              order.status
+                            )}`}
+                          >
+                            <option value={order.status}>
+                              {order.status === "ready" ? "Ready to Ship" : order.status}
+                            </option>
+                            {(VALID_TRANSITIONS[order.status] || []).map((t) => (
+                              <option key={t.value} value={t.value}>
+                                → {t.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span
+                            className={`text-[11px] font-bold uppercase rounded-lg px-2.5 py-1 border inline-block ${getStatusBadgeStyle(
+                              order.status
+                            )}`}
+                          >
+                            {order.status}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -549,20 +603,18 @@ export default function AdminOrders() {
 
       {/* Detailed Order Modal */}
       {selectedOrder && createPortal(
-        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150 ${theme === "dark" ? "dark" : ""}`}>
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl shadow-black/80 my-8">
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/75 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150 ${theme === "dark" ? "dark" : ""}`}>
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-6xl 2xl:max-w-7xl max-h-[94vh] flex flex-col shadow-2xl shadow-black/80 my-3 sm:my-5">
             <div className="p-6 border-b border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="font-display font-bold text-xl text-white flex items-center gap-2">
                   <span>Order #{selectedOrder._id.slice(-6).toUpperCase()}</span>
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      selectedOrder.status === "delivered"
-                        ? "bg-emerald-950 text-emerald-400 border border-emerald-800/40"
-                        : "bg-amber-950 text-amber-400 border border-amber-800/40"
-                    }`}
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(
+                      selectedOrder.status
+                    )}`}
                   >
-                    {selectedOrder.status}
+                    {selectedOrder.status === "ready" ? "Ready to Ship" : selectedOrder.status}
                   </span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -584,8 +636,66 @@ export default function AdminOrders() {
             </div>
 
             <div className="p-6 overflow-y-auto space-y-6 text-xs flex-1">
-              {/* Customer & Address */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              {/* Sequential Order Progression Pipeline */}
+              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={15} className="text-rose-400" />
+                    <span className="font-bold text-white text-xs uppercase tracking-wider">
+                      Order Lifecycle Sequence
+                    </span>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadgeStyle(selectedOrder.status)}`}>
+                    Current: {selectedOrder.status === "ready" ? "Ready to Ship" : selectedOrder.status}
+                  </span>
+                </div>
+
+                {selectedOrder.status === "cancelled" ? (
+                  <div className="p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-300 text-xs flex items-center justify-between">
+                    <span>❌ This order was cancelled. Status sequence is terminated.</span>
+                    {selectedOrder.cancellationReason && (
+                      <span className="italic text-[11px] text-red-400">&quot;{selectedOrder.cancellationReason}&quot;</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {[
+                      { key: "confirmed", step: 1, label: "1. Confirmed", desc: "Payment verified" },
+                      { key: "processing", step: 2, label: "2. Processing", desc: "Artisan crafting" },
+                      { key: "ready", step: 3, label: "3. Ready to Ship", desc: "QC & Ribbon box" },
+                      { key: "shipped", step: 4, label: "4. Shipped", desc: "Shiprocket dispatch" },
+                      { key: "delivered", step: 5, label: "5. Delivered", desc: "Doorstep delivery" },
+                    ].map((st) => {
+                      const orderSteps = { confirmed: 1, processing: 2, ready: 3, shipped: 4, delivered: 5 };
+                      const currentNum = orderSteps[selectedOrder.status] || 1;
+                      const isPast = currentNum > st.step;
+                      const isCurrent = currentNum === st.step;
+
+                      return (
+                        <div
+                          key={st.key}
+                          className={`p-2.5 rounded-xl border text-center transition flex flex-col justify-between ${
+                            isCurrent
+                              ? "bg-rose-500/10 border-rose-500/50 text-white shadow-xs"
+                              : isPast
+                              ? "bg-slate-950/60 border-slate-800 text-emerald-400 opacity-80"
+                              : "bg-slate-950/30 border-slate-800/50 text-slate-500 opacity-50"
+                          }`}
+                        >
+                          <div className="text-[11px] font-bold flex items-center justify-center gap-1">
+                            {isPast && <span>✓</span>}
+                            <span>{st.label}</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">{st.desc}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Customer & Address (Spacious 3-Column Grid) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-rose-400 font-semibold uppercase tracking-wider text-[11px]">
                     <User size={14} />
@@ -611,10 +721,25 @@ export default function AdminOrders() {
                     {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} -{" "}
                     {selectedOrder.shippingAddress?.postalCode}
                   </div>
+                  {selectedOrder.billingAddress?.line1 && (selectedOrder.billingAddress.line1 !== selectedOrder.shippingAddress?.line1 || selectedOrder.billingAddress.name !== selectedOrder.shippingAddress?.name) && (
+                    <div className="mt-2 pt-2 border-t border-slate-800 text-[10px] text-slate-300 space-y-0.5">
+                      <span className="font-bold text-amber-400 uppercase tracking-wider block">Billing / Invoice:</span>
+                      <div className="font-semibold text-white">
+                        {selectedOrder.billingAddress.company ? `${selectedOrder.billingAddress.company} · ` : ""}
+                        {selectedOrder.billingAddress.name}
+                      </div>
+                      {selectedOrder.billingAddress.gstin && (
+                        <div className="text-amber-300 font-mono">GSTIN: {selectedOrder.billingAddress.gstin}</div>
+                      )}
+                      <div className="text-slate-400">
+                        {selectedOrder.billingAddress.line1}, {selectedOrder.billingAddress.city} - {selectedOrder.billingAddress.postalCode}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Scheduled Celebration Date & Slot */}
-                <div className="space-y-1 sm:col-span-2 pt-2 border-t border-slate-800">
+                <div className="space-y-1 md:border-l md:border-slate-800 md:pl-4">
                   <div className="flex items-center gap-1.5 text-rose-400 font-semibold uppercase tracking-wider text-[11px]">
                     <Calendar size={14} />
                     <span>Scheduled Delivery Details</span>
@@ -656,6 +781,7 @@ export default function AdminOrders() {
                     const isCuteUploading = uploadingItemKey === `${selectedOrder._id}-${idx}-cute`;
                     const isModelUploading = uploadingItemKey === `${selectedOrder._id}-${idx}-model`;
 
+                    const isProductionLocked = ["ready", "shipped", "delivered", "cancelled"].includes(selectedOrder.status);
                     const originalDownloadName = `Order_${String(selectedOrder._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}_Customer_Photo.webp`;
                     const cuteDownloadName = `Order_${String(selectedOrder._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}_Cute_Render.webp`;
                     const modelDownloadName = c.model3dFilename || `Order_${String(selectedOrder._id).slice(-6).toUpperCase()}_${item.name.replace(/\s+/g, "_")}.3mf`;
@@ -746,15 +872,15 @@ export default function AdminOrders() {
 
                         {/* Personalized Request Action Row (Customer Photo | Cute Version | 3D Model File) */}
                         {isPersonalized && (
-                          <div className="pt-2 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="pt-2 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3.5">
                             {/* 1. Customer Source Photo */}
-                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
                               <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-1.5">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-2">
                                   1. Customer Source Photo
                                 </span>
                                 {originalPhotoUrl ? (
-                                  <div className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-800 h-28 flex items-center justify-center group">
+                                  <div className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-800 h-36 sm:h-40 flex items-center justify-center group">
                                     <img
                                       src={assetUrl(originalPhotoUrl)}
                                       alt="Customer photo"
@@ -764,14 +890,14 @@ export default function AdminOrders() {
                                     <button
                                       type="button"
                                       onClick={() => setZoomImage(originalPhotoUrl)}
-                                      className="absolute bottom-1.5 right-1.5 p-1 rounded bg-black/70 hover:bg-black text-white text-[9px] flex items-center gap-1 transition"
+                                      className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/75 hover:bg-black text-white text-[10px] flex items-center gap-1 transition"
                                     >
-                                      <Eye size={10} />
+                                      <Eye size={11} />
                                       <span>Zoom</span>
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="h-28 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 flex items-center justify-center text-slate-500 text-xs">
+                                  <div className="h-36 sm:h-40 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 flex items-center justify-center text-slate-500 text-xs">
                                     No photo attached
                                   </div>
                                 )}
@@ -781,22 +907,27 @@ export default function AdminOrders() {
                                 <button
                                   type="button"
                                   onClick={() => handleDownloadAsset(originalPhotoUrl, originalDownloadName)}
-                                  className="w-full py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition"
+                                  className="w-full py-2 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition"
                                 >
-                                  <Download size={12} />
+                                  <Download size={13} />
                                   <span>Download Customer Photo</span>
                                 </button>
                               )}
                             </div>
 
                             {/* 2. Cute Version Image */}
-                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
                               <div>
-                                <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center justify-between mb-2">
                                   <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400">
                                     2. Cute Version Image
                                   </span>
-                                  {sourcePhotoUrl && (
+                                  {isProductionLocked ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
+                                      <CheckCircle2 size={11} />
+                                      <span>Finalized</span>
+                                    </span>
+                                  ) : sourcePhotoUrl ? (
                                     <button
                                       type="button"
                                       disabled={generatingChibiKey === `${selectedOrder._id}-${idx}`}
@@ -816,11 +947,11 @@ export default function AdminOrders() {
                                         </>
                                       )}
                                     </button>
-                                  )}
+                                  ) : null}
                                 </div>
 
                                 {cuteImageUrl ? (
-                                  <div className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-800 h-28 flex items-center justify-center group">
+                                  <div className="relative rounded-lg overflow-hidden bg-slate-900 border border-slate-800 h-36 sm:h-40 flex items-center justify-center group">
                                     <img
                                       src={assetUrl(cuteImageUrl)}
                                       alt="Cute version"
@@ -830,11 +961,22 @@ export default function AdminOrders() {
                                     <button
                                       type="button"
                                       onClick={() => setZoomImage(cuteImageUrl)}
-                                      className="absolute bottom-1.5 right-1.5 p-1 rounded bg-black/70 hover:bg-black text-white text-[9px] flex items-center gap-1 transition"
+                                      className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/75 hover:bg-black text-white text-[10px] flex items-center gap-1 transition"
                                     >
-                                      <Eye size={10} />
+                                      <Eye size={11} />
                                       <span>Zoom</span>
                                     </button>
+                                  </div>
+                                ) : isProductionLocked ? (
+                                  <div className="h-36 sm:h-40 rounded-lg bg-slate-900/60 border border-slate-800 p-3 flex flex-col items-center justify-center text-center space-y-1.5">
+                                    <CheckCircle2 size={24} className="text-emerald-400" />
+                                    <span className="text-xs font-semibold text-slate-200">Handcrafted Direct from Photo</span>
+                                    <span className="text-[10px] text-slate-400 max-w-[210px] leading-relaxed">
+                                      Keepsake physical figurine crafted directly from customer source photo.
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-semibold">
+                                      Production Stage Complete
+                                    </span>
                                   </div>
                                 ) : (
                                   <div className="space-y-2">
@@ -884,61 +1026,79 @@ export default function AdminOrders() {
                               </div>
 
                               {cuteImageUrl ? (
-                                <div className="flex items-center gap-1.5">
+                                isProductionLocked ? (
                                   <button
                                     type="button"
                                     onClick={() => handleDownloadAsset(cuteImageUrl, cuteDownloadName)}
-                                    className="flex-1 py-1.5 px-2 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold flex items-center justify-center gap-1 transition"
+                                    className="w-full py-2 px-2 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition"
                                   >
-                                    <Download size={12} />
-                                    <span>Download</span>
+                                    <Download size={13} />
+                                    <span>Download Cute Render</span>
                                   </button>
-                                  {sourcePhotoUrl && (
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
                                     <button
                                       type="button"
-                                      disabled={generatingChibiKey === `${selectedOrder._id}-${idx}`}
-                                      onClick={() => handleGenerateChibi(selectedOrder._id, idx)}
-                                      className="py-1.5 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                                      title="Regenerate with AI"
+                                      onClick={() => handleDownloadAsset(cuteImageUrl, cuteDownloadName)}
+                                      className="flex-1 py-1.5 px-2 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold flex items-center justify-center gap-1 transition"
                                     >
-                                      <Sparkles size={11} className={generatingChibiKey === `${selectedOrder._id}-${idx}` ? "animate-spin" : ""} />
-                                      <span>Regen</span>
+                                      <Download size={12} />
+                                      <span>Download</span>
                                     </button>
-                                  )}
-                                  <label className="cursor-pointer py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition">
-                                    <RefreshCw size={11} className={isCuteUploading ? "animate-spin" : ""} />
-                                    <span>Replace</span>
-                                    <input
-                                      type="file"
-                                      accept="image/png,image/jpeg,image/webp"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleUploadCuteImage(selectedOrder._id, idx, file);
-                                      }}
-                                      disabled={isCuteUploading}
-                                    />
-                                  </label>
-                                </div>
+                                    {sourcePhotoUrl && (
+                                      <button
+                                        type="button"
+                                        disabled={generatingChibiKey === `${selectedOrder._id}-${idx}`}
+                                        onClick={() => handleGenerateChibi(selectedOrder._id, idx)}
+                                        className="py-1.5 px-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                                        title="Regenerate with AI"
+                                      >
+                                        <Sparkles size={11} className={generatingChibiKey === `${selectedOrder._id}-${idx}` ? "animate-spin" : ""} />
+                                        <span>Regen</span>
+                                      </button>
+                                    )}
+                                    <label className="cursor-pointer py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition">
+                                      <RefreshCw size={11} className={isCuteUploading ? "animate-spin" : ""} />
+                                      <span>Replace</span>
+                                      <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handleUploadCuteImage(selectedOrder._id, idx, file);
+                                        }}
+                                        disabled={isCuteUploading}
+                                      />
+                                    </label>
+                                  </div>
+                                )
                               ) : null}
                             </div>
 
                             {/* 3. Optional 3D Model File (Internal Use Only) */}
-                            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
                               <div>
-                                <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center justify-between mb-2">
                                   <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
                                     3. 3D Model File
                                   </span>
-                                  <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">
-                                    Internal Use Only
-                                  </span>
+                                  {isProductionLocked ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-400">
+                                      <CheckCircle2 size={11} />
+                                      <span>Studio Ready</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide">
+                                      Internal Use Only
+                                    </span>
+                                  )}
                                 </div>
 
                                 {model3dUrl ? (
-                                  <div className="h-28 rounded-lg bg-slate-900 border border-purple-900/50 p-3 flex flex-col items-center justify-center text-center space-y-1">
-                                    <Box size={22} className="text-purple-300" />
-                                    <div className="text-xs font-bold text-white truncate max-w-[170px]" title={c.model3dFilename}>
+                                  <div className="h-36 sm:h-40 rounded-lg bg-slate-900 border border-purple-900/50 p-3 flex flex-col items-center justify-center text-center space-y-1">
+                                    <Box size={24} className="text-purple-300" />
+                                    <div className="text-xs font-bold text-white truncate max-w-[200px]" title={c.model3dFilename}>
                                       {c.model3dFilename || "3d_model.3mf"}
                                     </div>
                                     <div className="text-[10px] text-purple-300 font-mono">
@@ -946,12 +1106,23 @@ export default function AdminOrders() {
                                       Print Ready
                                     </div>
                                   </div>
+                                ) : isProductionLocked ? (
+                                  <div className="h-36 sm:h-40 rounded-lg bg-slate-900/60 border border-slate-800 p-3 flex flex-col items-center justify-center text-center space-y-1.5">
+                                    <Box size={24} className="text-purple-400" />
+                                    <span className="text-xs font-semibold text-slate-200">Physical Figurine 3D Printed</span>
+                                    <span className="text-[10px] text-slate-400 max-w-[210px] leading-relaxed">
+                                      Figurine 3D printing and post-processing completed in studio.
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 text-[9px] font-semibold">
+                                      Workshop Complete
+                                    </span>
+                                  </div>
                                 ) : (
-                                  <label className="h-28 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 hover:border-purple-500/60 flex flex-col items-center justify-center p-2 text-center cursor-pointer group transition">
-                                    <FileCode size={18} className="text-purple-400 mb-1 group-hover:scale-110 transition" />
+                                  <label className="h-36 sm:h-40 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 hover:border-purple-500/60 flex flex-col items-center justify-center p-2 text-center cursor-pointer group transition">
+                                    <FileCode size={20} className="text-purple-400 mb-1 group-hover:scale-110 transition" />
                                     <span className="text-xs font-bold text-white">Attach 3D Model</span>
                                     <span className="text-[10px] text-slate-400 mt-0.5">.3mf, .obj, .stl, .glb</span>
-                                    <span className="text-[9px] text-slate-500 mt-0.5">Optional for workshop</span>
+                                    <span className="text-[9px] text-slate-500 mt-1">Optional for workshop</span>
                                     <input
                                       type="file"
                                       accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
@@ -967,31 +1138,42 @@ export default function AdminOrders() {
                               </div>
 
                               {model3dUrl ? (
-                                <div className="flex items-center gap-1.5">
+                                isProductionLocked ? (
                                   <button
                                     type="button"
                                     onClick={() => handleDownloadAsset(model3dUrl, modelDownloadName)}
-                                    className="flex-1 py-1.5 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1 transition"
+                                    className="w-full py-2 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition"
                                   >
-                                    <Download size={12} />
-                                    <span>Download .3MF</span>
+                                    <Download size={13} />
+                                    <span>Download .3MF Model</span>
                                   </button>
-                                  <label className="cursor-pointer py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition">
-                                    <RefreshCw size={11} className={isModelUploading ? "animate-spin" : ""} />
-                                    <span>Replace</span>
-                                    <input
-                                      type="file"
-                                      accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleUploadModelFile(selectedOrder._id, idx, file);
-                                      }}
-                                      disabled={isModelUploading}
-                                    />
-                                  </label>
-                                </div>
-                              ) : (
+                                ) : (
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadAsset(model3dUrl, modelDownloadName)}
+                                      className="flex-1 py-1.5 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1 transition"
+                                    >
+                                      <Download size={12} />
+                                      <span>Download .3MF</span>
+                                    </button>
+                                    <label className="cursor-pointer py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-bold flex items-center gap-1 transition">
+                                      <RefreshCw size={11} className={isModelUploading ? "animate-spin" : ""} />
+                                      <span>Replace</span>
+                                      <input
+                                        type="file"
+                                        accept=".3mf,.obj,.stl,.glb,.gcode,.zip,.step,.stp"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handleUploadModelFile(selectedOrder._id, idx, file);
+                                        }}
+                                        disabled={isModelUploading}
+                                      />
+                                    </label>
+                                  </div>
+                                )
+                              ) : !isProductionLocked ? (
                                 <label className="w-full py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-md shadow-purple-950/40">
                                   <Upload size={12} />
                                   <span>Attach 3D Model</span>
@@ -1006,7 +1188,7 @@ export default function AdminOrders() {
                                     disabled={isModelUploading}
                                   />
                                 </label>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         )}
@@ -1028,28 +1210,53 @@ export default function AdminOrders() {
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-700">
                       AWB: {selectedOrder.awbCode}
                     </span>
+                  ) : selectedOrder.status === "ready" ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700 animate-pulse">
+                      Ready for Dispatch
+                    </span>
                   ) : (
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-400">
-                      Unfulfilled in Shiprocket
+                      Locked • Requires &apos;Ready&apos; Status
                     </span>
                   )}
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <div className="text-xs text-slate-300">
-                    Assigned Courier: <strong className="text-white">{selectedOrder.courierName || selectedOrder.courierPartner || "BlueDart Express"}</strong>
+                    {selectedOrder.shiprocketShipmentId ? (
+                      <>Assigned Courier: <strong className="text-white">{selectedOrder.courierName || selectedOrder.courierPartner || "BlueDart Express"}</strong></>
+                    ) : selectedOrder.status === "ready" ? (
+                      <span className="text-emerald-400 font-medium">
+                        ✓ Figurine is crafted & boxed. Ready to book courier pickup & generate Shiprocket AWB label.
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">
+                        Crafting in progress. Mark order as <strong className="text-purple-300">&apos;Ready to Ship&apos;</strong> to unlock Shiprocket.
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
                     {!selectedOrder.shiprocketShipmentId ? (
-                      <button
-                        onClick={() => handleShiprocketDispatch(selectedOrder._id)}
-                        disabled={updating}
-                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer"
-                      >
-                        <Truck size={14} />
-                        <span>⚡ Ship with Shiprocket</span>
-                      </button>
+                      selectedOrder.status === "ready" ? (
+                        <button
+                          onClick={() => handleShiprocketDispatch(selectedOrder._id)}
+                          disabled={updating}
+                          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-indigo-950/50 transition cursor-pointer"
+                        >
+                          <Truck size={15} />
+                          <span>⚡ Ship with Shiprocket Now</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleStatusChange(selectedOrder._id, "ready")}
+                          disabled={updating || selectedOrder.status === "cancelled" || selectedOrder.status === "delivered"}
+                          className="px-3.5 py-2 rounded-xl bg-purple-950/70 hover:bg-purple-900 text-purple-200 border border-purple-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                        >
+                          <Sparkles size={13} className="text-purple-400" />
+                          <span>Mark as Ready to Ship</span>
+                        </button>
+                      )
                     ) : (
                       <button
                         onClick={() => handlePrintLabel(selectedOrder._id)}
@@ -1121,20 +1328,36 @@ export default function AdminOrders() {
 
             {/* Modal Footer with quick status change & refund */}
             <div className="p-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-950 rounded-b-3xl">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-xs">Update Status:</span>
-                <select
-                  value={selectedOrder.status}
-                  onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-xs font-bold text-white rounded-xl px-3 py-2"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="processing">Processing</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+              <div className="flex items-center gap-3">
+                <span className="text-slate-400 text-xs">Current Status:</span>
+                <span className={`px-2.5 py-1 rounded-xl text-xs font-bold uppercase border ${getStatusBadgeStyle(selectedOrder.status)}`}>
+                  {selectedOrder.status === "ready" ? "Ready to Ship" : selectedOrder.status}
+                </span>
+
+                {(VALID_TRANSITIONS[selectedOrder.status] || []).length > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 text-xs">Advance to:</span>
+                    <select
+                      value=""
+                      disabled={updating}
+                      onChange={(e) => {
+                        if (e.target.value) handleStatusChange(selectedOrder._id, e.target.value);
+                      }}
+                      className="bg-slate-900 border border-slate-700 text-xs font-bold text-white rounded-xl px-3 py-2 cursor-pointer hover:border-slate-500 transition"
+                    >
+                      <option value="">Choose Next Status...</option>
+                      {(VALID_TRANSITIONS[selectedOrder.status] || []).map((t) => (
+                        <option key={t.value} value={t.value}>
+                          → {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <span className="text-slate-500 text-xs italic">
+                    Final settled state ({selectedOrder.status})
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2">

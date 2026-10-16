@@ -396,6 +396,13 @@
   border: 1px solid #e9d5ff !important;
 }
 
+.admin-theme-light [class*="bg-sky-950"],
+.admin-theme-light span.bg-sky-950 {
+  background-color: #f0f9ff !important;
+  color: #0284c7 !important;
+  border: 1px solid #bae6fd !important;
+}
+
 /* Modal Backdrops & Overlays */
 .admin-theme-light .fixed.inset-0.bg-black\/70,
 .admin-theme-light .fixed.inset-0.bg-black\/60,

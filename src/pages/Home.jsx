@@ -402,23 +402,23 @@ export default function Home() {
       {/* =========================================================================
           2. VISUAL 3D CATEGORY BENTO GRID (With Real 3D Studio Product Photos)
          ========================================================================= */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-10 bg-white border-b border-stone-200/60">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-stone-100 pb-5">
+      <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-white border-b border-stone-200/60">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-stone-100 pb-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-ribbon-600 block mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-ribbon-600 block mb-0.5">
                 Visual Showcase
               </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-stone-900">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-stone-900">
                 Explore by 3D Collection
               </h2>
-              <p className="text-xs sm:text-sm text-stone-500 mt-1 max-w-xl">
+              <p className="text-xs sm:text-sm text-stone-500 mt-0.5 max-w-xl">
                 Ready-to-ship physical models printed on industrial multi-color FDM printers.
               </p>
             </div>
             <Link
               to="/shop"
-              className="text-xs font-bold text-ribbon-600 hover:text-ribbon-700 flex items-center gap-1 group py-1"
+              className="text-xs font-bold text-ribbon-600 hover:text-ribbon-700 flex items-center gap-1 group py-1 self-start sm:self-end"
             >
               <span>View All 3D Models</span>
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -427,25 +427,25 @@ export default function Home() {
 
           {/* Dynamic Collections from Database */}
           {loadingCategories ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-72 rounded-3xl bg-stone-100/80 animate-pulse border border-stone-200/60" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-56 sm:h-64 rounded-2xl bg-stone-100/80 animate-pulse border border-stone-200/60" />
               ))}
             </div>
           ) : categories.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {categories.map((cat) => (
                 <Link
                   key={cat._id || cat.slug}
                   to={`/shop?category=${cat.slug}`}
-                  className="group relative rounded-3xl bg-[#FAF8F5] border border-stone-200/80 hover:border-ribbon-300 hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+                  className="group relative rounded-2xl bg-[#FAF8F5] border border-stone-200/80 hover:border-ribbon-300 hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden"
                 >
-                  {/* Visual Image Header */}
-                  <div className="relative aspect-[16/11] overflow-hidden bg-stone-100">
+                  {/* Visual Image Header - Compact & Balanced */}
+                  <div className="relative h-36 sm:h-40 md:h-44 w-full overflow-hidden bg-stone-100">
                     <img
                       src={assetUrl(cat.image || "/images/photo-magnet.webp")}
                       alt={cat.name}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-106"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       onError={(e) => {
                         e.target.src = "/images/photo-magnet.webp";
                       }}
@@ -454,35 +454,35 @@ export default function Home() {
 
                     {/* Top Badge */}
                     {cat.badge && (
-                      <div className="absolute top-3 left-3 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-white px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs bg-rose-600">
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-2">
+                        <span className="text-[9px] font-bold text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs bg-rose-600">
                           {cat.badge}
                         </span>
                       </div>
                     )}
 
                     {/* Bottom Counter Pill */}
-                    <div className="absolute bottom-3 right-3">
-                      <span className="text-[10px] font-semibold text-white/95 bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-full">
+                    <div className="absolute bottom-2.5 right-2.5">
+                      <span className="text-[9px] font-semibold text-white/95 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-full">
                         {cat.productCount !== undefined ? `${cat.productCount} Models` : "Explore"}
                       </span>
                     </div>
                   </div>
 
                   {/* Card Text Content */}
-                  <div className="p-5 flex flex-col justify-between flex-1 space-y-3 bg-white">
+                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 space-y-2 bg-white">
                     <div>
-                      <h3 className="font-display font-bold text-base sm:text-lg text-stone-900 group-hover:text-ribbon-600 transition-colors">
+                      <h3 className="font-display font-bold text-sm sm:text-base text-stone-900 group-hover:text-ribbon-600 transition-colors line-clamp-1">
                         {cat.name}
                       </h3>
-                      <p className="text-xs text-stone-500 mt-1 leading-relaxed line-clamp-2">
+                      <p className="text-[11px] sm:text-xs text-stone-500 mt-0.5 leading-snug line-clamp-2">
                         {cat.description || "Handcrafted 3D creation collection"}
                       </p>
                     </div>
 
-                    <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-ribbon-600 group-hover:text-ribbon-700">
+                    <div className="pt-2 sm:pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px] sm:text-xs font-bold text-ribbon-600 group-hover:text-ribbon-700">
                       <span>Browse Collection</span>
-                      <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
@@ -623,7 +623,7 @@ export default function Home() {
 
                   <div className="space-y-3.5">
                     {/* Visual Photo / Render Thumbnail */}
-                    <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-rose-400/40 transition">
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-rose-400/40 transition">
                       <img
                         src={imageSrc}
                         alt={`${cat.name} 3D Keepsake`}

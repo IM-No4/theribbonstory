@@ -58,6 +58,13 @@ export function useKeepsakePreview() {
     setNoteState(next);
   }, []);
 
+  // 3D Figurine Style: 'chibi' | 'caricature' | 'realistic' | 'bobblehead'
+  const [style, setStyle] = useState("chibi");
+  const styleRef = useRef("chibi");
+  useEffect(() => {
+    styleRef.current = style;
+  }, [style]);
+
   // Free the local photo preview when it is replaced or the page closes
   useEffect(() => {
     const url = state.localPhoto;
@@ -80,6 +87,9 @@ export function useKeepsakePreview() {
         form.append("customNotes", noteToSend);
         form.append("prompt", noteToSend);
       }
+      const chosenStyle = extra?.style || styleRef.current || "chibi";
+      form.append("style", chosenStyle);
+
       if (extra?.engravingText) {
         form.append("engravingText", String(extra.engravingText).trim());
       }
@@ -118,10 +128,12 @@ export function useKeepsakePreview() {
       const noteToSend = (typeof customNotes === "string" && customNotes.trim())
         ? customNotes.trim()
         : noteRef.current.trim();
+      const chosenStyle = extra?.style || styleRef.current || "chibi";
       const payload = {
         photoUrl: state.originalUrl,
         customNotes: noteToSend,
         prompt: noteToSend,
+        style: chosenStyle,
       };
       if (extra?.engravingText) {
         payload.engravingText = String(extra.engravingText).trim();
@@ -177,6 +189,7 @@ export function useKeepsakePreview() {
    * photo. The admin downloads this exact image to create the 3D model.
    */
   const cartFields = () => {
+    const chosenStyle = styleRef.current || "chibi";
     if (state.status === "ready" && approvedPreview) {
       return {
         image: approvedPreview,
@@ -184,6 +197,7 @@ export function useKeepsakePreview() {
           photoUrl: state.originalUrl || state.localPhoto,
           cuteImageUrl: approvedPreview,
           note: noteRef.current.trim(),
+          style: chosenStyle,
         },
       };
     }
@@ -195,6 +209,7 @@ export function useKeepsakePreview() {
           photoUrl: fallbackPhoto,
           cuteImageUrl: null,
           note: noteRef.current.trim(),
+          style: chosenStyle,
         },
       };
     }
@@ -213,5 +228,7 @@ export function useKeepsakePreview() {
     cartFields,
     note,
     setNote,
+    style,
+    setStyle,
   };
 }

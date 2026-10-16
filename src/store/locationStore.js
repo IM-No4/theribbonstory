@@ -13,8 +13,21 @@ const POPULAR_CITIES = [
 
 const getStoredLocation = () => {
   try {
+    const savedPin = localStorage.getItem("ribbon_delivery_pincode");
     const saved = localStorage.getItem("ribbon_delivery_location");
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (savedPin && parsed) parsed.pincode = savedPin;
+      return parsed;
+    }
+    if (savedPin) {
+      return {
+        city: `PIN ${savedPin}`,
+        pincode: savedPin,
+        state: "India",
+        expressAvailable: true,
+      };
+    }
   } catch {
     // fallback
   }
@@ -37,10 +50,29 @@ export const useLocationStore = create((set, get) => ({
   setLocation: (loc) => {
     try {
       localStorage.setItem("ribbon_delivery_location", JSON.stringify(loc));
+      if (loc?.pincode) {
+        localStorage.setItem("ribbon_delivery_pincode", loc.pincode);
+      }
     } catch {
       /* storage unavailable — keep defaults */
     }
     set({ location: loc, isOpen: false });
+  },
+
+  setPincode: (pin, details = {}) => {
+    try {
+      localStorage.setItem("ribbon_delivery_pincode", pin);
+      const updated = {
+        city: details.city || `PIN ${pin}`,
+        pincode: pin,
+        state: details.state || "India",
+        expressAvailable: details.expressAvailable ?? true,
+      };
+      localStorage.setItem("ribbon_delivery_location", JSON.stringify(updated));
+      set({ location: updated });
+    } catch {
+      /* storage error */
+    }
   },
 
   getEstimatedDelivery: () => {

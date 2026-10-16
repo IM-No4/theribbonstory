@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
+  Camera,
   Sparkles,
   CheckCircle2,
   Eye,
@@ -18,6 +19,34 @@ import { useCartStore } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
 import { useSeo } from "../utils/seo";
 import { useKeepsakePreview } from "../hooks/useKeepsakePreview";
+
+export const FIGURINE_STYLE_OPTIONS = [
+  {
+    id: "chibi",
+    name: "Cute Chibi",
+    tagline: "Soft cute features & compact body",
+    emoji: "🧸",
+    isPopular: true,
+  },
+  {
+    id: "caricature",
+    name: "Fun Caricature",
+    tagline: "Playful cartoon smile & expressive charm",
+    emoji: "🎨",
+  },
+  {
+    id: "realistic",
+    name: "Mini Realistic",
+    tagline: "True-to-life human anatomy & sculpt",
+    emoji: "👤",
+  },
+  {
+    id: "bobblehead",
+    name: "Classic Bobblehead",
+    tagline: "Expressive head & trophy pedestal",
+    emoji: "🎪",
+  },
+];
 
 const CATEGORY_MESSAGE_SUGGESTIONS = {
   single: [
@@ -198,6 +227,55 @@ export default function PersonalizedPage() {
     preview.status === "unavailable" ||
     preview.regenerating;
 
+  const activeStyleObj =
+    FIGURINE_STYLE_OPTIONS.find((s) => s.id === (preview.style || "chibi")) ||
+    FIGURINE_STYLE_OPTIONS[0];
+
+  // Dynamic Progress Timer & Percentage Counter during 3D generation
+  const [genSeconds, setGenSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!preview.busy) {
+      setGenSeconds(0);
+      return;
+    }
+
+    setGenSeconds(0);
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      setGenSeconds(elapsed);
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [preview.busy]);
+
+  const getProgressInfo = (sec) => {
+    let pct = 5;
+    let label = "Initializing 3D sculpting studio…";
+
+    if (sec <= 4) {
+      pct = Math.min(22, Math.round(5 + (sec / 4) * 17));
+      label = "Analyzing photograph contours & face…";
+    } else if (sec <= 14) {
+      pct = Math.min(52, Math.round(22 + ((sec - 4) / 10) * 30));
+      label = `Sculpting ${activeStyleObj.name} 3D geometry…`;
+    } else if (sec <= 28) {
+      pct = Math.min(78, Math.round(52 + ((sec - 14) / 14) * 26));
+      label = "Forming outfit details & solid colors…";
+    } else if (sec <= 42) {
+      pct = Math.min(92, Math.round(78 + ((sec - 28) / 14) * 14));
+      label = "Calibrating circular display pedestal…";
+    } else {
+      pct = Math.min(98, Math.round(92 + Math.min(6, (sec - 42) * 0.25)));
+      label = "Finalizing 3D print-ready surfaces…";
+    }
+
+    return { pct, label, sec };
+  };
+
+  const progressInfo = getProgressInfo(genSeconds);
+
   // Lock body scroll and listen for Escape key when fullscreen lightbox is active
   useEffect(() => {
     if (!zoomImage) {
@@ -247,13 +325,15 @@ export default function PersonalizedPage() {
   };
 
   // Generate 3D figurine incorporating user's size, base engraving, and artisan notes
-  const handleGeneratePreview = () => {
+  const handleGeneratePreview = (overrideStyle) => {
     if (!hasPhoto || preview.busy) return;
 
+    const styleToUse = overrideStyle || preview.style || "chibi";
     const promptNotes = buildPromptNotes();
     const extraData = {
       engravingText: inscriptionText.trim(),
       artisanNotes: artisanNote.trim(),
+      style: styleToUse,
     };
 
     if (selectedFile) {
@@ -263,12 +343,14 @@ export default function PersonalizedPage() {
     }
   };
 
-  // Regenerate with updated notes
-  const handleRegenerateVariation = () => {
+  // Regenerate with updated notes or updated style
+  const handleRegenerateVariation = (overrideStyle) => {
+    const styleToUse = overrideStyle || preview.style || "chibi";
     const promptNotes = buildPromptNotes();
     const extraData = {
       engravingText: inscriptionText.trim(),
       artisanNotes: artisanNote.trim(),
+      style: styleToUse,
     };
     preview.regenerate(promptNotes, extraData);
   };
@@ -310,11 +392,13 @@ export default function PersonalizedPage() {
       return;
     }
 
+    const activeStyleObj = FIGURINE_STYLE_OPTIONS.find((s) => s.id === (preview.style || "chibi")) || FIGURINE_STYLE_OPTIONS[0];
     const unitPrice = currentOpt.price;
     const uniqueId = `custom-3d-${currentCat?.slug || "keepsake"}-${currentOpt._id || currentOpt.name}-${Date.now()}`;
 
     const combinedNotes = [
       currentCat ? `[Category: ${currentCat.name}]` : "",
+      `[Style: ${activeStyleObj.name}]`,
       inscriptionText.trim() ? `[Base Engraving: ${inscriptionText.trim()}]` : "",
       artisanNote.trim() ? `[Note: ${artisanNote.trim()}]` : "",
       preview.note?.trim() ? `[AI Note: ${preview.note.trim()}]` : "",
@@ -334,12 +418,15 @@ export default function PersonalizedPage() {
       quantity,
       selectedOptions: [
         { name: "Keepsake Category", value: currentCat?.name || "Personalized", priceDelta: 0 },
+        { name: "3D Figurine Style", value: activeStyleObj.name, priceDelta: 0 },
         { name: "Size & Dimensions", value: `${currentOpt.name} (${currentOpt.dimensions})`, priceDelta: 0 },
       ],
       customization: {
         ...design.customization,
         category: currentCat?.name,
         categorySlug: currentCat?.slug,
+        style: activeStyleObj.id,
+        styleName: activeStyleObj.name,
         cuteImageUrl: cuteImage,
         reference3D: { approvedPreview: cuteImage },
         photoUrl: originalPhoto,
@@ -350,7 +437,7 @@ export default function PersonalizedPage() {
       },
     });
 
-    toast.success(`Added ${currentCat?.name || ""} (${currentOpt.name}) keepsake to your bag!`);
+    toast.success(`Added ${currentCat?.name || ""} (${activeStyleObj.name}) keepsake to your bag!`);
 
     // Clear form and open cart
     handleResetForm();
@@ -411,11 +498,11 @@ export default function PersonalizedPage() {
         {/* Main Two-Card Row (Uploaded Photo / Dropzone on Left, Preview or Size Pricing on Right) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-stretch mb-6">
           {/* LEFT CARD: Customer Photo Upload or Render */}
-          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col justify-center items-center min-h-[440px] relative">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col h-[520px] sm:h-[550px] relative overflow-hidden">
             {!hasPhoto ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-full flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-stone-300/80 hover:border-rose-400 bg-gradient-to-b from-stone-50/60 to-rose-50/20 hover:from-rose-50/30 hover:to-rose-50/50 rounded-2xl text-center space-y-4 transition-all cursor-pointer group shadow-2xs min-h-[380px]"
+                className="w-full h-full flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-stone-300/80 hover:border-rose-400 bg-gradient-to-b from-stone-50/60 to-rose-50/20 hover:from-rose-50/30 hover:to-rose-50/50 rounded-2xl text-center space-y-4 transition-all cursor-pointer group shadow-2xs"
               >
                 <div className="h-16 w-16 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center mx-auto transition-transform group-hover:scale-110 shadow-xs">
                   <Upload size={26} />
@@ -441,38 +528,58 @@ export default function PersonalizedPage() {
                 </button>
               </div>
             ) : (
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-white to-rose-50/40 border border-stone-200/90 shadow-sm flex items-center justify-center group">
-                <img
-                  src={displayOriginal}
-                  alt=""
-                  className="w-full h-full object-contain p-1"
-                />
-                {/* Hover Overlay directly on the image */}
-                <div className="absolute inset-0 bg-black/55 backdrop-blur-2xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-3 p-4">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={preview.busy}
-                    className="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Upload size={14} />
-                    <span>Change Photo</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setZoomImage({ src: displayOriginal, title: "Your Uploaded Photo" })}
-                    className="py-1.5 px-4 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <Eye size={13} />
-                    <span>Zoom Fullscreen</span>
-                  </button>
+              <div className="w-full h-full flex flex-col justify-between flex-1 min-h-0">
+                {/* Symmetrical Header */}
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100 shrink-0">
+                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-stone-800">
+                    <Camera size={14} className="text-stone-400" />
+                    <span>Your Photo</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-stone-500 bg-stone-100 px-2.5 py-0.5 rounded-full border border-stone-200/70">
+                    Reference
+                  </span>
+                </div>
+
+                {/* Photo Frame - Completely Fills Space */}
+                <div className="relative flex-1 w-full rounded-2xl overflow-hidden bg-stone-100/70 border border-stone-200/90 shadow-inner group min-h-0">
+                  <img
+                    src={displayOriginal}
+                    alt="Your uploaded reference photo"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                  />
+
+                  {/* Gradient shadow overlay for buttons */}
+                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+
+                  {/* Floating Action Buttons directly over image */}
+                  <div className="absolute bottom-3.5 inset-x-0 flex items-center justify-center gap-2 z-10 px-4">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={preview.busy}
+                      className="px-4 py-2 rounded-full bg-white/95 hover:bg-white text-stone-900 text-xs font-bold shadow-lg backdrop-blur-md border border-white/80 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
+                      title="Choose another photo"
+                    >
+                      <Upload size={13} className="text-rose-600" />
+                      <span>Change Photo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setZoomImage({ src: displayOriginal, title: "Your Uploaded Photo" })}
+                      className="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white shadow-lg backdrop-blur-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      title="View Fullscreen"
+                    >
+                      <Eye size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
           {/* RIGHT CARD: Dimensions & Pricing + Inscription (before generation) */}
-          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col justify-center items-center min-h-[440px] relative overflow-hidden">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col h-[520px] sm:h-[550px] relative overflow-hidden">
             <AnimatePresence mode="wait">
               {!hasPreview ? (
                 /* STATE 1: Before Generation -> Configure Size, Engraving & Notes, then Click Generate */
@@ -588,60 +695,76 @@ export default function PersonalizedPage() {
                       </div>
                     </div>
 
-                    {/* Studio Artisan Notes */}
-                    <div className="space-y-1 pt-1">
+                    {/* 3D Figurine Style Selector Chips */}
+                    <div className="space-y-1.5 pt-0.5">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold uppercase tracking-wider text-stone-900">
-                          Studio Artisan Notes
+                          3D Figurine Style
                         </label>
-                        <span className="text-[10px] text-stone-400 font-semibold">Optional</span>
+                        <span className="text-[10px] text-stone-400 font-semibold">
+                          Choose Aesthetic
+                        </span>
                       </div>
-                      <input
-                        type="text"
-                        maxLength={150}
-                        value={artisanNote}
-                        onChange={(e) => setArtisanNote(e.target.value)}
-                        placeholder={activeArtisanPlaceholder}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 focus:bg-white focus:border-stone-800 focus:ring-1 focus:ring-stone-800/20 text-xs text-stone-900 placeholder:text-stone-400 transition"
-                      />
-                      <p className="text-[10px] text-stone-500 leading-snug">
-                        Custom details our 3D studio will incorporate into your figurine.
-                      </p>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {FIGURINE_STYLE_OPTIONS.map((st) => {
+                          const isSelected = (preview.style || "chibi") === st.id;
+                          return (
+                            <button
+                              key={st.id}
+                              type="button"
+                              onClick={() => {
+                                preview.setStyle(st.id);
+                                if (hasPreview && !preview.busy) {
+                                  toast(`Switched to ${st.name}!`, { icon: st.emoji });
+                                }
+                              }}
+                              className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-2 text-left relative ${
+                                isSelected
+                                  ? "border-rose-500 bg-rose-50/80 shadow-xs ring-1 ring-rose-400/30 text-rose-950 font-bold"
+                                  : "border-stone-200 hover:border-stone-300 bg-white hover:bg-stone-50/60 text-stone-700"
+                              }`}
+                            >
+                              <span className="text-lg shrink-0 leading-none">{st.emoji}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-bold leading-tight truncate">
+                                  {st.name}
+                                </div>
+                                <div className="text-[9.5px] text-stone-500 truncate leading-tight mt-0.5">
+                                  {st.tagline}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Action Button: Generate 3D Preview (Disabled until image uploaded) */}
-                    <div className="pt-2">
-                      <button
-                        type="button"
-                        onClick={handleGeneratePreview}
-                        disabled={!hasPhoto || preview.busy}
-                        className={`w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 rounded-xl transition-all duration-200 select-none ${
-                          !hasPhoto
-                            ? "bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed shadow-none"
-                            : preview.busy
-                            ? "bg-rose-500 text-white cursor-wait opacity-85 shadow-md"
-                            : "btn-primary shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                        }`}
-                      >
-                        <Sparkles
-                          size={16}
-                          className={
-                            hasPhoto && !preview.busy
-                              ? "text-amber-300 animate-pulse"
-                              : preview.busy
-                              ? "animate-spin text-white"
-                              : "text-stone-400"
-                          }
-                        />
-                        <span>
-                          {!hasPhoto
-                            ? "Select Photo on Left to Generate Preview"
-                            : preview.busy
-                            ? "Sculpting 3D Figurine…"
-                            : "Generate 3D Preview"}
-                        </span>
-                      </button>
-                    </div>
+                    {/* Action Button: Generate 3D Preview (Hidden while processing) */}
+                    {!preview.busy && (
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={handleGeneratePreview}
+                          disabled={!hasPhoto}
+                          className={`w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 rounded-xl transition-all duration-200 select-none ${
+                            !hasPhoto
+                              ? "bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed shadow-none"
+                              : "btn-primary shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                          }`}
+                        >
+                          <Sparkles
+                            size={16}
+                            className={hasPhoto ? "text-amber-300 animate-pulse" : "text-stone-400"}
+                          />
+                          <span>
+                            {!hasPhoto
+                              ? "Select Photo to Generate Preview"
+                              : "Generate 3D Preview"}
+                          </span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ) : (
@@ -652,56 +775,100 @@ export default function PersonalizedPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.35 }}
-                  className="w-full h-full flex flex-col justify-center items-center"
+                  className="w-full h-full flex flex-col justify-between flex-1 min-h-0"
                 >
-                  {preview.status === "generating" || preview.regenerating ? (
-                    /* PROCESSING ANIMATION - CLEAN LIGHT AESTHETIC, NO DARK BACKGROUND, NO AI/QWEN MENTIONS */
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-rose-50/70 via-white to-rose-50/50 border-2 border-rose-100 shadow-sm flex flex-col items-center justify-center p-6 text-center select-none">
-                      {/* Subtle ambient pastel glow */}
-                      <div className="absolute -top-12 -left-12 w-44 h-44 bg-rose-200/40 rounded-full blur-3xl animate-pulse" />
-                      <div
-                        className="absolute -bottom-12 -right-12 w-44 h-44 bg-amber-200/40 rounded-full blur-3xl animate-pulse"
-                        style={{ animationDelay: "1s" }}
-                      />
+                  {preview.busy ? (
+                    <div className="w-full h-full flex flex-col justify-between flex-1 min-h-0">
+                      {/* Symmetrical Header */}
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100 shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose-950">
+                          <Sparkles size={14} className="text-rose-500 animate-spin" />
+                          <span>3D Figurine Preview</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/80">
+                          {activeStyleObj.emoji} {activeStyleObj.name}
+                        </span>
+                      </div>
 
-                      {/* Spinning Ring Animation */}
-                      <div className="relative mb-4">
+                      {/* Processing Center Body - Completely Fills Space */}
+                      <div className="relative flex-1 w-full rounded-2xl overflow-hidden bg-gradient-to-b from-rose-50/70 via-white to-rose-50/50 border border-rose-200/80 shadow-xs flex flex-col items-center justify-center p-6 text-center select-none min-h-0">
+                        {/* Subtle ambient pastel glow */}
+                        <div className="absolute -top-12 -left-12 w-44 h-44 bg-rose-200/40 rounded-full blur-3xl animate-pulse" />
                         <div
-                          className="w-20 h-20 rounded-full border-2 border-dashed border-rose-400 animate-spin"
-                          style={{ animationDuration: "10s" }}
+                          className="absolute -bottom-12 -right-12 w-44 h-44 bg-amber-200/40 rounded-full blur-3xl animate-pulse"
+                          style={{ animationDelay: "1s" }}
                         />
-                        <div
-                          className="absolute inset-2 rounded-full border border-rose-200 animate-spin"
-                          style={{ animationDuration: "6s", animationDirection: "reverse" }}
-                        />
-                        <div className="absolute inset-3.5 rounded-full bg-gradient-to-tr from-rose-500 to-amber-400 p-0.5 shadow-md flex items-center justify-center">
-                          <div className="w-full h-full rounded-full bg-white flex items-center justify-center shadow-inner">
-                            <Sparkles className="text-ribbon-500 animate-pulse" size={22} />
+
+                        {/* Spinning Ring Animation */}
+                        <div className="relative mb-3">
+                          <div
+                            className="w-20 h-20 rounded-full border-2 border-dashed border-rose-400 animate-spin"
+                            style={{ animationDuration: "10s" }}
+                          />
+                          <div
+                            className="absolute inset-2 rounded-full border border-rose-200 animate-spin"
+                            style={{ animationDuration: "6s", animationDirection: "reverse" }}
+                          />
+                          <div className="absolute inset-3 rounded-full bg-gradient-to-tr from-rose-500 to-amber-400 p-0.5 shadow-md flex items-center justify-center">
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center shadow-inner">
+                              <Sparkles className="text-ribbon-500 animate-pulse" size={22} />
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="relative z-10 space-y-1.5 max-w-[260px]">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100/90 border border-rose-200 text-[10px] font-bold text-ribbon-700 uppercase tracking-wider">
-                          <Sparkles size={11} className="text-ribbon-500" />
-                          <span>Crafting in Progress</span>
+                        <div className="relative z-10 space-y-1.5 max-w-[280px]">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-rose-100/90 border border-rose-200 text-[10px] font-bold text-ribbon-700 uppercase tracking-wider">
+                            <Sparkles size={11} className="text-ribbon-500" />
+                            <span>Sculpting in Progress</span>
+                          </div>
+                          <h4 className="font-display font-bold text-sm sm:text-base text-burgundy-900 tracking-wide transition-all duration-300">
+                            {progressInfo.label}
+                          </h4>
+                          <p className="text-xs text-espresso-500 leading-relaxed">
+                            Crafting your personalized {activeStyleObj.name} figurine for 3D printing.
+                          </p>
                         </div>
-                        <h4 className="font-display font-bold text-base text-burgundy-900 tracking-wide">
-                          Sculpting 3D Figurine…
-                        </h4>
-                        <p className="text-xs text-espresso-500 leading-relaxed">
-                          Analyzing contours and sculpting your personalized 3D keepsake figurine.
-                        </p>
-                      </div>
 
-                      <div className="mt-3 px-3 py-1 rounded-full bg-rose-50 border border-rose-200/80 text-[10px] text-rose-700 font-mono font-medium">
-                        Takes ~10–20 seconds
+                        {/* Visual Progress Bar - Cleanly Shows Percent in One Place */}
+                        <div className="relative z-10 w-full max-w-[270px] mt-4 space-y-1.5">
+                          <div className="w-full h-2.5 bg-rose-100/80 rounded-full overflow-hidden p-0.5 border border-rose-200/70 shadow-inner">
+                            <div
+                              className="h-full bg-gradient-to-r from-rose-500 via-rose-600 to-amber-400 rounded-full transition-all duration-500 relative"
+                              style={{ width: `${progressInfo.pct}%` }}
+                            >
+                              <div className="absolute inset-0 bg-white/30 animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-stone-500 font-mono px-1">
+                            <span className="font-bold text-rose-700">{progressInfo.pct}% Completed</span>
+                            <span>{progressInfo.sec}s elapsed</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ) : preview.status === "ready" && displayCute ? (
                     /* RENDERED 3D FIGURINE */
-                    <div className="w-full space-y-3">
-                      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-white to-rose-50/40 border-2 border-rose-200 shadow-md flex items-center justify-center group">
+                    <div className="w-full h-full flex flex-col justify-between">
+                      {/* Symmetrical Header */}
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100">
+                        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose-950">
+                          <Sparkles size={14} className="text-rose-500" />
+                          <span>3D Figurine Preview</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/80">
+                            {FIGURINE_STYLE_OPTIONS.find((s) => s.id === preview.style)?.emoji}{" "}
+                            {FIGURINE_STYLE_OPTIONS.find((s) => s.id === preview.style)?.name}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shadow-2xs">
+                            <CheckCircle2 size={11} className="text-emerald-600" />
+                            <span>3D Print Ready</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Figurine Photo Frame - Symmetrical to Left Frame */}
+                      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-white to-stone-50/40 border border-stone-200/90 shadow-xs flex items-center justify-center group">
                         <img
                           src={displayCute}
                           alt="Cute 3D Keepsake Figurine"
@@ -712,30 +879,26 @@ export default function PersonalizedPage() {
                           <button
                             type="button"
                             onClick={() => setZoomImage({ src: displayCute, title: "Your Cute 3D Keepsake Figurine" })}
-                            className="btn-primary py-2.5 px-5 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 cursor-pointer"
+                            className="btn-primary py-2 px-4 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Eye size={14} />
+                            <Eye size={13} />
                             <span>Zoom</span>
                           </button>
                         </div>
-                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 shadow-xs pointer-events-none">
-                          <Sparkles size={10} />
-                          <span>3D Print Ready</span>
-                        </span>
                       </div>
 
                       {/* Multiple Variations Strip */}
                       {preview.attempts?.length > 1 && (
-                        <div className="flex items-center justify-center gap-2 pt-1">
+                        <div className="flex items-center justify-center gap-2 pt-2">
                           {preview.attempts.map((url, i) => (
                             <button
                               key={url}
                               type="button"
                               onClick={() => preview.select(i)}
-                              className={`w-12 h-12 rounded-xl overflow-hidden border-2 bg-white transition p-0.5 cursor-pointer ${
+                              className={`w-10 h-10 rounded-xl overflow-hidden border-2 bg-white transition p-0.5 cursor-pointer ${
                                 i === preview.selected
-                                  ? "border-ribbon-500 ring-2 ring-ribbon-500/30 scale-105"
-                                  : "border-rose-100 hover:border-rose-300 opacity-70"
+                                  ? "border-rose-500 ring-2 ring-rose-400/30 scale-105"
+                                  : "border-stone-200 hover:border-stone-300 opacity-70"
                               }`}
                             >
                               <img src={assetUrl(url)} alt="" className="w-full h-full object-contain" />
@@ -744,12 +907,12 @@ export default function PersonalizedPage() {
                         </div>
                       )}
 
-                      {/* Retry / Regenerate Variation */}
+                      {/* Symmetrical Retry / Regenerate Variation Button */}
                       <button
                         type="button"
                         onClick={handleRegenerateVariation}
                         disabled={preview.busy || (preview.attemptsLeft ?? 0) <= 0}
-                        className="w-full py-2.5 px-3 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-xs font-bold text-ribbon-600 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+                        className="w-full py-2.5 px-3 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-xs font-bold text-rose-700 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs mt-3 shrink-0"
                       >
                         <RefreshCw size={12} className={preview.regenerating ? "animate-spin" : ""} />
                         <span>
@@ -760,81 +923,55 @@ export default function PersonalizedPage() {
                       </button>
                     </div>
                   ) : (
-                    /* Fallback: Show error or studio fallback when 3D preview failed */
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-rose-50/70 via-white to-amber-50/30 border-2 border-rose-200/80 shadow-sm flex flex-col items-center justify-between p-5 text-center select-none">
-                      {/* Ambient background glow */}
-                      <div className="absolute -top-12 -left-12 w-44 h-44 bg-rose-200/30 rounded-full blur-3xl pointer-events-none" />
-                      <div className="absolute -bottom-12 -right-12 w-44 h-44 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" />
-
-                      {/* Error or Reassurance Badge */}
-                      {preview.error ? (
-                        <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[10.5px] font-bold shadow-2xs">
-                          <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                          <span>High Demand • Preview Queued</span>
+                    /* Fallback: Seamlessly fills the card with symmetrical height & styling */
+                    <div className="w-full h-full flex flex-col justify-between flex-1 min-h-0">
+                      {/* Symmetrical Header */}
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100 shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose-950">
+                          <Sparkles size={14} className="text-rose-500" />
+                          <span>3D Figurine Preview</span>
                         </div>
-                      ) : (
-                        <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[10.5px] font-bold shadow-2xs">
-                          <CheckCircle2 size={12} className="text-emerald-600" />
-                          <span>Photo Saved • Studio Crafting Ready</span>
+                        <div className="relative z-10 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[10px] font-bold shadow-2xs">
+                          <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          <span>High Demand • In Queue</span>
                         </div>
-                      )}
-
-                      {/* Photo Thumbnail with Artisan Frame */}
-                      {displayOriginal && (
-                        <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-white shadow-md ring-2 ring-rose-200/60 bg-rose-50 my-1 group">
-                          <img
-                            src={displayOriginal}
-                            alt="Uploaded keepsake photo"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-
-                      {/* Error Message or Informative Text */}
-                      <div className="relative z-10 space-y-1 max-w-xs">
-                        {preview.error ? (
-                          <>
-                            <h4 className="font-display font-bold text-sm sm:text-base text-amber-900">
-                              Our Studio Is Experiencing High Demand
-                            </h4>
-                            <p className="text-[11px] sm:text-xs text-stone-600 leading-relaxed">
-                              Your instant 3D preview is temporarily unavailable due to high traffic. Don't worry — you can still place your order and our artisans will personally handcraft your keepsake from your photo!
-                            </p>
-                            <p className="text-[10px] text-stone-400 leading-snug mt-1">
-                              Tip: Try again in a few minutes for an instant preview.
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <h4 className="font-display font-bold text-sm sm:text-base text-burgundy-900">
-                              Handcrafted 3D Modeling
-                            </h4>
-                            <p className="text-[11px] sm:text-xs text-espresso-500 leading-relaxed">
-                              Our 3D artisans will personally sculpt and calibrate your keepsake directly from your photograph during production. Select your size below to add to bag!
-                            </p>
-                          </>
-                        )}
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="relative z-10 flex flex-col sm:flex-row items-center gap-2 pt-1 w-full max-w-xs">
+                      {/* Informative Center Body - Completely Fills Space with Retry Button Inside */}
+                      <div className="relative flex-1 w-full rounded-2xl overflow-hidden bg-gradient-to-b from-rose-50/40 via-white to-amber-50/20 border border-stone-200/80 shadow-xs flex flex-col items-center justify-center p-6 text-center select-none min-h-0 space-y-3.5">
+                        {/* Ambient background glow */}
+                        <div className="absolute -top-12 -left-12 w-44 h-44 bg-rose-200/25 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute -bottom-12 -right-12 w-44 h-44 bg-amber-200/25 rounded-full blur-3xl pointer-events-none" />
+
+                        {/* Photo Thumbnail in Artisan Frame */}
+                        {displayOriginal && (
+                          <div className="relative z-10 w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white shadow-md ring-2 ring-rose-200/60 bg-rose-50 shrink-0">
+                            <img
+                              src={displayOriginal}
+                              alt="Uploaded keepsake photo"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+
+                        <div className="relative z-10 space-y-1 max-w-xs">
+                          <h4 className="font-display font-bold text-sm sm:text-base text-stone-900">
+                            Handcrafted 3D Modeling Ready
+                          </h4>
+                          <p className="text-[11px] sm:text-xs text-stone-500 leading-relaxed">
+                            Your reference photo is archived. Our 3D modeling artisans will personally calibrate and sculpt your figurine during production.
+                          </p>
+                        </div>
+
+                        {/* Retry Button INSIDE the same card */}
                         <button
                           type="button"
                           onClick={handleGeneratePreview}
                           disabled={preview.busy}
-                          className="w-full flex-1 py-2 px-3 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-[11px] font-bold text-ribbon-600 transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                          className="relative z-10 px-5 py-2.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-xs font-bold text-rose-700 transition flex items-center justify-center gap-1.5 shadow-xs hover:shadow-sm cursor-pointer disabled:opacity-50 mt-1"
                         >
-                          <RefreshCw size={12} className={preview.busy ? "animate-spin" : ""} />
+                          <RefreshCw size={13} className={preview.busy ? "animate-spin" : ""} />
                           <span>Retry 3D Preview</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={preview.busy}
-                          className="w-full flex-1 py-2 px-3 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-[11px] font-bold text-espresso-500 hover:text-burgundy-900 transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
-                        >
-                          <span>Change Photo</span>
                         </button>
                       </div>
                     </div>
@@ -978,19 +1115,10 @@ export default function PersonalizedPage() {
                     type="button"
                     onClick={handleAddToCart}
                     disabled={preview.busy}
-                    className="btn-primary py-2.5 px-6 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="btn-primary py-2.5 px-6 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
-                    {preview.busy ? (
-                      <>
-                        <Sparkles className="animate-spin" size={15} />
-                        <span>Adding…</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingBag size={15} />
-                        <span>Add to Bag</span>
-                      </>
-                    )}
+                    <ShoppingBag size={15} />
+                    <span>Add to Bag</span>
                   </button>
                 </div>
               </div>
