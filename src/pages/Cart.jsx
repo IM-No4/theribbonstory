@@ -17,6 +17,13 @@ export default function Cart() {
 
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+
+  useEffect(() => {
+    api.get("/coupons/available")
+      .then(({ data }) => setAvailableCoupons(data.coupons || []))
+      .catch(() => {});
+  }, []);
 
   const shipping = subtotal > 999 || subtotal === 0 ? 0 : 79;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
@@ -25,27 +32,32 @@ export default function Cart() {
   const freeShippingThreshold = 999;
   const freeShippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
-  const handleApplyCoupon = async (e) => {
-    e.preventDefault();
-    if (!couponCodeInput.trim()) {
-      toast.error("Please enter a coupon code");
-      return;
-    }
-
+  const handleApplyCouponCode = async (codeToApply) => {
+    const cleanCode = (codeToApply || "").trim().toUpperCase();
+    if (!cleanCode) return;
     setValidatingCoupon(true);
     try {
       const { data } = await api.post("/coupons/apply", {
-        code: couponCodeInput.trim(),
+        code: cleanCode,
         subtotal,
       });
       setCoupon(data);
-      toast.success(data.message);
+      toast.success(data.message || "Coupon applied!");
       setCouponCodeInput("");
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid coupon code");
     } finally {
       setValidatingCoupon(false);
     }
+  };
+
+  const handleApplyCoupon = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (!couponCodeInput.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+    await handleApplyCouponCode(couponCodeInput);
   };
 
   if (items.length === 0) {
@@ -246,6 +258,30 @@ export default function Cart() {
                     {validatingCoupon ? "..." : "Apply"}
                   </button>
                 </form>
+              )}
+
+              {!appliedCoupon && availableCoupons.length > 0 && (
+                <div className="pt-2 space-y-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-espresso-400">
+                    Available Offers:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableCoupons.slice(0, 3).map((cp) => (
+                      <button
+                        key={cp.code}
+                        type="button"
+                        onClick={() => handleApplyCouponCode(cp.code)}
+                        disabled={validatingCoupon}
+                        className="px-2 py-1 rounded-lg bg-cream-100 hover:bg-cream-200 border border-cream-300 text-burgundy-900 text-[11px] font-mono font-bold flex items-center gap-1 transition cursor-pointer"
+                      >
+                        <span>{cp.code}</span>
+                        <span className="text-[10px] font-sans font-normal text-burgundy-700">
+                          ({cp.discountType === "percentage" ? `${cp.discountAmount}% off` : `₹${cp.discountAmount} off`})
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 

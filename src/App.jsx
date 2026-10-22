@@ -44,6 +44,7 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminKeepsakes = lazy(() => import("./pages/admin/AdminKeepsakes"));
+const AdminPrintColors = lazy(() => import("./pages/admin/AdminPrintColors"));
 const Admin3DStudio = lazy(() => import("./pages/admin/Admin3DStudio"));
 
 // Luxury Branded Page Loading Suspense Fallback
@@ -181,6 +182,7 @@ function App() {
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="collections" element={<AdminCollections />} />
                   <Route path="keepsakes" element={<AdminKeepsakes />} />
+                  <Route path="print-colors" element={<AdminPrintColors />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="coupons" element={<AdminCoupons />} />
                   <Route path="reviews" element={<AdminReviews />} />

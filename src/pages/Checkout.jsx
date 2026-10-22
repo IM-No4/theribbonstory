@@ -106,6 +106,13 @@ export default function Checkout() {
   // Coupon input in summary
   const [couponInput, setCouponInput] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+
+  useEffect(() => {
+    api.get("/coupons/available")
+      .then(({ data }) => setAvailableCoupons(data.coupons || []))
+      .catch(() => {});
+  }, []);
 
   // Dynamic Shipping Calculation & Single Printer Queue Option
   const [selectedDeliveryTier, setSelectedDeliveryTier] = useState("standard"); // "standard" | "express"
@@ -342,16 +349,13 @@ export default function Checkout() {
     toast.success("Proceeding to final order summary!");
   };
 
-  const handleApplyCoupon = async (e) => {
-    e.preventDefault();
-    if (!couponInput.trim()) {
-      toast.error("Please enter a promo code");
-      return;
-    }
+  const handleApplyCouponCode = async (codeToApply) => {
+    const cleanCode = (codeToApply || "").trim().toUpperCase();
+    if (!cleanCode) return;
     setApplyingCoupon(true);
     try {
       const { data } = await api.post("/coupons/apply", {
-        code: couponInput.trim(),
+        code: cleanCode,
         subtotal,
       });
       setCoupon(data);
@@ -362,6 +366,15 @@ export default function Checkout() {
     } finally {
       setApplyingCoupon(false);
     }
+  };
+
+  const handleApplyCoupon = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (!couponInput.trim()) {
+      toast.error("Please enter a promo code");
+      return;
+    }
+    await handleApplyCouponCode(couponInput);
   };
 
   const buildOrderItems = () =>
@@ -836,7 +849,10 @@ export default function Checkout() {
                               Studio 3D Printer Queue:
                             </span>
                             <span className="text-amber-800 font-medium">
-                              {shippingEstimate.queueStats?.totalQueueItemsAhead || 0} keepsake{shippingEstimate.queueStats?.totalQueueItemsAhead === 1 ? "" : "s"} ahead in production
+                              {shippingEstimate.queueStats?.slotsLeftText ||
+                                (shippingEstimate.queueStats?.slotsLeft != null
+                                  ? `Only ${shippingEstimate.queueStats.slotsLeft} print slot${shippingEstimate.queueStats.slotsLeft === 1 ? "" : "s"} left today`
+                                  : "Only 3 print slots left today")}
                             </span>
                           </div>
                           <span className="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full self-start sm:self-auto">
@@ -1626,6 +1642,30 @@ export default function Checkout() {
                         {applyingCoupon ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
                       </button>
                     </form>
+                  )}
+
+                  {!appliedCoupon && availableCoupons.length > 0 && (
+                    <div className="pt-1.5 space-y-1">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-espresso-400">
+                        Available Offers:
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {availableCoupons.slice(0, 3).map((cp) => (
+                          <button
+                            key={cp.code}
+                            type="button"
+                            onClick={() => handleApplyCouponCode(cp.code)}
+                            disabled={applyingCoupon}
+                            className="px-2 py-1 rounded-lg bg-cream-100 hover:bg-cream-200 border border-cream-300 text-burgundy-900 text-[11px] font-mono font-bold flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <span>{cp.code}</span>
+                            <span className="text-[10px] font-sans font-normal text-burgundy-700">
+                              ({cp.discountType === "percentage" ? `${cp.discountAmount}% off` : `₹${cp.discountAmount} off`})
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
 

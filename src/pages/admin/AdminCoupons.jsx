@@ -92,6 +92,7 @@ export default function AdminCoupons() {
       minOrderAmount: formData.minOrderAmount ? Number(formData.minOrderAmount) : 0,
       maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : 0,
       usageLimit: Number(formData.usageLimit) || 1000,
+      validUntil: formData.validUntil ? formData.validUntil : null,
     };
 
     try {
@@ -108,6 +109,16 @@ export default function AdminCoupons() {
       toast.error(err.response?.data?.message || "Failed to save coupon");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleToggleActive = async (coupon) => {
+    try {
+      const { data } = await api.patch(`/coupons/${coupon._id}/toggle`);
+      toast.success(data.message || "Status updated");
+      fetchCoupons();
+    } catch {
+      toast.error("Failed to toggle coupon status");
     }
   };
 
@@ -196,15 +207,19 @@ export default function AdminCoupons() {
                       {c.usedCount || 0} / {c.usageLimit || "∞"} used
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(c)}
+                        title="Click to toggle Active / Disabled"
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition cursor-pointer flex items-center gap-1 ${
                           c.isActive
-                            ? "bg-emerald-950 text-emerald-400 border border-emerald-800/40"
-                            : "bg-slate-800 text-slate-400"
+                            ? "bg-emerald-950 text-emerald-400 border border-emerald-800/40 hover:bg-emerald-900"
+                            : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
                         }`}
                       >
-                        {c.isActive ? "Active" : "Disabled"}
-                      </span>
+                        <span className={`h-1.5 w-1.5 rounded-full ${c.isActive ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
+                        <span>{c.isActive ? "Active" : "Disabled"}</span>
+                      </button>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -340,6 +355,34 @@ export default function AdminCoupons() {
                   placeholder="e.g. Flat ₹100 discount on keepsakes above ₹499"
                   className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-hidden focus:border-rose-500 text-xs"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                    Usage Limit (Max Total Redemptions)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.usageLimit}
+                    onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
+                    placeholder="e.g. 1000"
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-hidden focus:border-rose-500 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
+                    Expiry Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.validUntil}
+                    onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-hidden focus:border-rose-500 text-xs"
+                  />
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-6 p-4 rounded-2xl bg-slate-900/40 border border-slate-800">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Edit2,
@@ -15,6 +16,7 @@ import {
   Info,
   Upload,
   Image as ImageIcon,
+  Palette,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
@@ -338,7 +340,15 @@ export default function AdminKeepsakes() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            to="/admin/print-colors"
+            className="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
+          >
+            <Palette size={14} />
+            <span>3D Filament Colors</span>
+          </Link>
+
           <button
             onClick={handleResetDefaults}
             disabled={resetting || loading}

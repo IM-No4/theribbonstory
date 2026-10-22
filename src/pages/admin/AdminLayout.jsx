@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Tag,
   MessageSquare,
+  Palette,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useAdminThemeStore } from "../../store/adminThemeStore";
@@ -38,6 +39,7 @@ export default function AdminLayout() {
     { to: "/admin/products", label: "Products & Pricing", icon: Package },
     { to: "/admin/collections", label: "Collections", icon: Layers },
     { to: "/admin/keepsakes", label: "Keepsake Pricing & Sizes", icon: Sparkles },
+    { to: "/admin/print-colors", label: "3D Filament Colors", icon: Palette },
     { to: "/admin/coupons", label: "Coupons & Discounts", icon: Tag },
     { to: "/admin/reviews", label: "Reviews & Feedback", icon: MessageSquare },
   ];
