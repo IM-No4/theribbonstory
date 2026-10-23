@@ -112,7 +112,7 @@ export default function OrderSuccess() {
           {awaitingPayment ? (
             <p className="text-xs sm:text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-4 py-2 max-w-lg mx-auto inline-flex items-center gap-2">
               <Loader2 size={14} className="animate-spin" />
-              Confirming your payment with Razorpay — this usually takes a few seconds.
+              Confirming your payment — this usually takes a few seconds.
             </p>
           ) : (
             <p className="text-xs sm:text-sm text-espresso-500 max-w-lg mx-auto leading-relaxed">
@@ -341,7 +341,7 @@ export default function OrderSuccess() {
                   Payment Summary
                 </span>
                 <p className="font-medium text-slate-800 uppercase">
-                  {order.paymentMethod === "cod" ? "Cash on Delivery" : "Online Gateway (Razorpay)"}
+                  {order.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment (Prepaid)"}
                 </p>
                 <p className="text-espresso-500 mt-0.5">
                   Status:{" "}
@@ -351,7 +351,7 @@ export default function OrderSuccess() {
                 </p>
                 {order.paymentResult?.razorpayPaymentId && (
                   <p className="text-[10px] text-espresso-400 mt-1 font-mono">
-                    Ref: {order.paymentResult.razorpayPaymentId}
+                    Transaction ID: {order.paymentResult.razorpayPaymentId}
                   </p>
                 )}
               </div>

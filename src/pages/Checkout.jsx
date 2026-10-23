@@ -155,7 +155,7 @@ export default function Checkout() {
           day: "numeric",
         }),
         recommendedCourier: {
-          courier_name: "BlueDart Air Express (Shiprocket)",
+          courier_name: "Express Air Delivery",
           rate: isFreeDeliveryQualified ? 0 : 65,
         },
       });
@@ -382,7 +382,8 @@ export default function Checkout() {
       productId: i.productId,
       name: i.name,
       image: i.image,
-      sizeId: i.sizeId,
+      sizeId: i.sizeId || i.customization?.size || "small",
+      price: i.price,
       hamper: i.hamper,
       quantity: i.quantity,
       selectedOptions: i.selectedOptions,
@@ -400,8 +401,8 @@ export default function Checkout() {
         : shippingEstimate?.standard?.slotName || "Standard Delivery",
     courierPartner:
       selectedDeliveryTier === "express"
-        ? shippingEstimate?.express?.courierName || "BlueDart Air Express (Priority)"
-        : shippingEstimate?.standard?.courierName || "BlueDart Express (Shiprocket)",
+        ? shippingEstimate?.express?.courierName || "Priority Air Delivery"
+        : shippingEstimate?.standard?.courierName || "Standard Delivery",
     couponCode: appliedCoupon?.code,
     giftOptions: giftOptions.isGift ? giftOptions : undefined,
   });
@@ -568,7 +569,7 @@ export default function Checkout() {
         {/* 2-Column Wide Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Stepped Accordions */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+          <div className="lg:col-span-7 xl:col-span-7 space-y-6">
             {/* ================= STEP 1: DELIVERY ADDRESS ================= */}
             <div className="rounded-3xl bg-white border border-rose-100 shadow-sm overflow-hidden transition-all duration-300">
               <div
@@ -934,7 +935,7 @@ export default function Checkout() {
                             <p className="text-[10px] text-stone-600 leading-snug">
                               {shippingEstimate.hasCustom3D
                                 ? "⚡ Priority Queue: Jumps ahead of standard orders to print next + Air Express"
-                                : "⚡ Priority packaging & BlueDart Air Express"}
+                                : "⚡ Priority packaging & Express Air Delivery"}
                             </p>
                           </div>
                         </div>
@@ -1118,7 +1119,7 @@ export default function Checkout() {
                       {loadingShiprocket ? (
                         <>
                           <Loader2 size={16} className="animate-spin" />
-                          <span>Checking Shiprocket...</span>
+                          <span>Checking Delivery...</span>
                         </>
                       ) : (
                         <>
@@ -1251,7 +1252,7 @@ export default function Checkout() {
                             <span>Online Payment (UPI, Cards, NetBanking, Wallets)</span>
                           </div>
                           <div className="text-[11px] text-espresso-400">
-                            Instant Razorpay gateway • Priority workshop crafting &amp; dispatch
+                            Instant secure online payment • Priority workshop crafting &amp; dispatch
                           </div>
                         </div>
                       </div>
@@ -1413,7 +1414,7 @@ export default function Checkout() {
                   <div>
                     <div className="font-bold text-burgundy-900">
                       {paymentMethod === "razorpay"
-                        ? "Online Payment via Razorpay (UPI, Cards, NetBanking)"
+                        ? "Online Payment (UPI, Cards, NetBanking)"
                         : "Cash on Delivery (COD)"}
                     </div>
                     <div className="text-espresso-400 text-[11px]">
@@ -1436,150 +1437,10 @@ export default function Checkout() {
               )}
             </div>
 
-            {/* ================= STEP 3: REVIEW ITEMS & FINAL CONFIRMATION ================= */}
-            {activeStep === 3 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-3xl bg-white border border-rose-200 shadow-xl overflow-hidden p-6 sm:p-8 space-y-6"
-              >
-                <div className="border-b border-rose-100 pb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-2xl bg-ribbon-500 text-white flex items-center justify-center font-bold text-sm">
-                      3
-                    </div>
-                    <div>
-                      <h2 className="font-display text-xl font-bold text-burgundy-900">
-                        Review Keepsakes &amp; Place Order
-                      </h2>
-                      <p className="text-xs text-espresso-400">
-                        Verify your delivery destination and keepsakes before final payment
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-                    Ready to Pay
-                  </span>
-                </div>
-
-                {/* Gift Option Confirmation Badge in Review */}
-                {giftOptions.isGift ? (
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-blush-50 to-rose-50 border border-rose-200 flex items-start justify-between gap-3 text-xs">
-                    <div className="flex items-start gap-2.5">
-                      <Gift size={16} className="text-ribbon-600 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="font-bold text-burgundy-900">
-                          Complimentary Gift Packaging Included ({giftOptions.cardTheme} Card)
-                        </div>
-                        {giftOptions.giftMessage && (
-                          <div className="text-[11px] text-espresso-600 italic mt-1 bg-white/70 p-2 rounded-xl border border-rose-100">
-                            &ldquo;{giftOptions.giftMessage}&rdquo;
-                          </div>
-                        )}
-                        <div className="text-[10px] text-espresso-400 mt-1">
-                          Ribbon: {giftOptions.ribbonColor} • Invoice concealed from recipient
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveStep(2)}
-                      className="text-[11px] font-bold text-ribbon-600 hover:underline shrink-0 cursor-pointer"
-                    >
-                      Edit Gift
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-2xl bg-cream-50/70 border border-rose-100 flex items-center justify-between text-xs">
-                    <span className="text-espresso-500 text-[11px]">
-                      Sending as a gift? Add a free printed greeting card &amp; ribbon.
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGiftOptions((g) => ({ ...g, isGift: true }));
-                        setActiveStep(2);
-                      }}
-                      className="text-xs font-bold text-ribbon-600 hover:underline cursor-pointer flex items-center gap-1"
-                    >
-                      <Plus size={12} />
-                      <span>Add Gift Card</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Keepsakes Items Grid Preview */}
-                <div className="space-y-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-burgundy-900">
-                    Your Keepsake Items ({items.length})
-                  </span>
-                  <div className="divide-y divide-rose-50 border border-rose-100 rounded-2xl overflow-hidden bg-cream-50/30">
-                    {items.map((item) => (
-                      <div key={item.id} className="p-4 flex items-center justify-between gap-4 text-xs">
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <img
-                            src={assetUrl(item.image)}
-                            alt={item.name}
-                            className="w-14 h-14 rounded-xl object-cover border border-rose-100 bg-white shrink-0 shadow-2xs"
-                          />
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-burgundy-900 text-sm truncate">{item.name}</h4>
-                            <div className="text-espresso-500 text-[11px] mt-0.5">
-                              Quantity: <strong className="font-mono">{item.quantity}</strong> × {formatPrice(item.price)}
-                            </div>
-                            {item.customization?.note && (
-                              <div className="text-[10px] text-ribbon-700 italic truncate mt-0.5">
-                                Note: &ldquo;{item.customization.note}&rdquo;
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="font-mono font-bold text-burgundy-900 text-sm shrink-0">
-                          {formatPrice(item.price * item.quantity)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Final Order Confirmation Call To Action */}
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-50/60 via-cream-50/60 to-blush-50/60 border border-rose-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <div className="text-xs text-espresso-500">By clicking below, you agree to The Ribbon Story terms:</div>
-                    <div className="text-sm font-bold text-burgundy-900">
-                      Total Payable Amount: <span className="text-ribbon-600 font-mono text-lg">{formatPrice(total)}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handlePlaceOrder}
-                    disabled={placing}
-                    className="btn-primary py-4 px-8 text-sm font-bold uppercase tracking-wider shadow-lg hover:shadow-xl transition cursor-pointer flex items-center gap-2 shrink-0 disabled:opacity-50"
-                  >
-                    {placing ? (
-                      <>
-                        <Loader2 className="animate-spin" size={18} />
-                        <span>Processing Order...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={16} />
-                        <span>
-                          {paymentMethod === "cod"
-                            ? `Place Order via COD (${formatPrice(total)})`
-                            : `Pay ${formatPrice(total)} via Razorpay`}
-                        </span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </motion.div>
-            )}
           </div>
 
           {/* ================= RIGHT COLUMN: ORDER SUMMARY ================= */}
-          <div className="lg:col-span-5 xl:col-span-4">
+          <div className="lg:col-span-5 xl:col-span-5">
             {activeStep === 3 ? (
               /* ACTIVE FINAL ORDER SUMMARY CARD (ON STEP 3) */
               <motion.div
@@ -1595,13 +1456,107 @@ export default function Checkout() {
                         Final Step 3
                       </span>
                       <h3 className="font-display text-lg sm:text-xl font-bold text-burgundy-900">
-                        Order Summary
+                        Order Summary &amp; Review
                       </h3>
                     </div>
                     <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                       {items.length} keepsake{items.length > 1 ? "s" : ""}
                     </span>
                   </div>
+                </div>
+
+                {/* Keepsakes Items Review Section */}
+                <div className="p-5 border-b border-rose-100 bg-cream-50/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-burgundy-900 flex items-center gap-1.5">
+                      <Sparkles size={13} className="text-ribbon-500" />
+                      <span>Review Keepsakes ({items.length})</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/cart")}
+                      className="text-[11px] font-semibold text-ribbon-600 hover:underline cursor-pointer"
+                    >
+                      Edit Cart
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-3.5 rounded-2xl bg-white border border-rose-100 flex items-center justify-between gap-3 text-xs shadow-2xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={assetUrl(item.image)}
+                            alt={item.name}
+                            className="w-12 h-12 rounded-xl object-cover border border-rose-100 bg-cream-50 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-burgundy-900 text-xs truncate">{item.name}</h4>
+                            <div className="text-espresso-500 text-[11px] mt-0.5">
+                              Quantity: <strong className="font-mono">{item.quantity}</strong> × {formatPrice(item.price)}
+                            </div>
+                            {item.customization?.note && (
+                              <div className="text-[10px] text-ribbon-700 italic truncate mt-0.5">
+                                Note: &ldquo;{item.customization.note}&rdquo;
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="font-mono font-bold text-burgundy-900 text-xs shrink-0">
+                          {formatPrice(item.price * item.quantity)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gift Packaging Review / Add */}
+                <div className="px-5 py-3.5 border-b border-rose-100 bg-rose-50/30 text-xs">
+                  {giftOptions.isGift ? (
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-start gap-2">
+                        <Gift size={15} className="text-ribbon-600 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="font-bold text-burgundy-900 text-[11px]">
+                            Complimentary Gift Packaging Included ({giftOptions.cardTheme} Card)
+                          </div>
+                          {giftOptions.giftMessage && (
+                            <div className="text-[10px] text-espresso-600 italic mt-0.5 line-clamp-2">
+                              &ldquo;{giftOptions.giftMessage}&rdquo;
+                            </div>
+                          )}
+                          <div className="text-[10px] text-espresso-400 mt-0.5">
+                            Ribbon: {giftOptions.ribbonColor} • Concealed invoice
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveStep(2)}
+                        className="text-[10px] font-bold text-ribbon-600 hover:underline shrink-0 cursor-pointer"
+                      >
+                        Edit Gift
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-espresso-500 text-[11px]">
+                      <span>Sending as a gift? Add a free greeting card &amp; ribbon.</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGiftOptions((g) => ({ ...g, isGift: true }));
+                          setActiveStep(2);
+                        }}
+                        className="font-bold text-ribbon-600 hover:underline cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <Plus size={11} />
+                        <span>Add Gift Card</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Promo Coupon Box */}

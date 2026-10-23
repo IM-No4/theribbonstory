@@ -414,7 +414,7 @@ export default function PersonalizedPage() {
       name: `Custom 3D Keepsake (${currentCat?.name || "Personalized"} - ${currentOpt.name} ${currentOpt.dimensions})`,
       image: cuteImage,
       price: unitPrice,
-      sizeId: currentOpt._id || currentOpt.name,
+      sizeId: currentOpt._id || currentOpt.id || currentOpt.name || "small",
       quantity,
       selectedOptions: [
         { name: "Keepsake Category", value: currentCat?.name || "Personalized", priceDelta: 0 },

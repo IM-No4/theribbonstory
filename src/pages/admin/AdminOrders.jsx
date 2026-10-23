@@ -1398,7 +1398,7 @@ export default function AdminOrders() {
                     Issue Payment Refund
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Order #{refundModal._id.slice(-6).toUpperCase()} • {refundModal.paymentMethod === "razorpay" ? "Razorpay Gateway" : "Store / Bank Credit"}
+                    Order #{refundModal._id.slice(-6).toUpperCase()} • {refundModal.paymentMethod === "razorpay" ? "Online Payment" : "Store / Bank Credit"}
                   </p>
                 </div>
               </div>
@@ -1426,7 +1426,7 @@ export default function AdminOrders() {
                 </div>
                 {refundModal.paymentResult?.razorpayPaymentId && (
                   <div className="flex justify-between text-slate-300 font-mono text-[11px]">
-                    <span>Razorpay Payment ID:</span>
+                    <span>Payment Reference ID:</span>
                     <span className="text-slate-400">{refundModal.paymentResult.razorpayPaymentId}</span>
                   </div>
                 )}
@@ -1479,7 +1479,7 @@ export default function AdminOrders() {
               </div>
 
               <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-200">
-                ⚡ Razorpay will automatically credit the customer&apos;s source account (UPI / Card / NetBanking) within 5-7 business days.
+                ⚡ The refund will automatically credit the customer&apos;s source account (UPI / Card / NetBanking) within 5-7 business days.
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">

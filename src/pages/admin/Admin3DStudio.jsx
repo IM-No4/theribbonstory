@@ -439,7 +439,7 @@ export default function Admin3DStudio() {
                     {order.paymentMethod === "cod"
                       ? "Cash on Delivery"
                       : order.isPaid
-                      ? "Paid via Razorpay"
+                      ? "Paid Online"
                       : "Awaiting Payment"}
                   </span>
                 </div>

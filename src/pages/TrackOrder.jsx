@@ -150,7 +150,7 @@ export default function TrackOrder() {
 
           {/* Quick Helper */}
           <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-3 gap-2">
-            <span>💡 Real-time Courier Status (BlueDart, Delhivery, DTDC, Express Air).</span>
+            <span>💡 Live Courier Dispatch &amp; Real-time Transit Updates.</span>
             <Link to="/contact" className="text-ribbon-600 font-semibold hover:underline">
               Need WhatsApp Support?
             </Link>
