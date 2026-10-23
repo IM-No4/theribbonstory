@@ -1571,7 +1571,7 @@ export default function AdminOrders() {
                       <h4 className="font-bold text-sm text-white mt-0.5">
                         {liveTrackingModal.courierName ||
                           liveTrackingModal.courierPartner ||
-                          "BlueDart Express (Shiprocket)"}
+                          "Express Delivery"}
                       </h4>
                       <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
                         AWB: {liveTrackingModal.awbCode || liveTrackingModal.trackingNumber || "SR84729103IN"}

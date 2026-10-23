@@ -65,6 +65,7 @@ export default function TrackOrder() {
   };
 
   const order = trackingResponse?.order;
+  const activities = order?.activities || [];
   const srData = trackingResponse?.shiprocketTracking;
   const srActivities = srData?.shipment_track_activities || [];
   const srTrack = srData?.shipment_track?.[0];
@@ -197,14 +198,26 @@ export default function TrackOrder() {
 
                 <div className="text-left sm:text-right">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Carrier Partner
+                    {order?.status === "shipped" || order?.status === "delivered" ? "Carrier Partner" : "Delivery Service"}
                   </div>
                   <div className="font-display text-base font-extrabold text-slate-900 flex items-center sm:justify-end gap-1.5 mt-0.5">
                     <Award size={16} className="text-ribbon-500" />
-                    <span>{order?.courierPartner || srTrack?.courier_name || "Express Air Courier"}</span>
+                    <span>{order?.courierPartner || srTrack?.courier_name || "Express Delivery"}</span>
                   </div>
                   <div className="text-xs text-slate-500 font-mono mt-0.5">
-                    AWB: <strong>{order?.trackingNumber || srTrack?.awb_code || "AWB-IN"}</strong>
+                    {order?.awbCode ? (
+                      <>
+                        AWB: <strong>{order.awbCode}</strong>
+                      </>
+                    ) : order?.status === "shipped" || order?.status === "delivered" ? (
+                      <>
+                        AWB: <strong>{order?.trackingNumber || srTrack?.awb_code || "Generated"}</strong>
+                      </>
+                    ) : (
+                      <>
+                        AWB: <span className="text-slate-400 italic">Assigned upon dispatch</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -316,12 +329,52 @@ export default function TrackOrder() {
               )}
             </div>
 
-            {/* 2. Shiprocket Live Courier Activity Scans */}
-            {srActivities.length > 0 && (
+            {/* 2. Authentic Order Status Journey Checkpoints */}
+            {activities.length > 0 && (
               <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-md space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
                     <Clock size={16} className="text-ribbon-500" />
+                    <span>Actual Order Status &amp; Journey</span>
+                  </h3>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                    Verified Status
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {activities.map((act, aIdx) => (
+                    <div key={aIdx} className="flex items-start gap-3.5 relative">
+                      <div className="h-3 w-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0 mt-1" />
+                      <div className="flex-1 text-xs">
+                        <div className="font-bold text-slate-900">{act.activity}</div>
+                        <div className="text-slate-500 flex items-center gap-2 mt-0.5 text-[11px]">
+                          <span>{act.location}</span>
+                          <span>•</span>
+                          <span>{act.date}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {order && order.status !== "shipped" && order.status !== "delivered" && order.status !== "cancelled" && (
+                  <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
+                    <Sparkles size={14} className="text-ribbon-500 shrink-0" />
+                    <span>
+                      Keepsake is in studio handcrafting. Live courier activity checkpoints will activate once handed to the courier partner.
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. Live Courier Activity Scans (Only when order is dispatched/delivered) */}
+            {srActivities.length > 0 && (order?.status === "shipped" || order?.status === "delivered" || !order) && (
+              <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-md space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="font-display font-bold text-base text-slate-900 flex items-center gap-2">
+                    <Truck size={16} className="text-ribbon-500" />
                     <span>Live Courier Activity Checkpoints</span>
                   </h3>
                   <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
