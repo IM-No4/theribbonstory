@@ -84,3 +84,34 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #E11D48;
 }
+
+@media print {
+  /* Strip out all website chrome, headers, navigation bars, footers, drawers */
+  header,
+  nav,
+  footer,
+  aside,
+  #floating-help,
+  .print\:hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  body,
+  html,
+  #root,
+  main {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #111111 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+  }
+
+  @page {
+    margin: 1.2cm;
+    size: auto;
+  }
+}

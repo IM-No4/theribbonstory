@@ -957,7 +957,7 @@ export default function Checkout() {
                           Billing address is the same as delivery address
                         </span>
                         <span className="text-[11px] text-espresso-400 block mt-0.5">
-                          Uncheck if you need the tax invoice billed to a different person, office, or company GSTIN.
+                          Uncheck if you need the invoice billed to a different person or company address.
                         </span>
                       </div>
                     </label>
@@ -971,7 +971,7 @@ export default function Checkout() {
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-200 text-burgundy-900">
                           <Receipt size={16} className="text-ribbon-600" />
                           <span className="text-xs font-bold uppercase tracking-wider">
-                            Billing Address &amp; GST Details
+                            Billing Address
                           </span>
                         </div>
 
@@ -1003,35 +1003,17 @@ export default function Checkout() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
-                              Company Name (Optional)
-                            </label>
-                            <input
-                              type="text"
-                              value={billingAddress.company}
-                              onChange={(e) => setBillingAddress({ ...billingAddress, company: e.target.value })}
-                              placeholder="e.g. Acme Innovations Pvt Ltd"
-                              className="input-field text-xs py-3 bg-white"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
-                              GSTIN (Optional, for Tax Credit)
-                            </label>
-                            <input
-                              type="text"
-                              maxLength={15}
-                              value={billingAddress.gstin}
-                              onChange={(e) =>
-                                setBillingAddress({ ...billingAddress, gstin: e.target.value.toUpperCase() })
-                              }
-                              placeholder="15-digit GSTIN (e.g. 29ABCDE1234F1Z5)"
-                              className="input-field text-xs py-3 font-mono uppercase bg-white"
-                            />
-                          </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1.5">
+                            Company Name (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={billingAddress.company}
+                            onChange={(e) => setBillingAddress({ ...billingAddress, company: e.target.value })}
+                            placeholder="e.g. Acme Innovations Pvt Ltd"
+                            className="input-field text-xs py-3 bg-white"
+                          />
                         </div>
 
                         <div>

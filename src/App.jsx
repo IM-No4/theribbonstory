@@ -45,6 +45,7 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminKeepsakes = lazy(() => import("./pages/admin/AdminKeepsakes"));
 const AdminPrintColors = lazy(() => import("./pages/admin/AdminPrintColors"));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const Admin3DStudio = lazy(() => import("./pages/admin/Admin3DStudio"));
 
 // Luxury Branded Page Loading Suspense Fallback
@@ -129,12 +130,12 @@ function App() {
 
       {/* Show Storefront navigation components only outside admin, isolated auth portals and coming soon mode */}
       {!isIsolatedLayout && (
-        <>
+        <div className="print:hidden">
           <Navbar />
           <CartDrawer />
           <WishlistDrawer />
           <FloatingHelp />
-        </>
+        </div>
       )}
 
       <main className="flex-1">
@@ -183,6 +184,7 @@ function App() {
                   <Route path="collections" element={<AdminCollections />} />
                   <Route path="keepsakes" element={<AdminKeepsakes />} />
                   <Route path="print-colors" element={<AdminPrintColors />} />
+                  <Route path="notifications" element={<AdminNotifications />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="coupons" element={<AdminCoupons />} />
                   <Route path="reviews" element={<AdminReviews />} />
@@ -195,7 +197,11 @@ function App() {
         </Suspense>
       </main>
 
-      {!isIsolatedLayout && <Footer />}
+      {!isIsolatedLayout && (
+        <div className="print:hidden">
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }

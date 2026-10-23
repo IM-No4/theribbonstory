@@ -19,7 +19,9 @@ import {
   Upload,
   FileCode,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
 import { api, assetUrl } from "../../api/client";
@@ -345,15 +347,25 @@ export default function AdminOrders() {
           </p>
         </div>
 
-        <div className="relative self-start sm:self-auto">
-          <button
-            onClick={() => setExportOpen((v) => !v)}
-            aria-expanded={exportOpen}
-            className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <Link
+            to="/admin/notifications"
+            className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-semibold flex items-center gap-2 transition"
+            title="Configure which email IDs receive new order notification alerts"
           >
-            <Download size={15} className="text-rose-400" />
-            <span>Export Orders CSV</span>
-          </button>
+            <Mail size={15} className="text-rose-400" />
+            <span>Email Alerts</span>
+          </Link>
+
+          <div className="relative">
+            <button
+              onClick={() => setExportOpen((v) => !v)}
+              aria-expanded={exportOpen}
+              className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+            >
+              <Download size={15} className="text-rose-400" />
+              <span>Export Orders CSV</span>
+            </button>
           {exportOpen && (
             <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 z-30 w-72 p-4 rounded-2xl bg-slate-950 border border-slate-700 shadow-2xl shadow-black/60 space-y-3">
               <p className="text-[11px] text-slate-400">
@@ -394,6 +406,7 @@ export default function AdminOrders() {
           )}
         </div>
       </div>
+    </div>
 
       {/* Filter and Search */}
       <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -622,7 +635,7 @@ export default function AdminOrders() {
                   {selectedOrder.invoice?.number && <span className="font-mono">{selectedOrder.invoice.number}</span>}
                   <InvoiceButton
                     order={selectedOrder}
-                    label="GST invoice"
+                    label="Invoice"
                     className="text-rose-300 hover:text-rose-200 font-semibold cursor-pointer"
                   />
                 </p>
