@@ -25,7 +25,7 @@ export default function Cart() {
       .catch(() => {});
   }, []);
 
-  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 79;
+  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 99;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
   const total = Math.max(0, subtotal + shipping - discount);
 

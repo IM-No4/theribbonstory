@@ -73,6 +73,28 @@ export default function Checkout() {
   const subtotal = useCartStore((s) => s.subtotal());
   const { user, isAuthenticated } = useAuthStore();
 
+  // Custom 3D Keepsakes cannot use Cash on Delivery (Prepaid online only)
+  const hasCustomKeepsake = items.some((item) =>
+    Boolean(
+      item.customization?.photoUrl ||
+      item.customization?.cuteImageUrl ||
+      item.customization?.reference3D ||
+      item.customization?.category ||
+      item.fromCatalog === false ||
+      item.sizeId ||
+      item.hamper?.keepsakeId === "3d-miniature" ||
+      (typeof item.productId === "string" && (
+        item.productId.startsWith("custom-3d-") ||
+        item.productId.startsWith("keepsake-")
+      )) ||
+      (typeof item.name === "string" && (
+        item.name.toLowerCase().includes("3d") ||
+        item.name.toLowerCase().includes("keepsake") ||
+        item.name.toLowerCase().includes("figurine")
+      ))
+    )
+  );
+
   // 3-Step Streamlined Checkout (1: Address, 2: Payment & Gifting, 3: Order Summary & Pay)
   const [activeStep, setActiveStep] = useState(1);
   const [addressConfirmed, setAddressConfirmed] = useState(false);
@@ -103,6 +125,13 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [placing, setPlacing] = useState(false);
 
+  // Automatically reset to prepaid razorpay if cart has custom keepsakes
+  useEffect(() => {
+    if (hasCustomKeepsake && paymentMethod === "cod") {
+      setPaymentMethod("razorpay");
+    }
+  }, [hasCustomKeepsake, paymentMethod]);
+
   // Coupon input in summary
   const [couponInput, setCouponInput] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -117,7 +146,7 @@ export default function Checkout() {
   // Dynamic Shipping Calculation & Single Printer Queue Option
   const [selectedDeliveryTier, setSelectedDeliveryTier] = useState("standard"); // "standard" | "express"
   const isFreeDeliveryQualified = subtotal >= 999;
-  const baseShippingFee = isFreeDeliveryQualified ? 0 : 79;
+  const baseShippingFee = isFreeDeliveryQualified ? 0 : 99;
   const expressPriorityFee = selectedDeliveryTier === "express" ? 199 : 0;
   const shippingFee = baseShippingFee + expressPriorityFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
@@ -137,7 +166,7 @@ export default function Checkout() {
         pincode: cleanPin,
         items,
         weight: 0.5,
-        cod: paymentMethod === "cod" ? 1 : 0,
+        cod: (!hasCustomKeepsake && paymentMethod === "cod") ? 1 : 0,
       });
 
       if (data?.serviceable) {
@@ -431,6 +460,12 @@ export default function Checkout() {
     setPlacing(true);
     try {
       if (paymentMethod === "cod") {
+        if (hasCustomKeepsake) {
+          toast.error("Cash on Delivery is not available for custom keepsake orders. Please complete payment online.");
+          setPaymentMethod("razorpay");
+          setPlacing(false);
+          return;
+        }
         const { data } = await api.post("/orders", { ...buildOrderPayload(), paymentMethod: "cod" });
         completeOrder(data.order._id);
         return;
@@ -893,7 +928,7 @@ export default function Checkout() {
                                     FREE
                                   </span>
                                 ) : (
-                                  "₹79"
+                                  "₹99"
                                 )}
                               </span>
                             </div>
@@ -1244,138 +1279,64 @@ export default function Checkout() {
                     </label>
 
                     {/* Cash on Delivery */}
-                    <label
-                      onClick={() => setPaymentMethod("cod")}
-                      className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
-                        paymentMethod === "cod"
-                          ? "border-burgundy-900 bg-rose-50/40 shadow-xs ring-1 ring-burgundy-900/20"
-                          : "border-slate-200 hover:border-ribbon-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          checked={paymentMethod === "cod"}
-                          onChange={() => setPaymentMethod("cod")}
-                          className="text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
-                        />
-                        <div>
-                          <div className="font-bold text-xs sm:text-sm text-burgundy-900">
-                            Cash on Delivery (COD)
+                    {hasCustomKeepsake ? (
+                      <div className="p-4 rounded-2xl border border-dashed border-stone-300 bg-stone-50/70 space-y-2 select-none">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-full border border-stone-300 bg-stone-200/90 flex items-center justify-center shrink-0">
+                              <Lock size={11} className="text-stone-500" />
+                            </div>
+                            <div>
+                              <div className="font-bold text-xs sm:text-sm text-stone-500 line-through">
+                                Cash on Delivery (COD)
+                              </div>
+                              <div className="text-[11px] text-stone-500">
+                                Unavailable for custom keepsake orders
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-[11px] text-espresso-400">
-                            Pay in cash or UPI QR code at your doorstep upon package arrival
-                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                            Prepaid Only
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
+                          <Sparkles size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                          <span>
+                            <strong>Personalized Keepsake Attached:</strong> Because each 3D miniature figurine is uniquely handcrafted and made-to-order from your photograph, Cash on Delivery is disabled. Online prepayment (UPI, Cards, NetBanking) is required to begin 3D studio sculpting &amp; printing.
+                          </span>
                         </div>
                       </div>
-                    </label>
-                  </div>
-
-                  {/* Prominent Luxury Gift Packaging & Greeting Card Box */}
-                  <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-50/50 via-white to-blush-50/50 border border-rose-200 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-sm text-burgundy-900">
-                        <Gift size={18} className="text-ribbon-500" />
-                        <span>Gift Packaging &amp; Personalized Greeting Card</span>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-ribbon-600 bg-white border border-rose-200 px-2.5 py-0.5 rounded-full shadow-2xs">
-                        100% Free / Complimentary
-                      </span>
-                    </div>
-
-                    <label className="flex items-start gap-3 p-3.5 rounded-xl bg-white border border-rose-200/90 hover:border-ribbon-400 cursor-pointer transition shadow-2xs">
-                      <input
-                        type="checkbox"
-                        checked={giftOptions.isGift}
-                        onChange={(e) => setGiftOptions({ ...giftOptions, isGift: e.target.checked })}
-                        className="rounded text-burgundy-900 focus:ring-burgundy-900 h-4.5 w-4.5 mt-0.5"
-                      />
-                      <div className="flex-1">
-                        <div className="font-bold text-xs text-burgundy-900 flex items-center gap-1.5">
-                          <span>Yes, this order is a gift for someone special</span>
-                          <Sparkles size={13} className="text-amber-500" />
-                        </div>
-                        <div className="text-[11px] text-espresso-500 mt-0.5 leading-relaxed">
-                          Include free printed greeting card, satin ribbon box &amp; conceal prices on packing slip
-                        </div>
-                      </div>
-                    </label>
-
-                    {/* Expandable Gift Details */}
-                    {giftOptions.isGift && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="space-y-4 pt-1"
+                    ) : (
+                      <label
+                        onClick={() => setPaymentMethod("cod")}
+                        className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
+                          paymentMethod === "cod"
+                            ? "border-burgundy-900 bg-rose-50/40 shadow-xs ring-1 ring-burgundy-900/20"
+                            : "border-slate-200 hover:border-ribbon-300 bg-white"
+                        }`}
                       >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                          <div>
-                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1">
-                              Greeting Card Theme
-                            </label>
-                            <select
-                              value={giftOptions.cardTheme}
-                              onChange={(e) => setGiftOptions({ ...giftOptions, cardTheme: e.target.value })}
-                              className="input-field text-xs py-2.5 bg-white font-medium"
-                            >
-                              <option value="Birthday">🎉 Happy Birthday</option>
-                              <option value="Anniversary">💍 Happy Anniversary</option>
-                              <option value="Romantic / Love">🌹 Pure Love &amp; Forever</option>
-                              <option value="Congratulations">✨ Congratulations</option>
-                              <option value="Thinking of You">🤍 Thinking of You</option>
-                              <option value="Thank You">🙏 Thank You So Much</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase mb-1">
-                              Satin Ribbon Knot Color
-                            </label>
-                            <select
-                              value={giftOptions.ribbonColor}
-                              onChange={(e) => setGiftOptions({ ...giftOptions, ribbonColor: e.target.value })}
-                              className="input-field text-xs py-2.5 bg-white font-medium"
-                            >
-                              <option value="Classic Crimson">Classic Crimson Red</option>
-                              <option value="Rose Gold">Blush &amp; Rose Gold</option>
-                              <option value="Royal Emerald">Royal Emerald Green</option>
-                              <option value="Champagne Gold">Champagne Warm Gold</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-[11px] font-bold text-burgundy-900 uppercase">
-                              Personalized Message for Greeting Card
-                            </label>
-                            <span className="text-[10px] font-mono text-espresso-400">
-                              {giftOptions.giftMessage.length}/250 chars
-                            </span>
-                          </div>
-                          <textarea
-                            rows={3}
-                            maxLength={250}
-                            value={giftOptions.giftMessage}
-                            onChange={(e) => setGiftOptions({ ...giftOptions, giftMessage: e.target.value })}
-                            placeholder="e.g. Happy Birthday sweetheart! To endless memories and unconditional love. With love, Priya"
-                            className="input-field text-xs py-2.5 leading-relaxed"
-                          />
-                        </div>
-
-                        <label className="flex items-center gap-2 text-xs text-espresso-600 cursor-pointer pt-0.5">
+                        <div className="flex items-center gap-3">
                           <input
-                            type="checkbox"
-                            checked={giftOptions.hideInvoice}
-                            onChange={(e) => setGiftOptions({ ...giftOptions, hideInvoice: e.target.checked })}
-                            className="rounded text-burgundy-900 focus:ring-burgundy-900 h-3.5 w-3.5"
+                            type="radio"
+                            name="paymentMethod"
+                            checked={paymentMethod === "cod"}
+                            onChange={() => setPaymentMethod("cod")}
+                            className="text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
                           />
-                          <span>Hide pricing &amp; invoice breakdown from package delivery slip</span>
-                        </label>
-                      </motion.div>
+                          <div>
+                            <div className="font-bold text-xs sm:text-sm text-burgundy-900">
+                              Cash on Delivery (COD)
+                            </div>
+                            <div className="text-[11px] text-espresso-400">
+                              Pay in cash or UPI QR code at your doorstep upon package arrival
+                            </div>
+                          </div>
+                        </div>
+                      </label>
                     )}
                   </div>
+
+
 
                   <div className="pt-2 flex items-center justify-end">
                     <button
@@ -1404,17 +1365,7 @@ export default function Checkout() {
                     </div>
                   </div>
 
-                  {giftOptions.isGift && (
-                    <div className="text-right sm:border-l sm:border-slate-200 sm:pl-4 text-ribbon-700">
-                      <div className="text-[11px] font-semibold flex items-center gap-1 justify-end">
-                        <Gift size={13} />
-                        <span>Gift Card ({giftOptions.cardTheme})</span>
-                      </div>
-                      <div className="text-[10px] text-espresso-400 truncate max-w-[200px]">
-                        Ribbon: {giftOptions.ribbonColor}
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               )}
             </div>
@@ -1495,51 +1446,7 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* Gift Packaging Review / Add */}
-                <div className="px-5 py-3.5 border-b border-rose-100 bg-rose-50/30 text-xs">
-                  {giftOptions.isGift ? (
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-start gap-2">
-                        <Gift size={15} className="text-ribbon-600 shrink-0 mt-0.5" />
-                        <div>
-                          <div className="font-bold text-burgundy-900 text-[11px]">
-                            Complimentary Gift Packaging Included ({giftOptions.cardTheme} Card)
-                          </div>
-                          {giftOptions.giftMessage && (
-                            <div className="text-[10px] text-espresso-600 italic mt-0.5 line-clamp-2">
-                              &ldquo;{giftOptions.giftMessage}&rdquo;
-                            </div>
-                          )}
-                          <div className="text-[10px] text-espresso-400 mt-0.5">
-                            Ribbon: {giftOptions.ribbonColor} • Concealed invoice
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveStep(2)}
-                        className="text-[10px] font-bold text-ribbon-600 hover:underline shrink-0 cursor-pointer"
-                      >
-                        Edit Gift
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between text-espresso-500 text-[11px]">
-                      <span>Sending as a gift? Add a free greeting card &amp; ribbon.</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGiftOptions((g) => ({ ...g, isGift: true }));
-                          setActiveStep(2);
-                        }}
-                        className="font-bold text-ribbon-600 hover:underline cursor-pointer flex items-center gap-1 shrink-0"
-                      >
-                        <Plus size={11} />
-                        <span>Add Gift Card</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+
 
                 {/* Promo Coupon Box */}
                 <div className="p-5 border-b border-slate-100 space-y-2">

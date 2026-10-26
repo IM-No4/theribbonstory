@@ -205,6 +205,10 @@ export default function AdminOrders() {
   }, [statusFilter, search]);
 
   const openRefundModal = (order) => {
+    if (!order.isPaid) {
+      toast.error("Cannot issue a refund for an unpaid order. You can cancel the order directly.");
+      return;
+    }
     setRefundModal(order);
     setRefundAmount(order.totalPrice || "");
     setRefundReason(order.cancellationReason || "Customer requested refund");
@@ -315,6 +319,22 @@ export default function AdminOrders() {
       }
     } catch {
       toast.error("Failed to fetch shipping label");
+    }
+  };
+
+  const handleSyncShiprocket = async (orderId) => {
+    setUpdating(true);
+    try {
+      const { data } = await api.post(`/shipping/sync/${orderId}`);
+      toast.success(data.message || "Synced status from Shiprocket!");
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder(data.order);
+      }
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to sync status from Shiprocket");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -1271,13 +1291,28 @@ export default function AdminOrders() {
                         </button>
                       )
                     ) : (
-                      <button
-                        onClick={() => handlePrintLabel(selectedOrder._id)}
-                        className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                      >
-                        <Download size={14} className="text-emerald-400" />
-                        <span>Print Shipping Label PDF</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSyncShiprocket(selectedOrder._id)}
+                          disabled={updating}
+                          className="px-3.5 py-2 rounded-xl bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-200 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                          title="Sync live status from Shiprocket panel"
+                        >
+                          <RefreshCw size={13} className={updating ? "animate-spin" : ""} />
+                          <span>Sync Shiprocket</span>
+                        </button>
+                        {selectedOrder.shippingLabelUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => handlePrintLabel(selectedOrder._id)}
+                            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                          >
+                            <Download size={14} className="text-emerald-400" />
+                            <span>Print Shipping Label PDF</span>
+                          </button>
+                        ) : null}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1289,18 +1324,28 @@ export default function AdminOrders() {
                   <AlertTriangle className="text-amber-400 shrink-0 mt-0.5" size={18} />
                   <div className="space-y-1">
                     <div className="font-bold text-amber-300 text-xs uppercase tracking-wider">
-                      Customer Cancellation & Refund Requested
+                      {selectedOrder.isPaid ? "Customer Cancellation & Refund Requested" : "Customer Cancellation Requested"}
                     </div>
                     <p className="text-slate-300 text-xs">
                       Customer requested cancellation with reason: <em>&quot;{selectedOrder.cancellationReason || "Not specified"}&quot;</em>
                     </p>
-                    <button
-                      onClick={() => openRefundModal(selectedOrder)}
-                      className="mt-2 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
-                    >
-                      <RotateCcw size={13} />
-                      <span>Review & Issue Refund Now</span>
-                    </button>
+                    {selectedOrder.isPaid ? (
+                      <button
+                        onClick={() => openRefundModal(selectedOrder)}
+                        className="mt-2 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <RotateCcw size={13} />
+                        <span>Review & Issue Refund Now</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleStatusChange(selectedOrder._id, "cancelled")}
+                        className="mt-2 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <RotateCcw size={13} />
+                        <span>Cancel Order</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -1374,7 +1419,7 @@ export default function AdminOrders() {
               </div>
 
               <div className="flex items-center gap-2">
-                {!selectedOrder.isRefunded && (
+                {selectedOrder.isPaid && !selectedOrder.isRefunded && (
                   <button
                     onClick={() => openRefundModal(selectedOrder)}
                     className="px-4 py-2 rounded-xl bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
