@@ -13,6 +13,7 @@ import {
   Phone,
   AlertCircle,
   ArrowRight,
+  XCircle,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
@@ -75,6 +76,7 @@ export default function TrackOrder() {
   const srActivities = srData?.shipment_track_activities || [];
   const isCod = order?.paymentMethod === "cod";
   const isPaid = Boolean(order?.isPaid);
+  const isCancelled = order?.status === "cancelled";
 
   const trackingCode =
     order?.awbCode ||
@@ -119,8 +121,8 @@ export default function TrackOrder() {
     },
   ];
 
-  const currentStep = order?.currentStep || 1;
-  const progressPercent = Math.min(100, Math.max(0, ((currentStep - 1) / 4) * 100));
+  const currentStep = isCancelled ? 0 : (order?.currentStep ?? 1);
+  const progressPercent = isCancelled ? 0 : Math.min(100, Math.max(0, ((currentStep - 1) / 4) * 100));
 
   // Formatted Creation Date
   const createdDateStr = order?.createdAt
@@ -135,15 +137,17 @@ export default function TrackOrder() {
       })
     : "";
 
-  // Estimated delivery display
-  const estDeliveryStr = order?.estimatedDelivery
+  // Estimated delivery display (only shown if order is active and not cancelled)
+  const estDeliveryStr = !isCancelled && order?.estimatedDelivery
     ? new Date(order.estimatedDelivery).toLocaleDateString("en-IN", {
         timeZone: "Asia/Kolkata",
         day: "numeric",
         month: "short",
         year: "numeric",
       })
-    : "3–5 Business Days";
+    : !isCancelled
+    ? "3–5 Business Days"
+    : null;
 
   const itemsPrice = order?.itemsPrice ?? order?.totalPrice ?? 0;
   const shippingPrice = order?.shippingPrice ?? 0;
@@ -200,9 +204,17 @@ export default function TrackOrder() {
             {/* CARD 1: ORDER DETAILS */}
             <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 sm:p-7">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
-                <h2 className="text-lg sm:text-xl font-bold font-display text-slate-900 tracking-tight">
-                  Order Details - #{order.shortId || identifier.toUpperCase()}
-                </h2>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-bold font-display text-slate-900 tracking-tight">
+                    Order Details - #{order.shortId || identifier.toUpperCase()}
+                  </h2>
+                  {isCancelled && (
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                      <XCircle size={13} className="text-rose-600" />
+                      Cancelled
+                    </span>
+                  )}
+                </div>
                 {createdDateStr && (
                   <div className="text-xs sm:text-sm text-slate-500 font-medium">
                     Created: <span className="text-slate-800 font-semibold">{createdDateStr}</span>
@@ -266,81 +278,133 @@ export default function TrackOrder() {
                 )}
               </div>
 
-              {/* Courier & Estimated Delivery Row */}
+              {/* Courier & Estimated Delivery Row (Only show estimated delivery when active) */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center font-bold">
-                    <Truck size={17} />
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
+                      isCancelled
+                        ? "bg-rose-50 text-rose-600 border border-rose-100"
+                        : "bg-sky-50 text-sky-600 border border-sky-100"
+                    }`}
+                  >
+                    {isCancelled ? <XCircle size={17} /> : <Truck size={17} />}
                   </div>
                   <div>
                     <div className="font-bold text-sm text-slate-900">
-                      {order.courierPartner || "Express Delivery"}
+                      {isCancelled ? "Shipment Cancelled" : (order.courierPartner || "Express Delivery")}
                     </div>
-                    <div className="text-[11px] text-slate-400">Doorstep Courier Delivery</div>
+                    <div className="text-[11px] text-slate-400">
+                      {isCancelled ? "Delivery Stopped" : "Doorstep Courier Delivery"}
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-xs sm:text-sm text-slate-500">
-                  Estimated delivery:{" "}
-                  <strong className="text-slate-900 font-semibold">{estDeliveryStr}</strong>
-                </div>
+                {!isCancelled ? (
+                  <div className="text-xs sm:text-sm text-slate-500">
+                    Estimated delivery:{" "}
+                    <strong className="text-slate-900 font-semibold">{estDeliveryStr}</strong>
+                  </div>
+                ) : (
+                  <div className="text-xs sm:text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-3 py-1 rounded-lg inline-flex items-center gap-1.5">
+                    <XCircle size={14} className="text-rose-600" />
+                    <span>Order Cancelled</span>
+                  </div>
+                )}
               </div>
 
-              {/* Horizontal Stepper */}
-              <div className="pt-2 pb-2">
-                <div className="relative">
-                  {/* Connecting Track Line */}
-                  <div className="hidden sm:block absolute top-3.5 left-6 right-6 -translate-y-1/2 h-1 bg-slate-200 rounded-full z-0">
-                    <div
-                      className="h-full bg-sky-500 transition-all duration-500 rounded-full"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+              {/* Cancelled Banner OR Horizontal Stepper */}
+              {isCancelled ? (
+                <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 text-rose-950">
+                  <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <XCircle size={20} />
                   </div>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <h4 className="text-sm font-bold text-rose-900">Order & Delivery Cancelled</h4>
+                      {order.cancelledAt && (
+                        <span className="text-[11px] text-rose-600 font-medium">
+                          {new Date(order.cancelledAt).toLocaleString("en-IN", {
+                            timeZone: "Asia/Kolkata",
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-rose-700 leading-relaxed">
+                      {order.cancellationReason
+                        ? `Cancellation note: ${order.cancellationReason}.`
+                        : "This order has been cancelled and is no longer being processed or dispatched."}
+                      {isCod
+                        ? " As this was a Cash on Delivery order, no payment was collected."
+                        : isPaid
+                        ? " If payment was deducted, your refund will be processed back to the original payment source."
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Horizontal Stepper (active orders only) */
+                <div className="pt-2 pb-2">
+                  <div className="relative">
+                    {/* Connecting Track Line */}
+                    <div className="hidden sm:block absolute top-3.5 left-6 right-6 -translate-y-1/2 h-1 bg-slate-200 rounded-full z-0">
+                      <div
+                        className="h-full bg-sky-500 transition-all duration-500 rounded-full"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
 
-                  {/* 5 Step Icons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 relative z-10">
-                    {steps.map((s) => {
-                      const isCompleted = currentStep > s.step;
-                      const isCurrent = currentStep === s.step;
+                    {/* 5 Step Icons */}
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 relative z-10">
+                      {steps.map((s) => {
+                        const isCompleted = currentStep > s.step;
+                        const isCurrent = currentStep === s.step;
 
-                      return (
-                        <div
-                          key={s.step}
-                          className="flex sm:flex-col items-center sm:text-center gap-3 sm:gap-2"
-                        >
+                        return (
                           <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition ${
-                              isCompleted
-                                ? "bg-sky-500 text-white shadow-xs"
-                                : isCurrent
-                                ? "bg-white border-2 border-sky-500 ring-4 ring-sky-100"
-                                : "bg-white border-2 border-slate-300 text-transparent"
-                            }`}
+                            key={s.step}
+                            className="flex sm:flex-col items-center sm:text-center gap-3 sm:gap-2"
                           >
-                            {isCompleted ? (
-                              <Check size={14} strokeWidth={3} />
-                            ) : isCurrent ? (
-                              <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
-                            ) : (
-                              <div className="w-2 h-2 rounded-full bg-transparent" />
-                            )}
-                          </div>
-                          <div>
                             <div
-                              className={`text-xs font-semibold ${
-                                isCurrent ? "text-sky-700 font-bold" : isCompleted ? "text-slate-900" : "text-slate-400"
+                              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition ${
+                                isCompleted
+                                  ? "bg-sky-500 text-white shadow-xs"
+                                  : isCurrent
+                                  ? "bg-white border-2 border-sky-500 ring-4 ring-sky-100"
+                                  : "bg-white border-2 border-slate-300 text-transparent"
                               }`}
                             >
-                              {s.title}
+                              {isCompleted ? (
+                                <Check size={14} strokeWidth={3} />
+                              ) : isCurrent ? (
+                                <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                              ) : (
+                                <div className="w-2 h-2 rounded-full bg-transparent" />
+                              )}
                             </div>
-                            <div className="text-[10px] text-slate-500 sm:mt-0.5">{s.desc}</div>
+                            <div>
+                              <div
+                                className={`text-xs font-semibold ${
+                                  isCurrent ? "text-sky-700 font-bold" : isCompleted ? "text-slate-900" : "text-slate-400"
+                                }`}
+                              >
+                                {s.title}
+                              </div>
+                              <div className="text-[10px] text-slate-500 sm:mt-0.5">{s.desc}</div>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Tracking Details Toggle Dropdown */}
               <div className="pt-1">
@@ -359,15 +423,24 @@ export default function TrackOrder() {
                 {showDetails && (
                   <div className="mt-4 pl-3 border-l-2 border-slate-200 space-y-4 text-xs">
                     {/* Real Order Activities */}
-                    {activities.map((act, idx) => (
-                      <div key={idx} className="relative pl-3">
-                        <div className="absolute -left-[19px] top-1.5 w-2.5 h-2.5 rounded-full bg-sky-500 ring-4 ring-white" />
-                        <div className="font-bold text-slate-900">{act.activity}</div>
-                        <div className="text-slate-500 text-[11px] mt-0.5">
-                          {act.date} • {act.location}
+                    {activities.map((act, idx) => {
+                      const isActCancelled = act.status === "CANCELLED";
+                      return (
+                        <div key={idx} className="relative pl-3">
+                          <div
+                            className={`absolute -left-[19px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-white ${
+                              isActCancelled ? "bg-rose-500" : "bg-sky-500"
+                            }`}
+                          />
+                          <div className={`font-bold ${isActCancelled ? "text-rose-900" : "text-slate-900"}`}>
+                            {act.activity}
+                          </div>
+                          <div className="text-slate-500 text-[11px] mt-0.5">
+                            {act.date} • {act.location}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Live Courier Activities if dispatched */}
                     {srActivities.map((act, idx) => (
