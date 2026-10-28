@@ -448,70 +448,70 @@ export default function PersonalizedPage() {
   const displayCute = preview.approvedPreview ? assetUrl(preview.approvedPreview) : null;
 
   return (
-    <div className="bg-[#FAF8F5] min-h-screen pt-8 sm:pt-12 pb-16 relative overflow-hidden">
+    <div className="bg-[#FAF8F5] min-h-screen pt-5 sm:pt-8 lg:pt-10 pb-10 sm:pb-16 relative overflow-hidden">
       {/* Ambient Warm Studio Lighting Glows */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-rose-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute top-1/3 right-10 w-[500px] h-[500px] bg-amber-100/25 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Header - Spacious & Luxury Atelier */}
-        <div className="text-center mb-8 sm:mb-10 max-w-2xl mx-auto">
+        <div className="text-center mb-4 sm:mb-9 max-w-3xl mx-auto">
           {/* Eyebrow Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white border border-stone-200/80 shadow-2xs text-[10px] sm:text-[11px] font-bold text-stone-700 tracking-wider uppercase mb-3">
+          <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-white border border-stone-200/80 shadow-sm text-[9px] sm:text-[11px] font-bold text-stone-700 tracking-wider uppercase mb-2 sm:mb-3 max-w-full">
             <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
             <span>Personalized 3D Keepsakes</span>
-            <span className="text-stone-300">•</span>
-            <span className="text-stone-500 font-mono">Photo to Figurine</span>
+            <span className="hidden sm:inline text-stone-300">•</span>
+            <span className="hidden sm:inline text-stone-500 font-mono">Photo to Figurine</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold text-stone-900 tracking-tight">
+          <h1 className="text-[1.6rem] leading-[1.12] sm:text-3xl lg:text-4xl xl:text-[2.75rem] font-display font-extrabold text-stone-900 tracking-tight text-balance">
             Turn Your Memories Into 3D Keepsakes
           </h1>
 
-          <p className="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto mt-2 leading-relaxed">
+          <p className="hidden sm:block text-sm sm:text-base text-stone-600 max-w-2xl mx-auto mt-3 leading-relaxed px-1">
             Transform your favorite photograph into an adorable, personalized 3D-printed figurine—a unique keepsake made to celebrate the moments that matter most.
           </p>
 
           {/* 3-Step Guided Progress Indicator */}
-          <div className="flex items-center justify-center gap-1.5 sm:gap-3 mt-4 text-[10.5px] sm:text-xs font-semibold text-stone-600">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-2xs transition ${
+          <div className="flex items-center justify-center gap-1 sm:gap-3 mt-3 sm:mt-5 text-[9px] sm:text-xs font-semibold text-stone-600">
+            <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 rounded-full border shadow-2xs transition ${
               hasPhoto ? "bg-rose-50 text-rose-700 border-rose-200 font-bold" : "bg-white text-stone-700 border-stone-200"
             }`}>
               <span className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold">1</span>
-              <span>Upload Photo</span>
+              <span>Photo</span>
             </span>
             <span className="text-stone-300">→</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 shadow-2xs">
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 rounded-full bg-white border border-stone-200 text-stone-700 shadow-2xs">
               <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 flex items-center justify-center text-[9px] font-bold">2</span>
-              <span>Choose Size & Inscription</span>
+              <span>Options</span>
             </span>
             <span className="text-stone-300">→</span>
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-2xs transition ${
+            <span className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-3 rounded-full border shadow-2xs transition ${
               hasPreview ? "bg-emerald-50 text-emerald-800 border-emerald-200 font-bold" : "bg-white text-stone-500 border-stone-100"
             }`}>
               <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 flex items-center justify-center text-[9px] font-bold">3</span>
-              <span>3D Preview</span>
+              <span>Preview</span>
             </span>
           </div>
         </div>
 
         {/* Main Two-Card Row (Uploaded Photo / Dropzone on Left, Preview or Size Pricing on Right) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-stretch mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 lg:gap-7 items-start mb-4 sm:mb-7">
           {/* LEFT CARD: Customer Photo Upload or Render */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col h-[520px] sm:h-[550px] relative overflow-hidden">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-6 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col min-h-0 sm:min-h-[420px] lg:h-[550px] relative overflow-hidden">
             {!hasPhoto ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-full flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-stone-300/80 hover:border-rose-400 bg-gradient-to-b from-stone-50/60 to-rose-50/20 hover:from-rose-50/30 hover:to-rose-50/50 rounded-2xl text-center space-y-4 transition-all cursor-pointer group shadow-2xs"
+                className="w-full min-h-[220px] sm:min-h-0 flex-1 flex flex-col items-center justify-center p-4 sm:p-8 border-2 border-dashed border-stone-300/80 hover:border-rose-400 bg-gradient-to-b from-stone-50/60 to-rose-50/20 hover:from-rose-50/30 hover:to-rose-50/50 rounded-2xl text-center space-y-3 sm:space-y-4 transition-all cursor-pointer group shadow-2xs"
               >
-                <div className="h-16 w-16 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center mx-auto transition-transform group-hover:scale-110 shadow-xs">
-                  <Upload size={26} />
+                <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center mx-auto transition-transform group-hover:scale-110 shadow-xs">
+                  <Upload size={22} className="sm:hidden" /><Upload size={26} className="hidden sm:block" />
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-base sm:text-lg text-stone-900">
                     Select Your Photo
                   </h3>
-                  <p className="text-xs text-stone-500 mt-1 max-w-xs mx-auto">
+                  <p className="hidden sm:block text-xs text-stone-500 mt-1 max-w-xs mx-auto">
                     Clear portraits, memories, or everyday photos.
                   </p>
                 </div>
@@ -522,7 +522,7 @@ export default function PersonalizedPage() {
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
-                  className="btn-primary py-2.5 px-8 text-xs font-bold uppercase tracking-wider shadow-sm mt-1 cursor-pointer"
+                  className="btn-primary py-2.5 px-7 text-[11px] sm:text-xs font-bold uppercase tracking-wider shadow-sm mt-1 cursor-pointer"
                 >
                   Select Photo
                 </button>
@@ -545,7 +545,7 @@ export default function PersonalizedPage() {
                   <img
                     src={displayOriginal}
                     alt="Your uploaded reference photo"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                    className="w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                   />
 
                   {/* Gradient shadow overlay for buttons */}
@@ -579,7 +579,7 @@ export default function PersonalizedPage() {
           </div>
 
           {/* RIGHT CARD: Dimensions & Pricing + Inscription (before generation) */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col h-[520px] sm:h-[550px] relative overflow-hidden">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-6 shadow-[0_10px_35px_-5px_rgba(28,25,23,0.06)] border border-stone-200/80 flex flex-col min-h-0 sm:min-h-[420px] lg:h-[550px] relative overflow-hidden">
             <AnimatePresence mode="wait">
               {!hasPreview ? (
                 /* STATE 1: Before Generation -> Configure Size, Engraving & Notes, then Click Generate */
@@ -589,7 +589,7 @@ export default function PersonalizedPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.25 }}
-                  className="w-full h-full flex flex-col justify-center space-y-3.5"
+                  className="w-full flex flex-col justify-center space-y-3 sm:space-y-4"
                 >
                   <div className="space-y-3.5">
                     {/* Dimensions & Pricing Tiers for Selected Category */}
@@ -599,8 +599,8 @@ export default function PersonalizedPage() {
                           <label className="block text-xs font-bold uppercase tracking-wider text-stone-900">
                             Choose Size & Dimensions
                           </label>
-                          <p className="text-[11px] text-stone-500">
-                            Dimensions for your <span className="font-semibold text-rose-600">{selectedCategory?.name || ""}</span> keepsake
+                          <p className="hidden sm:block text-[11px] text-stone-500">
+                            Choose a size for your <span className="font-semibold text-rose-600">{selectedCategory?.name || ""}</span> keepsake
                           </p>
                         </div>
                         {selectedOption && (
@@ -620,7 +620,7 @@ export default function PersonalizedPage() {
                               key={opt._id || opt.name}
                               type="button"
                               onClick={() => setSelectedOption(opt)}
-                              className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                              className={`min-h-[82px] sm:min-h-[96px] p-2 sm:p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
                                 isSelected
                                   ? "border-rose-500 bg-rose-50/80 shadow-xs ring-2 ring-rose-400/20 scale-[1.02]"
                                   : "border-stone-200 hover:border-stone-300 bg-white"
@@ -675,14 +675,14 @@ export default function PersonalizedPage() {
 
                       {/* Clickable Category-Specific Suggestion Chips */}
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        {activeSuggestions.map((suggestion) => {
+                        {activeSuggestions.map((suggestion, suggestionIndex) => {
                           const isCurrent = inscriptionText === suggestion;
                           return (
                             <button
                               key={suggestion}
                               type="button"
                               onClick={() => setInscriptionText(isCurrent ? "" : suggestion)}
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] transition cursor-pointer font-medium border ${
+                              className={`${suggestionIndex > 2 ? "hidden sm:inline-flex" : "inline-flex"} px-2.5 py-0.5 rounded-full text-[10px] transition cursor-pointer font-medium border ${
                                 isCurrent
                                   ? "bg-rose-500 text-white border-rose-500 shadow-xs"
                                   : "bg-stone-100/80 hover:bg-rose-50 hover:text-rose-700 text-stone-700 border-stone-200/70"
@@ -719,7 +719,7 @@ export default function PersonalizedPage() {
                                   toast(`Switched to ${st.name}!`, { icon: st.emoji });
                                 }
                               }}
-                              className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-2 text-left relative ${
+                              className={`min-h-[54px] p-2 sm:p-2.5 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-2 text-left relative ${
                                 isSelected
                                   ? "border-rose-500 bg-rose-50/80 shadow-xs ring-1 ring-rose-400/30 text-rose-950 font-bold"
                                   : "border-stone-200 hover:border-stone-300 bg-white hover:bg-stone-50/60 text-stone-700"
@@ -727,10 +727,10 @@ export default function PersonalizedPage() {
                             >
                               <span className="text-lg shrink-0 leading-none">{st.emoji}</span>
                               <div className="min-w-0 flex-1">
-                                <div className="text-xs font-bold leading-tight truncate">
+                                <div className="text-xs font-bold leading-tight">
                                   {st.name}
                                 </div>
-                                <div className="text-[9.5px] text-stone-500 truncate leading-tight mt-0.5">
+                                <div className="hidden sm:block text-[10px] text-stone-500 leading-snug mt-0.5">
                                   {st.tagline}
                                 </div>
                               </div>
@@ -868,7 +868,7 @@ export default function PersonalizedPage() {
                       </div>
 
                       {/* Figurine Photo Frame - Symmetrical to Left Frame */}
-                      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gradient-to-b from-white to-stone-50/40 border border-stone-200/90 shadow-xs flex items-center justify-center group">
+                      <div className="relative aspect-[4/3] sm:aspect-square w-full rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-b from-white to-stone-50/40 border border-stone-200/90 shadow-sm flex items-center justify-center group">
                         <img
                           src={displayCute}
                           alt="Cute 3D Keepsake Figurine"
@@ -1127,8 +1127,8 @@ export default function PersonalizedPage() {
         </AnimatePresence>
 
         {/* Atelier Craftsmanship & Reassurance Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-8 sm:mt-10">
-          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+        <div className="hidden sm:grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mt-7 sm:mt-10">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-sm flex items-start gap-2.5 sm:gap-3">
             <span className="text-xl shrink-0">📸</span>
             <div>
               <h4 className="text-xs font-bold text-stone-900">Photo Privacy</h4>
@@ -1137,7 +1137,7 @@ export default function PersonalizedPage() {
               </p>
             </div>
           </div>
-          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-sm flex items-start gap-2.5 sm:gap-3">
             <span className="text-xl shrink-0">🪵</span>
             <div>
               <h4 className="text-xs font-bold text-stone-900">Engraved Stand</h4>
@@ -1146,7 +1146,7 @@ export default function PersonalizedPage() {
               </p>
             </div>
           </div>
-          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-sm flex items-start gap-2.5 sm:gap-3">
             <span className="text-xl shrink-0">🎨</span>
             <div>
               <h4 className="text-xs font-bold text-stone-900">Solid Studio Colors</h4>
@@ -1155,7 +1155,7 @@ export default function PersonalizedPage() {
               </p>
             </div>
           </div>
-          <div className="p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-stone-200/80 shadow-2xs flex items-start gap-3">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-sm flex items-start gap-2.5 sm:gap-3">
             <span className="text-xl shrink-0">📦</span>
             <div>
               <h4 className="text-xs font-bold text-stone-900">Crush-Proof Box</h4>

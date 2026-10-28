@@ -30,6 +30,8 @@ const Account = lazy(() => import("./pages/Account"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const BuildABox = lazy(() => import("./pages/BuildABox"));
+const FaqPage = lazy(() => import("./pages/FaqPage"));
+const PackagingDeliveryPage = lazy(() => import("./pages/PackagingDeliveryPage"));
 const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -171,6 +173,12 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/our-story" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/faqs" element={<FaqPage />} />
+              <Route path="/faq" element={<FaqPage />} />
+              <Route path="/keepsake-care" element={<FaqPage />} />
+              <Route path="/packaging-delivery" element={<PackagingDeliveryPage />} />
+              <Route path="/delivery-info" element={<PackagingDeliveryPage />} />
+              <Route path="/shipping" element={<PackagingDeliveryPage />} />
 
               {/* Admin Authentication */}
               <Route path="/admin/login" element={<AdminLogin />} />

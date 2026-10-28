@@ -39,8 +39,8 @@ const FOOTER_COLUMNS = [
     links: [
       { label: "Track Live Order", to: "/track-order" },
       { label: "WhatsApp Concierge Support", to: "/contact" },
-      { label: "Packaging & Delivery Info", to: "/how-it-works" },
-      { label: "FAQs & Keepsake Care", to: "/how-it-works" },
+      { label: "Packaging & Delivery Info", to: "/packaging-delivery" },
+      { label: "FAQs & Keepsake Care", to: "/faqs" },
     ],
   },
 ];
@@ -121,7 +121,7 @@ export default function Footer() {
             </p>
 
             {/* Streamlined Newsletter Box */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 max-w-md">
+            {/* <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 max-w-md">
               <div>
                 <span className="text-[10.5px] font-bold uppercase tracking-widest text-rose-400 block">
                   The Ribbon Club
@@ -147,13 +147,13 @@ export default function Footer() {
                   <ArrowRight size={11} />
                 </button>
               </form>
-            </div>
+            </div> */}
 
             {/* Quick Contact & Socials */}
             <div className="space-y-2 text-xs text-stone-400 pt-1">
               <p className="flex items-center gap-2">
                 <Phone size={13} className="text-emerald-400 shrink-0" />
-                <span>+91 98765 43210 (Mon–Sat 10 AM – 8 PM)</span>
+                <span>+91 79052 75048 (Mon–Sat 10 AM – 8 PM)</span>
               </p>
               <p className="flex items-center gap-2">
                 <Mail size={13} className="text-rose-400 shrink-0" />

@@ -1,57 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles,
-  Star,
   ArrowRight,
   CheckCircle2,
-  Layers,
-  ShieldCheck,
-  Truck,
+  PackageCheck,
   Heart,
-  Eye,
-  Zap,
-  Box,
   Camera,
-  RotateCw,
+  Palette,
+  ShoppingBag,
+  ChevronDown,
 } from "lucide-react";
 import { api, assetUrl } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import { useSeo } from "../utils/seo";
-
-// Verified 3D Enthusiast Reviews
-const REVIEWS = [
-  {
-    name: "Vikram & Sneha",
-    city: "Bengaluru",
-    rating: 5,
-    product: "Custom 3D Couple Keepsake",
-    text: "Uploaded our engagement picture and the 3D figurine turned out unbelievable! The clothes matched our photo colors and the engraved base with our date is such a classy touch.",
-    img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    verified: true,
-  },
-  {
-    name: "Arjun Mehta",
-    city: "Mumbai",
-    rating: 5,
-    product: "Articulated Crystal Dragon",
-    text: "The silk dual-tone shine on this dragon is mesmerizing! Every single joint flexes smoothly right out of the box with zero stiff spots. Truly premium 3D print quality.",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-    verified: true,
-  },
-  {
-    name: "Dr. Rohini Verma",
-    city: "Pune",
-    rating: 5,
-    product: "Geometric Succulent Planter",
-    text: "Sturdy, perfectly watertight, and the hexagonal facets catch the morning sunlight beautifully on my windowsill. The matching drainage tray fits seamlessly.",
-    img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80",
-    verified: true,
-  },
-];
 
 const KEEPSAKE_CATEGORY_IMAGES = {
   single: "/images/3d-single-keepsake.jpg",
@@ -68,72 +33,113 @@ const DEFAULT_KEEPSAKE_CARDS = [
     name: "Single",
     slug: "single",
     icon: "👤",
-    tagline: "Solo portrait & character",
-    description: "Self-avatars, graduates, portraits, and individual character sculpts.",
+    tagline: "A little version of you",
+    description: "A personalized character inspired by your photo.",
     image: "/images/3d-single-keepsake.jpg",
-    pricingOptions: [{ price: 699, compareAtPrice: 1199, dimensions: '3.5" (9 cm)' }],
+    pricingOptions: [{ price: 699, dimensions: '3.5" (9 cm)' }],
   },
   {
     name: "Couple",
     slug: "couple",
-    icon: "👩‍❤️‍👨",
-    tagline: "Anniversaries & couples",
-    description: "Two figures sculpted together in harmony on an elegant wooden pedestal.",
+    icon: "💞",
+    tagline: "For your favourite person",
+    description: "A custom couple keepsake for anniversaries and special moments.",
     image: "/images/3d-couple-keepsake.webp",
-    pricingOptions: [{ price: 1499, compareAtPrice: 2399, dimensions: '5.0" (13 cm)' }],
+    pricingOptions: [{ price: 1499, dimensions: '5.0" (13 cm)' }],
     isPopular: true,
   },
   {
     name: "Family",
     slug: "family",
     icon: "👨‍👩‍👧",
-    tagline: "3–5 Family members",
-    description: "Heartwarming multi-figure family portrait capturing loved ones together.",
+    tagline: "Keep your people close",
+    description: "A family keepsake made to celebrate the people who matter.",
     image: "/images/3d-family-keepsake.webp",
-    pricingOptions: [{ price: 2499, compareAtPrice: 3999, dimensions: '5.5" (14 cm)' }],
+    pricingOptions: [{ price: 2499, dimensions: '5.5" (14 cm)' }],
   },
   {
     name: "Kid & Baby",
     slug: "kid",
-    icon: "👶",
-    tagline: "Children & milestones",
-    description: "Precious baby milestones, childhood memories, and birthdays in 3D.",
+    icon: "🧸",
+    tagline: "Little milestones",
+    description: "Mark a birthday, a milestone or a moment worth remembering.",
     image: "/images/3d-kid-keepsake.jpg",
-    pricingOptions: [{ price: 649, compareAtPrice: 1099, dimensions: '3.5" (9 cm)' }],
+    pricingOptions: [{ price: 649, dimensions: '3.5" (9 cm)' }],
   },
   {
     name: "Pet",
     slug: "pet",
     icon: "🐾",
-    tagline: "Dogs, cats & companions",
-    description: "Beloved furry friends, dogs, and cats sculpted in realistic detail.",
+    tagline: "Your furry family",
+    description: "A personalized keepsake inspired by your beloved companion.",
     image: "/images/3d-dog-keepsake.webp",
-    pricingOptions: [{ price: 699, compareAtPrice: 1199, dimensions: '3.5" (9 cm)' }],
+    pricingOptions: [{ price: 699, dimensions: '3.5" (9 cm)' }],
   },
 ];
 
+const TRUST_ITEMS = [
+  {
+    icon: Camera,
+    title: "Made from your photo",
+    description: "Personalized figurines created to order from your reference photo.",
+  },
+  {
+    icon: Palette,
+    title: "Thoughtful designs",
+    description: "Cute characters and considered details, made for display and gifting.",
+  },
+  {
+    icon: PackageCheck,
+    title: "Packed with care",
+    description: "We take care when preparing your keepsake for its journey to you.",
+  },
+  {
+    icon: Heart,
+    title: "Made to be kept",
+    description: "Small objects that celebrate people, pets and everyday moments.",
+  },
+];
+
+function SectionHeading({ eyebrow, title, description, action }) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div className="max-w-2xl">
+        {eyebrow && (
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600 mb-2">
+            {eyebrow}
+          </p>
+        )}
+        <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-stone-900">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-2 text-sm sm:text-base leading-relaxed text-stone-600">
+            {description}
+          </p>
+        )}
+      </div>
+      {action}
+    </div>
+  );
+}
+
 export default function Home() {
   useSeo({ path: "/" });
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [showAllCollections, setShowAllCollections] = useState(false);
   const [keepsakeCategories, setKeepsakeCategories] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [previewSize, setPreviewSize] = useState("classic");
-
-  // Half Real / Half 3D Split State (0 = 100% 3D, 50 = Split, 100 = 100% Original Photo)
-  const [splitPercent, setSplitPercent] = useState(50);
-  const [activeSide, setActiveSide] = useState("split"); // "original" | "split" | "3d"
-  const splitContainerRef = useRef(null);
-
   const navigate = useNavigate();
 
-  // Fetch 3D catalog, collections, and keepsake categories from database
   useEffect(() => {
     let active = true;
+
     Promise.all([
       api.get("/products"),
       api.get("/categories"),
@@ -143,386 +149,273 @@ export default function Home() {
         if (!active) return;
         setProducts(prodRes.data?.products || []);
         setCategories(catRes.data?.categories || []);
-        if (keepsakeRes.data?.categories?.length > 0) {
+        if (keepsakeRes.data?.categories?.length) {
           setKeepsakeCategories(keepsakeRes.data.categories);
         }
       })
-      .catch((err) => console.error("Error fetching data from database:", err))
+      .catch((err) => {
+        console.error("Error fetching homepage data:", err);
+      })
       .finally(() => {
         if (active) {
           setLoading(false);
           setLoadingCategories(false);
         }
       });
+
     return () => {
       active = false;
     };
   }, []);
 
-  // Filter products by selected 3D category tab
-  const filteredProducts = products.filter((p) => {
+  const filteredProducts = products.filter((product) => {
     if (activeTab === "all") return true;
-    return p.category === activeTab;
+    return product.category === activeTab;
   });
 
-  // Handle interactive mouse hover over the split image container
-  const handleMouseMove = (e) => {
-    if (!splitContainerRef.current) return;
-    const rect = splitContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const ratio = x / rect.width;
+  const keepsakeCards =
+    keepsakeCategories.length > 0 ? keepsakeCategories : DEFAULT_KEEPSAKE_CARDS;
 
-    if (ratio < 0.42) {
-      // Hovering left side -> reveal complete original photo
-      setSplitPercent(100);
-      setActiveSide("original");
-    } else if (ratio > 0.58) {
-      // Hovering right side -> reveal complete 3D printed model
-      setSplitPercent(0);
-      setActiveSide("3d");
+  const openProductCustomizer = (product) => {
+    if (
+      product.category === "personalized-3d" ||
+      product.slug === "custom-3d-keepsake-figurine"
+    ) {
+      navigate("/personalized");
     } else {
-      // Centered hover
-      setSplitPercent(50);
-      setActiveSide("split");
+      setSelectedProduct(product);
     }
   };
 
-  const handleMouseLeave = () => {
-    setSplitPercent(50);
-    setActiveSide("split");
-  };
+  const categoryAction = (title) => (
+    <Link
+      to="/shop"
+      className="inline-flex items-center gap-2 text-sm font-semibold text-ribbon-600 hover:text-ribbon-700 transition-colors"
+    >
+      {title} <ArrowRight size={16} />
+    </Link>
+  );
 
   return (
-    <div className="min-h-screen bg-[#FBF9F7] text-slate-800">
-      {/* =========================================================================
-          1. HERO SECTION: VIEWPORT-FITTING HERO (TEXT ON LEFT, SPLIT IMAGE ON RIGHT)
-         ========================================================================= */}
-      <section className="relative min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] flex items-center justify-center py-6 lg:py-0 px-4 sm:px-6 lg:px-10 overflow-hidden border-b border-stone-200/70 bg-[#FAF8F5]">
-        {/* Luxury Studio Canvas Background with Travertine & Architectural Lighting */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          {/* Architectural Travertine Plaster & Natural Sunlight Photo */}
+    <main className="min-h-screen bg-[#FBF8F4] text-stone-800">
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden border-b border-stone-200/70 bg-[#F8F1E9]">
+        <div className="absolute inset-0 -z-10">
           <img
             src="/images/studio-bg.jpg"
             alt=""
-            className="w-full h-full object-cover object-center opacity-50 filter contrast-[1.06] brightness-[1.02]"
+            aria-hidden="true"
+            className="h-full w-full object-cover object-center opacity-25"
           />
-          {/* Soft Cashmere Studio Scrims for perfect text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F5]/92 via-[#FAF8F5]/75 to-[#FAF8F5]/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-transparent to-[#FAF8F5]/50" />
-          {/* Warm Champagne & Rose Atelier Spotlight */}
-          <div className="absolute top-1/2 right-[10%] -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-br from-amber-200/40 via-rose-200/25 to-transparent rounded-full blur-3xl pointer-events-none" />
-          {/* Subtle Precision CAD Micro-Dots */}
-          <div
-            className="absolute inset-0 opacity-[0.035] pointer-events-none"
-            style={{
-              backgroundImage: `radial-gradient(rgba(60, 45, 30, 0.8) 1px, transparent 1px)`,
-              backgroundSize: "28px 28px",
-            }}
-          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FBF6EF]/95 via-[#FBF6EF]/85 to-[#FBF6EF]/45" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#FBF8F4]/65 via-transparent to-white/10" />
+          <div className="absolute -right-24 top-1/4 h-72 w-72 sm:h-96 sm:w-96 rounded-full bg-rose-200/35 blur-3xl" />
         </div>
 
-        <div className="max-w-7xl mx-auto w-full relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-center">
-            {/* -----------------------------------------------------------------
-                LEFT COLUMN: Grand Display Text, Value Props & Clear CTA Buttons
-               ----------------------------------------------------------------- */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="lg:col-span-6 xl:col-span-6 space-y-3.5 sm:space-y-4 text-left"
-            >
-              {/* Studio Eyebrow Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md border border-stone-200/80 shadow-2xs text-[10px] sm:text-[11px] font-bold text-stone-700 tracking-wider uppercase">
-                <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                <span>Personalized 3D Keepsakes</span>
-                <span className="text-stone-300">•</span>
-                <span className="text-stone-500 font-mono">Photo to Figurine</span>
-              </div>
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-16 xl:py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="order-2 max-w-2xl lg:order-1"
+          >
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-700 shadow-sm sm:text-xs">
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
+              Little things. Big meaning.
+            </div>
 
-              {/* Main Headline */}
-              <div className="space-y-1.5">
-                <h1 className="text-2xl sm:text-3xl lg:text-[34px] xl:text-[40px] font-display font-extrabold text-stone-900 tracking-tight leading-[1.14]">
-                  Turn Your Favorite Photos Into 3D Keepsakes
-                </h1>
-                <p className="text-xs sm:text-[13px] md:text-sm text-stone-600 leading-relaxed max-w-lg">
-                  Transform your favorite couple, family, or pet photo into an adorable, personalized chibi-style 3D-printed figurine. Choose a memorable design in clean, solid colors and turn a special moment into something you can keep forever.
-                </p>
-              </div>
+            <h1 className="max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight text-stone-900 sm:text-4xl md:text-5xl xl:text-6xl">
+              Your Memories,
+              <span className="block text-ribbon-600">Made to Keep.</span>
+            </h1>
 
-              {/* Action Buttons: Primary Personalize + Secondary Ready-to-Ship */}
-              <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => navigate("/personalized")}
-                  className="btn-primary py-2.5 sm:py-3 px-5 sm:px-6 text-xs sm:text-[13px] font-bold tracking-wider uppercase gap-2 shadow-md hover:shadow-lg cursor-pointer"
-                >
-                  <Sparkles size={14} className="text-amber-300" />
-                  <span>Personalize Your 3D Keepsake</span>
-                  <ArrowRight size={13} />
-                </button>
+            <p className="mt-5 max-w-xl text-sm leading-6 text-stone-600 sm:text-base sm:leading-7">
+              Discover cute 3D-printed collectibles for your desk and home, or
+              turn your favourite photo into a personalized figurine made just
+              for you.
+            </p>
 
-                <button
-                  type="button"
-                  onClick={() => navigate("/shop")}
-                  className="btn-secondary py-2.5 sm:py-3 px-4 sm:px-5 text-xs sm:text-[13px] font-semibold tracking-wide cursor-pointer bg-white/90 backdrop-blur-sm hover:bg-white shadow-2xs transition-all"
-                >
-                  <span>Browse 3D Models</span>
-                </button>
-              </div>
+            <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row">
+              <Link
+                to="/personalized"
+                className="btn-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-md transition hover:shadow-lg"
+              >
+                <Sparkles size={16} />
+                Create Your Figurine
+                <ArrowRight size={15} />
+              </Link>
+              <Link
+                to="/shop"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white/90 px-5 py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:border-ribbon-300 hover:bg-white"
+              >
+                <ShoppingBag size={16} />
+                Shop Collectibles
+              </Link>
+            </div>
 
-              {/* Feature Highlights: Streamlined Luxury Badges */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-stone-200/60">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/85 backdrop-blur-md border border-stone-200/80 shadow-2xs text-[11px] font-semibold text-stone-700">
-                  <span>📸</span>
-                  <span>Any Photo (Couple, Pet, Solo)</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/85 backdrop-blur-md border border-stone-200/80 shadow-2xs text-[11px] font-semibold text-stone-700">
-                  <span>🎨</span>
-                  <span>Clean, Solid Colors</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/85 backdrop-blur-md border border-stone-200/80 shadow-2xs text-[11px] font-semibold text-stone-700">
-                  <span>🧸</span>
-                  <span>Cute, Personalized 3D Figurines</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/85 backdrop-blur-md border border-stone-200/80 shadow-2xs text-[11px] font-semibold text-stone-700">
-                  <span>💝</span>
-                  <span>A Keepsake Made From Your Memories</span>
-                </span>
-              </div>
-
-              {/* Social Proof Metric */}
-              <div className="flex items-center gap-2 pt-0.5 text-xs text-stone-600">
-                <div className="flex items-center text-amber-500">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} size={11} className="fill-current" />
-                  ))}
+            <div className="mt-6 grid grid-cols-1 gap-2 border-t border-stone-300/70 pt-5 min-[420px]:grid-cols-2">
+              {[
+                "Personalized figurines made to order",
+                "Cute collectibles for desks and homes",
+                "Thoughtful little gifts",
+                "Designed to make everyday moments special",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-2 text-xs sm:text-sm text-stone-600">
+                  <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-ribbon-600" />
+                  <span>{item}</span>
                 </div>
-                <span className="font-bold text-stone-800">4.9 / 5.0 Rating</span>
-                <span className="text-stone-300">•</span>
-                <span className="text-stone-500">2,400+ Keepsakes Crafted Pan-India</span>
-              </div>
-            </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
-            {/* -----------------------------------------------------------------
-                RIGHT COLUMN: HALF REAL / HALF 3D INTERACTIVE SPLIT SHOWCASE
-               ----------------------------------------------------------------- */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.45, delay: 0.1 }}
-              className="lg:col-span-6 xl:col-span-6 flex justify-center items-center"
-            >
-              <div className="w-full flex justify-center items-center">
-                {/* THE INTERACTIVE SPLIT CARD */}
-                <div
-                  ref={splitContainerRef}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                  className="relative aspect-[944/1600] h-[min(540px,calc(100vh-140px))] max-w-[min(340px,92vw)] w-auto rounded-3xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(28,25,23,0.2),0_0_30px_rgba(244,63,94,0.08)] border border-white/90 ring-1 ring-stone-900/10 select-none group cursor-ew-resize bg-stone-100"
-                >
-                  {/* LAYER 1 (BOTTOM): 3D Printed Figurine */}
-                  <img
-                    src="/images/keepsake-3d.jpeg"
-                    alt="3D Printed Keepsake Figurine"
-                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                  />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
+            className="order-1 mx-auto w-full max-w-xl lg:order-2"
+          >
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-white/80 bg-white p-2 shadow-[0_24px_70px_-28px_rgba(70,45,35,0.35)] sm:p-3">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-[#F7F0E8] sm:aspect-[5/4]">
+                <img
+                  src="/images/keepsake-3d.jpeg"
+                  alt="Personalized 3D-printed figurine"
+                  className="h-full w-full object-contain object-center"
+                  onError={(event) => {
+                    event.currentTarget.src = "/images/photo-magnet.webp";
+                  }}
+                />
 
-                  {/* LAYER 2 (TOP): Real Portrait Photo clipped by splitPercent */}
-                  <div
-                    className="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300 ease-out"
-                    style={{
-                      clipPath: `inset(0 ${100 - splitPercent}% 0 0)`,
-                    }}
-                  >
-                    <img
-                      src="/images/real-photo.jpeg"
-                      alt="Original Portrait Photograph"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-950/75 via-stone-950/25 to-transparent p-4 pt-16 sm:p-6 sm:pt-20">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-3 py-1.5 text-[10px] font-semibold text-white backdrop-blur sm:text-xs">
+                    <Sparkles size={13} />
+                    Made personal, made to keep
+                  </span>
 
-                  {/* DIVIDING VERTICAL LINE (Visible in Split Mode) */}
-                  <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_12px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-300 ease-out z-20"
-                    style={{
-                      left: `${splitPercent}%`,
-                      opacity: splitPercent > 3 && splitPercent < 97 ? 1 : 0,
-                    }}
-                  >
-                    {/* Center Handle Badge */}
-                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-white/95 backdrop-blur-md border-2 border-rose-500 shadow-xl flex items-center justify-center text-rose-600">
-                      <span className="text-[11px] font-black font-mono">⇄</span>
-                    </div>
-                  </div>
-
-                  {/* FLOATING STATUS BADGES */}
-                  {/* Left Badge: Real Photo */}
-                  <div
-                    className={`absolute top-3.5 left-3.5 transition-all duration-300 z-30 pointer-events-none ${
-                      splitPercent > 20 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
-                    }`}
-                  >
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-md backdrop-blur-md transition-colors ${
-                        activeSide === "original"
-                          ? "bg-rose-500 text-white ring-2 ring-white"
-                          : "bg-stone-900/80 text-white"
-                      }`}
-                    >
-                      <Camera size={12} />
-                      <span>Original Photo</span>
-                    </span>
-                  </div>
-
-                  {/* Right Badge: 3D Printed Figurine */}
-                  <div
-                    className={`absolute top-3.5 right-3.5 transition-all duration-300 z-30 pointer-events-none ${
-                      splitPercent < 80 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
-                    }`}
-                  >
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-md backdrop-blur-md transition-colors ${
-                        activeSide === "3d"
-                          ? "bg-rose-500 text-white ring-2 ring-white"
-                          : "bg-stone-900/80 text-white"
-                      }`}
-                    >
-                      <Sparkles size={12} className="text-amber-300" />
-                      <span>3D Model</span>
-                    </span>
-                  </div>
+                  <p className="mt-2 max-w-sm text-lg font-bold leading-snug text-white sm:text-2xl">
+                    A favourite moment, turned into a keepsake.
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          </div>
+              <div className="grid grid-cols-3 gap-2 px-1 pb-1 pt-3 sm:gap-3 sm:px-2 sm:pb-2">
+                <div className="rounded-xl bg-[#FBF6EF] px-2 py-3 text-center">
+                  <Camera size={17} className="mx-auto text-ribbon-600" />
+                  <p className="mt-1.5 text-[10px] font-semibold text-stone-700 sm:text-xs">Your photo</p>
+                </div>
+                <div className="rounded-xl bg-[#FBF6EF] px-2 py-3 text-center">
+                  <Sparkles size={17} className="mx-auto text-ribbon-600" />
+                  <p className="mt-1.5 text-[10px] font-semibold text-stone-700 sm:text-xs">Custom design</p>
+                </div>
+                <div className="rounded-xl bg-[#FBF6EF] px-2 py-3 text-center">
+                  <Heart size={17} className="mx-auto text-ribbon-600" />
+                  <p className="mt-1.5 text-[10px] font-semibold text-stone-700 sm:text-xs">Your keepsake</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* =========================================================================
-          2. VISUAL 3D CATEGORY BENTO GRID (With Real 3D Studio Product Photos)
-         ========================================================================= */}
-      <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-white border-b border-stone-200/60">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-stone-100 pb-4">
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-ribbon-600 block mb-0.5">
-                Visual Showcase
-              </span>
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-stone-900">
-                Explore by 3D Collection
-              </h2>
-              <p className="text-xs sm:text-sm text-stone-500 mt-0.5 max-w-xl">
-                Ready-to-ship physical models printed on industrial multi-color FDM printers.
-              </p>
-            </div>
-            <Link
-              to="/shop"
-              className="text-xs font-bold text-ribbon-600 hover:text-ribbon-700 flex items-center gap-1 group py-1 self-start sm:self-end"
-            >
-              <span>View All 3D Models</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
+      {/* COLLECTIONS */}
+      <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
+          <SectionHeading
+            eyebrow="Find your kind of little thing"
+            title="Shop by Collection"
+            description="From tiny desk companions to thoughtful home accents, find something that feels like you."
+            action={categoryAction("Browse all collections")}
+          />
 
-          {/* Dynamic Collections from Database */}
           {loadingCategories ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-56 sm:h-64 rounded-2xl bg-stone-100/80 animate-pulse border border-stone-200/60" />
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="aspect-[4/5] animate-pulse rounded-2xl bg-stone-100 sm:aspect-[4/3]"
+                />
               ))}
             </div>
           ) : categories.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {categories.map((cat) => (
-                <Link
-                  key={cat._id || cat.slug}
-                  to={`/shop?category=${cat.slug}`}
-                  className="group relative rounded-2xl bg-[#FAF8F5] border border-stone-200/80 hover:border-ribbon-300 hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden"
-                >
-                  {/* Visual Image Header - Compact & Balanced */}
-                  <div className="relative h-36 sm:h-40 md:h-44 w-full overflow-hidden bg-stone-100">
-                    <img
-                      src={assetUrl(cat.image || "/images/photo-magnet.webp")}
-                      alt={cat.name}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = "/images/photo-magnet.webp";
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-
-                    {/* Top Badge */}
-                    {cat.badge && (
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-2">
-                        <span className="text-[9px] font-bold text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs bg-rose-600">
-                          {cat.badge}
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+                {(showAllCollections ? categories : categories.slice(0, 4)).map((category) => (
+                  <Link
+                    key={category._id || category.slug}
+                    to={`/shop?category=${category.slug}`}
+                    className="group overflow-hidden rounded-2xl border border-stone-200 bg-[#FBF8F4] transition duration-300 hover:-translate-y-1 hover:border-ribbon-300 hover:shadow-lg"
+                  >
+                    <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
+                      <img
+                        src={assetUrl(category.image || "/images/photo-magnet.webp")}
+                        alt={category.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        onError={(event) => {
+                          event.currentTarget.src = "/images/photo-magnet.webp";
+                        }}
+                      />
+                      {category.badge && (
+                        <span className="absolute left-2 top-2 rounded-full bg-ribbon-600 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white sm:left-3 sm:top-3 sm:text-[10px]">
+                          {category.badge}
                         </span>
-                      </div>
-                    )}
-
-                    {/* Bottom Counter Pill */}
-                    <div className="absolute bottom-2.5 right-2.5">
-                      <span className="text-[9px] font-semibold text-white/95 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-full">
-                        {cat.productCount !== undefined ? `${cat.productCount} Models` : "Explore"}
-                      </span>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Card Text Content */}
-                  <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 space-y-2 bg-white">
-                    <div>
-                      <h3 className="font-display font-bold text-sm sm:text-base text-stone-900 group-hover:text-ribbon-600 transition-colors line-clamp-1">
-                        {cat.name}
+                    <div className="p-3 sm:p-4">
+                      <h3 className="font-display text-sm font-bold text-stone-900 transition-colors group-hover:text-ribbon-600 sm:text-lg">
+                        {category.name}
                       </h3>
-                      <p className="text-[11px] sm:text-xs text-stone-500 mt-0.5 leading-snug line-clamp-2">
-                        {cat.description || "Handcrafted 3D creation collection"}
+                      <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-stone-600 sm:text-sm">
+                        {category.description || "Explore this collection of 3D-printed creations."}
                       </p>
+                      <div className="mt-3 flex items-center justify-between border-t border-stone-200/80 pt-3 text-[10px] font-bold text-ribbon-600 sm:text-xs">
+                        <span>
+                          {typeof category.productCount === "number" && category.productCount > 0
+                            ? `${category.productCount} products`
+                            : "Explore collection"}
+                        </span>
+                        <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                      </div>
                     </div>
-
-                    <div className="pt-2 sm:pt-2.5 border-t border-stone-100 flex items-center justify-between text-[11px] sm:text-xs font-bold text-ribbon-600 group-hover:text-ribbon-700">
-                      <span>Browse Collection</span>
-                      <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-stone-300 bg-[#FBF8F4] p-8 text-center">
+              <p className="text-sm text-stone-600">Collections will appear here soon.</p>
+              <Link to="/shop" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-ribbon-600">
+                Browse the shop <ArrowRight size={15} />
+              </Link>
             </div>
-          ) : null}
+          )}
         </div>
       </section>
 
-      {/* =========================================================================
-          3. FEATURED PRODUCTS CATALOG (Filterable Tabs for Ready 3D Models)
-         ========================================================================= */}
-      <section id="printed-catalog-section" className="py-14 sm:py-20 px-4 sm:px-6 lg:px-10">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-ribbon-600 block">
-              Curated Highlights
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-display font-bold text-stone-900">
-              Featured 3D Printed Creations
-            </h2>
-            <p className="text-xs sm:text-sm text-stone-500">
-              Calibrated layer heights, smooth tactile ball joints, and non-toxic bio-PLA materials.
-            </p>
-          </div>
+      {/* FEATURED PRODUCTS */}
+      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="mx-auto max-w-7xl space-y-7 sm:space-y-9">
+          <SectionHeading
+            eyebrow="Small things, big personality"
+            title="Little Things Worth Keeping"
+            description="Explore our ready-to-buy 3D-printed pieces for desks, shelves, refrigerators and thoughtful gifting."
+            action={categoryAction("Explore all products")}
+          />
 
-          {/* Dynamic Filter Tabs from Database */}
-          <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 py-1 no-scrollbar">
             {[
-              { id: "all", label: "All Creations" },
-              ...categories.map((c) => ({ id: c.slug, label: c.name })),
+              { id: "all", label: "All products" },
+              ...categories.map((category) => ({
+                id: category.slug,
+                label: category.name,
+              })),
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
                   activeTab === tab.id
-                    ? "bg-ribbon-500 text-white shadow-xs"
-                    : "bg-white text-stone-700 border border-stone-200 hover:border-ribbon-300 shadow-2xs"
+                    ? "bg-ribbon-600 text-white shadow-sm"
+                    : "border border-stone-200 bg-white text-stone-700 hover:border-ribbon-300 hover:text-ribbon-600"
                 }`}
               >
                 {tab.label}
@@ -530,325 +423,290 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Product Cards Grid */}
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="aspect-square bg-white rounded-2xl border border-stone-200 animate-pulse" />
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                <div
+                  key={item}
+                  className="aspect-[3/4] animate-pulse rounded-2xl border border-stone-200 bg-white"
+                />
               ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {filteredProducts.slice(0, 8).map((product, idx) => (
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+              {filteredProducts.slice(0, 8).map((product, index) => (
                 <ProductCard
                   key={product._id || product.slug}
                   product={product}
-                  index={idx}
-                  onQuickView={(p) => setQuickViewProduct(p)}
-                  onPersonalize={(p) => {
-                    if (p.category === "personalized-3d" || p.slug === "custom-3d-keepsake-figurine") {
-                      navigate("/personalized");
-                    } else {
-                      setSelectedProduct(p);
-                    }
-                  }}
+                  index={index}
+                  onQuickView={(item) => setQuickViewProduct(item)}
+                  onPersonalize={openProductCustomizer}
                 />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-2xl border border-stone-200">
-              <p className="text-xs text-stone-400">No models found in this category.</p>
+            <div className="rounded-2xl border border-stone-200 bg-white px-5 py-12 text-center">
+              <ShoppingBag size={28} className="mx-auto text-stone-400" />
+              <p className="mt-3 text-sm font-semibold text-stone-700">No products in this collection yet.</p>
+              <p className="mt-1 text-xs text-stone-500">Try another collection or browse all products.</p>
+              <button
+                type="button"
+                onClick={() => setActiveTab("all")}
+                className="mt-4 text-sm font-semibold text-ribbon-600"
+              >
+                Show all products
+              </button>
             </div>
           )}
-
-          <div className="text-center pt-4">
-            <Link
-              to="/shop"
-              className="btn-secondary py-3.5 px-8 text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow-xs hover:shadow"
-            >
-              <span>Browse Full 3D Catalog ({products.length} Models)</span>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* =========================================================================
-          4. PERSONALIZED 3D STUDIO EXPERIENCE (Keepsake Categories Showcase)
-         ========================================================================= */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-10 bg-gradient-to-br from-[#1C1917] via-[#292524] to-[#1C1917] text-white relative overflow-hidden">
-        {/* Subtle Ambient Glow */}
-        <div className="absolute top-1/2 -left-20 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* PERSONALIZED FIGURINES */}
+      <section className="relative overflow-hidden bg-[#292321] px-4 py-12 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="pointer-events-none absolute -left-24 top-0 h-80 w-80 rounded-full bg-rose-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
 
-        <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12">
-          {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-rose-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={13} className="text-amber-400" />
-              <span>Custom Keepsake Atelier</span>
-            </div>
+        <div className="relative mx-auto max-w-7xl">
+          {/* Header & Value Highlights */}
+          <div className="mb-8 text-left lg:mx-auto lg:mb-12 lg:max-w-3xl lg:text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-rose-200 sm:text-xs">
+              <Sparkles size={14} />
+              Made just for you
+            </span>
 
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white leading-tight">
-              Turn Any Photograph Into a Handcrafted 3D Figurine
+            <h2 className="mt-4 font-display text-2xl font-extrabold leading-tight text-white sm:text-3xl lg:text-4xl">
+              Turn a Favourite Photo Into a Little Keepsake.
             </h2>
 
-            <p className="text-stone-300 text-xs sm:text-sm md:text-base leading-relaxed">
-              Upload your photo and our studio sculpts an adorable stylized chibi 3D figurine in solid multi-color bio-PLA, mounted on a laser-engraved wooden pedestal. Choose your subject to start:
+            <p className="mt-3 text-sm leading-relaxed text-stone-300 sm:text-base lg:mx-auto lg:max-w-2xl">
+              Choose a figurine type, share your reference photo and create a personalized piece for a birthday, anniversary, family memory or a gift that feels truly personal.
             </p>
+
+            <div className="mt-5 flex flex-wrap gap-2 sm:gap-3 lg:justify-center">
+              {[
+                "Choose a single, couple, family, child or pet design",
+                "Review available sizes and pricing before ordering",
+                "Each figurine is made to order from your selected details",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs text-stone-200 backdrop-blur-sm"
+                >
+                  <CheckCircle2 size={15} className="shrink-0 text-rose-300" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3 lg:justify-center">
+              <Link
+                to="/personalized"
+                className="btn-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold shadow-lg transition hover:shadow-xl"
+              >
+                <Sparkles size={16} />
+                Create Your Figurine
+                <ArrowRight size={15} />
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                How it works
+              </Link>
+            </div>
           </div>
 
-          {/* Keepsake Categories Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
-            {(keepsakeCategories.length > 0 ? keepsakeCategories : DEFAULT_KEEPSAKE_CARDS).map((cat) => {
-              const rawImg = cat.image || KEEPSAKE_CATEGORY_IMAGES[cat.slug] || "/images/3d-single-keepsake.jpg";
-              const imageSrc = assetUrl(rawImg);
-              const startingPrice = cat.pricingOptions?.length
-                ? Math.min(...cat.pricingOptions.map((o) => o.price))
-                : 699;
-              const compareAt = cat.pricingOptions?.[0]?.compareAtPrice;
+          {/* Keepsake Cards Grid (2-cols on mobile, 5-cols across desktop) */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+            {keepsakeCards.map((category) => {
+              const rawImage =
+                category.image ||
+                KEEPSAKE_CATEGORY_IMAGES[category.slug] ||
+                "/images/3d-single-keepsake.jpg";
+              const imageSrc = assetUrl(rawImage);
+              const prices = (category.pricingOptions || [])
+                .map((option) => Number(option.price))
+                .filter((price) => Number.isFinite(price) && price > 0);
+              const startingPrice = prices.length ? Math.min(...prices) : null;
 
               return (
                 <Link
-                  key={cat._id || cat.slug}
-                  to={`/personalized?category=${cat.slug}`}
-                  className="group relative bg-white/[0.07] hover:bg-white/[0.12] backdrop-blur-md rounded-3xl p-4 sm:p-5 border border-white/15 hover:border-rose-400/60 transition-all duration-300 flex flex-col justify-between hover:-translate-y-2 shadow-xl hover:shadow-2xl hover:shadow-rose-950/50 text-left overflow-hidden cursor-pointer"
+                  key={category._id || category.slug}
+                  to={`/personalized?category=${category.slug}`}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.06] transition duration-300 hover:-translate-y-1 hover:border-rose-300/60 hover:bg-white/[0.1] hover:shadow-xl last:col-span-2 lg:last:col-span-1 sm:rounded-3xl"
                 >
-                  {/* Popular badge */}
-                  {(cat.isPopular || cat.slug === "couple") && (
-                    <span className="absolute top-3.5 right-3.5 z-10 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-md">
-                      Most Loved
-                    </span>
-                  )}
-
-                  <div className="space-y-3.5">
-                    {/* Visual Photo / Render Thumbnail */}
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-rose-400/40 transition">
-                      <img
-                        src={imageSrc}
-                        alt={`${cat.name} 3D Keepsake`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                      {/* Floating Subject Icon Badge */}
-                      <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold shadow-xs">
-                        <span className="text-sm leading-none">{cat.icon || "👤"}</span>
-                        <span>{cat.name}</span>
-                      </div>
-                    </div>
-
-                    {/* Category Details */}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-stone-800">
+                    <img
+                      src={imageSrc}
+                      alt={`${category.name} personalized figurine example`}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      onError={(event) => {
+                        event.currentTarget.src = "/images/3d-single-keepsake.jpg";
+                      }}
+                    />
+                    {category.isPopular && (
+                      <span className="absolute left-2 top-2 rounded-full bg-rose-500 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white sm:left-3 sm:top-3">
+                        Popular choice
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
                     <div>
-                      <h3 className="font-display font-bold text-base text-white group-hover:text-rose-300 transition-colors flex items-center justify-between">
-                        <span>{cat.name} Keepsake</span>
+                      <h3 className="font-display text-sm font-bold text-white group-hover:text-rose-200 sm:text-base">
+                        {category.icon ? `${category.icon} ` : ""}
+                        {category.name}
                       </h3>
-                      {cat.tagline && (
-                        <p className="text-[11px] font-semibold text-rose-300/90 mt-0.5">
-                          {cat.tagline}
+                      {category.tagline && (
+                        <p className="mt-1 text-[11px] font-medium text-rose-200 sm:text-xs">
+                          {category.tagline}
                         </p>
                       )}
-                      <p className="text-[11px] text-stone-300 line-clamp-2 mt-1 leading-snug">
-                        {cat.description || "Personalized 3D figurine sculpt from your photo with custom laser engraving."}
+                      <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-stone-300 sm:text-xs">
+                        {category.description || "A personalized keepsake made from your photo."}
                       </p>
                     </div>
-                  </div>
 
-                  {/* Pricing & CTA Button */}
-                  <div className="pt-4 mt-3 border-t border-white/10 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-stone-400 block uppercase tracking-wider">Starts at</span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="font-mono font-bold text-sm sm:text-base text-white group-hover:text-amber-300 transition">
-                          ₹{startingPrice.toLocaleString("en-IN")}
-                        </span>
-                        {compareAt > startingPrice && (
-                          <span className="font-mono text-[10px] text-stone-400 line-through">
-                            ₹{compareAt.toLocaleString("en-IN")}
-                          </span>
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+                      <div>
+                        {startingPrice !== null ? (
+                          <>
+                            <span className="block text-[9px] uppercase tracking-wide text-stone-400 sm:text-[10px]">
+                              Starting at
+                            </span>
+                            <span className="text-sm font-bold text-white sm:text-base">
+                              ₹{startingPrice.toLocaleString("en-IN")}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-xs font-semibold text-stone-200">View options</span>
                         )}
                       </div>
+                      <ArrowRight size={16} className="shrink-0 text-rose-200 transition-transform group-hover:translate-x-1" />
                     </div>
-
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-xl bg-rose-500/80 group-hover:bg-rose-500 text-white shadow-xs group-hover:translate-x-0.5 transition-all">
-                      <span>Create</span>
-                      <ArrowRight size={12} />
-                    </span>
                   </div>
                 </Link>
               );
             })}
           </div>
-
-          {/* Bottom Trust & Direct Studio CTA */}
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6 text-xs text-stone-300">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-rose-400" />
-                <span>Upload Any Clear Photo</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-rose-400" />
-                <span>Laser-Engraved Solid Base Plaque</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-rose-400" />
-                <span>High-Precision Bio-PLA Molding</span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                to="/personalized"
-                className="btn-primary py-3 px-6 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 cursor-pointer"
-              >
-                <Sparkles size={14} className="text-amber-300" />
-                <span>Launch 3D Customizer</span>
-                <ArrowRight size={14} />
-              </Link>
-              <Link
-                to="/how-it-works"
-                className="text-xs font-semibold text-rose-300 hover:text-white underline px-2 py-1"
-              >
-                How It Works
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* =========================================================================
-          5. CRAFTSMANSHIP & TECHNOLOGY TRUST STRIP
-         ========================================================================= */}
-      <section className="py-12 px-4 sm:px-6 lg:px-10 bg-white border-b border-stone-200/60">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-          <div className="p-6 rounded-2xl bg-stone-50/70 border border-stone-100 flex flex-col items-center justify-center space-y-2 shadow-2xs">
-            <div className="h-10 w-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-rose-500 shadow-2xs">
-              <Layers size={20} />
-            </div>
-            <h4 className="font-display font-bold text-sm text-stone-900">
-              Photo to Figurine
-            </h4>
-            <p className="text-xs text-stone-500 leading-snug">
-              Printed on industrial multi-color FDM systems with ultra-smooth layer bonds.
+      {/* BRAND BENEFITS */}
+      <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600">
+              The Ribbon Story touch
             </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-stone-50/70 border border-stone-100 flex flex-col items-center justify-center space-y-2 shadow-2xs">
-            <div className="h-10 w-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-emerald-600 shadow-2xs">
-              <ShieldCheck size={20} />
-            </div>
-            <h4 className="font-display font-bold text-sm text-stone-900">
-              Non-Toxic Bio-PLA
-            </h4>
-            <p className="text-xs text-stone-500 leading-snug">
-              Odor-free, durable, eco-friendly filaments safe for desktops and home spaces.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-stone-50/70 border border-stone-100 flex flex-col items-center justify-center space-y-2 shadow-2xs">
-            <div className="h-10 w-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-teal-600 shadow-2xs">
-              <Box size={20} />
-            </div>
-            <h4 className="font-display font-bold text-sm text-stone-900">
-              Watertight Infill
-            </h4>
-            <p className="text-xs text-stone-500 leading-snug">
-              Engineered density walls tested for live plants, soil moisture, and durability.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-stone-50/70 border border-stone-100 flex flex-col items-center justify-center space-y-2 shadow-2xs">
-            <div className="h-10 w-10 rounded-xl bg-white border border-stone-200 flex items-center justify-center text-blue-600 shadow-2xs">
-              <Truck size={20} />
-            </div>
-            <h4 className="font-display font-bold text-sm text-stone-900">
-              Drop-Proof Shipping
-            </h4>
-            <p className="text-xs text-stone-500 leading-snug">
-              Custom foam-cushioned packaging ensuring zero transit breakage across India.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          6. VERIFIED CUSTOMER STORIES
-         ========================================================================= */}
-      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-10 bg-[#FAF8F5]">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-ribbon-600 block">
-              Verified Collector Stories
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-stone-900">
-              What 3D Enthusiasts Say
+            <h2 className="mt-2 font-display text-2xl font-bold text-stone-900 sm:text-3xl">
+              Little Details. Lots of Meaning.
             </h2>
-            <div className="flex items-center justify-center gap-1 text-amber-500 pt-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} size={15} className="fill-current" />
-              ))}
-              <span className="text-xs font-bold text-stone-700 ml-2">4.9 / 5.0 Rating</span>
-            </div>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+              Whether it is a tiny collectible or a personalized figurine, we want it to feel worth keeping.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {REVIEWS.map((rev, idx) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+            {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
               <div
-                key={idx}
-                className="p-6 rounded-3xl bg-white border border-stone-200/80 shadow-2xs flex flex-col justify-between space-y-4"
+                key={title}
+                className="rounded-2xl border border-stone-200 bg-[#FBF8F4] p-5 sm:p-6"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-amber-500">
-                      {[...Array(rev.rating)].map((_, rIdx) => (
-                        <Star key={rIdx} size={13} className="fill-current" />
-                      ))}
-                    </div>
-                    {rev.verified && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        <CheckCircle2 size={11} /> Verified Buyer
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs sm:text-sm text-stone-600 italic leading-relaxed">
-                    &quot;{rev.text}&quot;
-                  </p>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-stone-200 bg-white text-ribbon-600 shadow-sm">
+                  <Icon size={20} />
                 </div>
-
-                <div className="pt-3 border-t border-stone-100 flex items-center gap-3">
-                  <img
-                    src={rev.img}
-                    alt={rev.name}
-                    className="h-10 w-10 rounded-full object-cover border border-rose-200"
-                  />
-                  <div>
-                    <h4 className="font-display font-bold text-sm text-stone-900">{rev.name}</h4>
-                    <p className="text-[11px] text-stone-400">{rev.city} • {rev.product}</p>
-                  </div>
-                </div>
+                <h3 className="mt-4 font-display text-base font-bold text-stone-900">
+                  {title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone-600">
+                  {description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Quick View Modal */}
+      {/* HOW IT WORKS */}
+      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionHeading
+            eyebrow="Simple and personal"
+            title="From Little Idea to Keepsake"
+            description="A simple path from discovering something you love to making it yours."
+          />
+          <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+            {[
+              {
+                number: "01",
+                title: "Find your favourite",
+                description: "Explore ready-to-buy collectibles or choose the personalized figurine that suits your occasion.",
+              },
+              {
+                number: "02",
+                title: "Make it yours",
+                description: "For custom figurines, share your reference photo and select from the options available.",
+              },
+              {
+                number: "03",
+                title: "We prepare your order",
+                description: "Your selected item is prepared and packed for delivery. Check the product page for current timelines.",
+              },
+            ].map((step) => (
+              <div
+                key={step.number}
+                className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"
+              >
+                <span className="font-mono text-sm font-bold text-ribbon-600">{step.number}</span>
+                <h3 className="mt-3 font-display text-lg font-bold text-stone-900">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone-600">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 rounded-3xl bg-[#F0E3D8] p-6 sm:p-8 md:flex-row md:items-center md:p-10">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600">A little something special</p>
+            <h2 className="mt-2 font-display text-2xl font-extrabold text-stone-900 sm:text-3xl">
+              Find a keepsake that feels like you.
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:text-base">
+              Shop the collection or create a personalized figurine from a favourite photo.
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Link
+              to="/shop"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-5 py-3 text-sm font-semibold text-stone-800 transition hover:border-ribbon-300"
+            >
+              Shop collectibles <ArrowRight size={15} />
+            </Link>
+            <Link
+              to="/personalized"
+              className="btn-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
+            >
+              <Sparkles size={16} /> Personalize yours
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Modals */}
       <QuickViewModal
         product={quickViewProduct}
         isOpen={Boolean(quickViewProduct)}
         onClose={() => setQuickViewProduct(null)}
-        onOpenCustomizer={(p) => {
+        onOpenCustomizer={(product) => {
           setQuickViewProduct(null);
-          if (p.category === "personalized-3d" || p.slug === "custom-3d-keepsake-figurine") {
-            navigate("/personalized");
-          } else {
-            setSelectedProduct(p);
-          }
+          openProductCustomizer(product);
         }}
       />
 
-      {/* Product Customizer Modal */}
       {selectedProduct && (
         <ProductCustomizerModal
           product={selectedProduct}
@@ -856,6 +714,6 @@ export default function Home() {
           onClose={() => setSelectedProduct(null)}
         />
       )}
-    </div>
+    </main>
   );
 }
