@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { Sparkles, Eye, ArrowRight, Heart, Star, Zap, Clock } from "lucide-react";
+import { Sparkles, Eye, ArrowRight, Heart, Star, Zap, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useWishlistStore } from "../store/wishlistStore";
+import { useCartStore, productToCartItem } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
 
@@ -9,12 +10,53 @@ const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function ProductCard({ product, index = 0, onQuickView, onPersonalize }) {
   const { isInWishlist, toggleWishlist } = useWishlistStore();
+  const { items, addItem, updateQuantity, removeItem } = useCartStore();
 
   const isLiked = isInWishlist(product._id || product.id);
 
   const discount = product.compareAtPrice
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
+
+  const productId = product._id || product.id;
+  const cartItem = items.find(
+    (i) => i.productId === productId && !i.customization?.photoUrl && !i.customization?.cuteImageUrl
+  );
+  const quantity = cartItem ? cartItem.quantity : 0;
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.isCustomizable && onPersonalize) {
+      onPersonalize(product);
+      return;
+    }
+    // Add silently without opening the cart sidebar drawer
+    addItem(productToCartItem(product), false);
+    toast.success(`Added "${product.name}" to cart!`, { icon: "🛍️" });
+  };
+
+  const handleIncrement = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartItem) {
+      updateQuantity(cartItem.id, quantity + 1);
+    } else {
+      handleAddToCart(e);
+    }
+  };
+
+  const handleDecrement = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!cartItem) return;
+    if (quantity <= 1) {
+      removeItem(cartItem.id);
+      toast("Removed from cart", { icon: "🗑️" });
+    } else {
+      updateQuantity(cartItem.id, quantity - 1);
+    }
+  };
 
   const handleWishlistClick = (e) => {
     e.preventDefault();
@@ -48,6 +90,9 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
               alt={product.name}
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.src = "/images/photo-magnet.webp";
+              }}
             />
           </Link>
 
@@ -105,50 +150,46 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
         </div>
 
         {/* Product Details */}
-        <div className="p-3.5 pb-1 space-y-1.5">
+        <div className="p-2.5 sm:p-3 pb-1 space-y-1">
           {/* Category & Rating */}
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-bold uppercase tracking-wider text-ribbon-500 text-[10px] truncate max-w-[120px]">
+            <span className="font-bold uppercase tracking-wider text-ribbon-500 text-[10px] truncate max-w-[110px]">
               {product.category?.replace("-", " ")}
             </span>
-            <div className="flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-800 font-bold text-[10px]">
-              <span>{rating}</span>
-              <Star size={10} className="fill-emerald-600 text-emerald-600" />
-              <span className="text-slate-400 font-normal">({reviewsCount})</span>
-            </div>
+            {product.rating > 0 && (product.reviewCount > 0 || product.reviewsCount > 0) && (
+              <div className="flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-800 font-bold text-[10px]">
+                <span>{product.rating}</span>
+                <Star size={10} className="fill-emerald-600 text-emerald-600" />
+                <span className="text-slate-400 font-normal">({product.reviewCount || product.reviewsCount})</span>
+              </div>
+            )}
           </div>
 
           {/* Title */}
           <Link
             to={`/product/${product.slug}`}
-            className="font-display font-bold text-sm text-slate-900 hover:text-ribbon-500 transition-colors line-clamp-1 block leading-tight"
+            className="font-display font-bold text-xs sm:text-sm text-slate-900 hover:text-ribbon-500 transition-colors line-clamp-1 block leading-tight"
           >
             {product.name}
           </Link>
 
           {/* Tagline */}
-          <p className="text-[11px] text-slate-500 line-clamp-1 leading-tight">{product.tagline}</p>
-
-          {/* Dynamic Delivery Teaser (IGP Style) */}
-          <div className="pt-1 flex items-center gap-1.5 text-[11px] text-slate-600 font-medium">
-            <Clock size={12} className="text-emerald-600 shrink-0" />
-            <span className="truncate">
-              Earliest: <strong className="text-slate-900 font-semibold">Tomorrow</strong>
-            </span>
-          </div>
+          {product.tagline && (
+            <p className="text-[10px] sm:text-[11px] text-slate-500 line-clamp-1 leading-tight">{product.tagline}</p>
+          )}
         </div>
       </div>
 
       {/* Pricing & Call to Action */}
-      <div className="p-3.5 pt-2 border-t border-slate-100 mt-2">
+      <div className="p-2.5 sm:p-3 pt-2 border-t border-slate-100 mt-1">
         <div className="flex items-center justify-between gap-2">
           {/* Price */}
           <div className="flex items-baseline gap-1.5">
-            <span className="font-display font-extrabold text-base text-slate-900">
+            <span className="font-display font-extrabold text-sm sm:text-base text-slate-900">
               {formatPrice(product.price)}
             </span>
             {product.compareAtPrice && (
-              <span className="text-xs text-slate-400 line-through">
+              <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                 {formatPrice(product.compareAtPrice)}
               </span>
             )}
@@ -157,20 +198,47 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
           {/* CTA Action */}
           {onPersonalize && product.isCustomizable ? (
             <button
+              type="button"
               onClick={() => onPersonalize(product)}
-              className="px-3 py-1.5 rounded-lg bg-ribbon-500 hover:bg-ribbon-600 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs transition"
+              className="px-2.5 sm:px-3 py-1 rounded-lg bg-ribbon-600 hover:bg-ribbon-700 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs transition hover:shadow-sm"
             >
               <span>Personalize</span>
               <ArrowRight size={11} />
             </button>
-          ) : (
-            <Link
-              to={`/product/${product.slug}`}
-              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-800 hover:text-ribbon-500 text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition"
+          ) : quantity > 0 ? (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center rounded-lg border border-ribbon-200 bg-rose-50/70 p-0.5 shadow-2xs"
             >
-              <span>View</span>
-              <ArrowRight size={11} />
-            </Link>
+              <button
+                type="button"
+                onClick={handleDecrement}
+                aria-label="Decrease quantity"
+                className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-ribbon-700 hover:bg-ribbon-600 hover:text-white transition shadow-2xs"
+              >
+                <Minus size={11} className="stroke-[2.5]" />
+              </button>
+              <span className="min-w-6 text-center text-xs font-bold text-stone-900 px-1">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                aria-label="Increase quantity"
+                className="flex h-6 w-6 items-center justify-center rounded-md bg-ribbon-600 text-white hover:bg-ribbon-700 transition shadow-2xs"
+              >
+                <Plus size={11} className="stroke-[2.5]" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="px-2.5 sm:px-3 py-1 rounded-lg bg-ribbon-600 hover:bg-ribbon-700 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs transition hover:shadow-sm"
+            >
+              <span>Add</span>
+              <Plus size={12} className="stroke-[2.5]" />
+            </button>
           )}
         </div>
       </div>

@@ -70,7 +70,7 @@ export const useCartStore = create((set, get) => ({
     set({ appliedCoupon: null });
   },
 
-  addItem: (item) => {
+  addItem: (item, openDrawer = true) => {
     const items = [...get().items];
     const cuteImg = item.customization?.cuteImageUrl || item.customization?.reference3D?.approvedPreview;
     const finalItem = cuteImg ? { ...item, image: cuteImg } : item;
@@ -82,7 +82,7 @@ export const useCartStore = create((set, get) => ({
       items.push({ ...finalItem, id: `${Date.now()}-${Math.round(Math.random() * 1e6)}` });
     }
     persist(items);
-    set({ items, isCartOpen: true });
+    set({ items, ...(openDrawer ? { isCartOpen: true } : {}) });
   },
 
   updateQuantity: (id, quantity) => {

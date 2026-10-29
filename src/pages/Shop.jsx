@@ -29,6 +29,51 @@ const DEFAULT_CATEGORY = {
   name: "All Creations",
 };
 
+/**
+ * Interleaves products across collections in a round-robin order so the "All Creations"
+ * view displays a diverse, balanced mix rather than clumped items from one collection.
+ */
+function mixProductsByCollection(products, categories = []) {
+  if (!Array.isArray(products) || products.length === 0) return [];
+
+  const groups = new Map();
+
+  // Pre-seed groups in categories order so collections are traversed in configured sequence
+  if (Array.isArray(categories) && categories.length > 0) {
+    for (const cat of categories) {
+      if (cat?.slug && cat.slug !== "all") groups.set(cat.slug, []);
+    }
+  }
+
+  // Populate products into their respective category bucket
+  for (const product of products) {
+    const cat = product.category || "other";
+    if (!groups.has(cat)) {
+      groups.set(cat, []);
+    }
+    groups.get(cat).push(product);
+  }
+
+  // Interleave round-robin across every category bucket
+  const mixed = [];
+  const activeLists = Array.from(groups.values()).filter((list) => list.length > 0);
+  let round = 0;
+  let addedInRound = true;
+
+  while (addedInRound) {
+    addedInRound = false;
+    for (const list of activeLists) {
+      if (round < list.length) {
+        mixed.push(list[round]);
+        addedInRound = true;
+      }
+    }
+    round++;
+  }
+
+  return mixed;
+}
+
 export default function Shop() {
   useSeo({
     title: "Shop 3D Printed Models & Personalized Keepsakes",
@@ -223,6 +268,13 @@ export default function Shop() {
     (occasion ? 1 : 0) +
     (sort ? 1 : 0);
 
+  const displayedProducts = useMemo(() => {
+    if ((category === "all" || !category) && !sort && !search) {
+      return mixProductsByCollection(products, categories);
+    }
+    return products;
+  }, [products, categories, category, sort, search]);
+
   const selectedCategoryName =
     categories.find((item) => item.slug === category)?.name ||
     "All Creations";
@@ -231,7 +283,7 @@ export default function Shop() {
     <main className="min-h-screen bg-white text-stone-800">
       {/* PAGE HEADER */}
       <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+        <div className="mx-auto max-w-[1536px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8 xl:px-12 lg:py-6">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="mb-1.5 flex items-center gap-2">
@@ -265,7 +317,7 @@ export default function Shop() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1440px] bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto max-w-[1536px] bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8 xl:px-12">
         {/* COMPACT TOOLBAR: NO HORIZONTAL OCCASION CAROUSEL */}
         <section className="flex items-center justify-between gap-3 border-y border-stone-200 py-3">
           <div className="min-w-0">
@@ -340,7 +392,7 @@ export default function Shop() {
         )}
 
         {/* SHOP CONTENT */}
-        <div className="mt-5 grid grid-cols-1 gap-6 lg:mt-7 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-8 xl:grid-cols-[230px_minmax(0,1fr)] xl:gap-10">
+        <div className="mt-5 grid grid-cols-1 gap-6 lg:mt-7 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
           {/* DESKTOP SIDEBAR */}
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-7">
@@ -420,7 +472,7 @@ export default function Shop() {
           {/* PRODUCT GRID */}
           <section className="min-w-0" aria-label="Products">
             {loading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1120px]:grid-cols-4 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
@@ -435,7 +487,7 @@ export default function Shop() {
                   </div>
                 ))}
               </div>
-            ) : products.length === 0 ? (
+            ) : displayedProducts.length === 0 ? (
               <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-10 text-center sm:min-h-[360px] sm:rounded-3xl">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
                   <ShoppingBag size={24} />
@@ -460,8 +512,8 @@ export default function Shop() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
-                {products.map((product, index) => (
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1120px]:grid-cols-4 xl:grid-cols-4">
+                {displayedProducts.map((product, index) => (
                   <ProductCard
                     key={product._id || product.slug}
                     product={product}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -100,6 +100,51 @@ const TRUST_ITEMS = [
   },
 ];
 
+/**
+ * Interleaves products across collections in a round-robin order so the "All products"
+ * view displays a diverse, balanced mix rather than clumped items from one collection.
+ */
+function mixProductsByCollection(products, categories = []) {
+  if (!Array.isArray(products) || products.length === 0) return [];
+
+  const groups = new Map();
+
+  // Pre-seed groups in categories order so collections are traversed in configured sequence
+  if (Array.isArray(categories) && categories.length > 0) {
+    for (const cat of categories) {
+      if (cat?.slug) groups.set(cat.slug, []);
+    }
+  }
+
+  // Populate products into their respective category bucket
+  for (const product of products) {
+    const cat = product.category || "other";
+    if (!groups.has(cat)) {
+      groups.set(cat, []);
+    }
+    groups.get(cat).push(product);
+  }
+
+  // Interleave round-robin across every category bucket
+  const mixed = [];
+  const activeLists = Array.from(groups.values()).filter((list) => list.length > 0);
+  let round = 0;
+  let addedInRound = true;
+
+  while (addedInRound) {
+    addedInRound = false;
+    for (const list of activeLists) {
+      if (round < list.length) {
+        mixed.push(list[round]);
+        addedInRound = true;
+      }
+    }
+    round++;
+  }
+
+  return mixed;
+}
+
 function SectionHeading({ eyebrow, title, description, action }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -168,10 +213,12 @@ export default function Home() {
     };
   }, []);
 
-  const filteredProducts = products.filter((product) => {
-    if (activeTab === "all") return true;
-    return product.category === activeTab;
-  });
+  const filteredProducts = useMemo(() => {
+    if (activeTab === "all") {
+      return mixProductsByCollection(products, categories);
+    }
+    return products.filter((product) => product.category === activeTab);
+  }, [products, categories, activeTab]);
 
   const keepsakeCards =
     keepsakeCategories.length > 0 ? keepsakeCategories : DEFAULT_KEEPSAKE_CARDS;
@@ -316,8 +363,8 @@ export default function Home() {
       </section>
 
       {/* COLLECTIONS */}
-      <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
+      <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12">
+        <div className="mx-auto max-w-[1536px] space-y-6 sm:space-y-8">
           <SectionHeading
             eyebrow="Find your kind of little thing"
             title="Shop by Collection"
@@ -326,8 +373,8 @@ export default function Home() {
           />
 
           {loadingCategories ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-              {[1, 2, 3, 4].map((item) => (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {[1, 2, 3, 4, 5].map((item) => (
                 <div
                   key={item}
                   className="aspect-[4/5] animate-pulse rounded-2xl bg-stone-100 sm:aspect-[4/3]"
@@ -336,12 +383,12 @@ export default function Home() {
             </div>
           ) : categories.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-                {(showAllCollections ? categories : categories.slice(0, 4)).map((category) => (
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+                {(showAllCollections ? categories : categories.slice(0, 5)).map((category) => (
                   <Link
                     key={category._id || category.slug}
                     to={`/shop?category=${category.slug}`}
-                    className="group overflow-hidden rounded-2xl border border-stone-200 bg-[#FBF8F4] transition duration-300 hover:-translate-y-1 hover:border-ribbon-300 hover:shadow-lg"
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-[#FBF8F4] transition duration-300 hover:-translate-y-1 hover:border-ribbon-300 hover:shadow-lg"
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
                       <img
@@ -354,19 +401,21 @@ export default function Home() {
                         }}
                       />
                       {category.badge && (
-                        <span className="absolute left-2 top-2 rounded-full bg-ribbon-600 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white sm:left-3 sm:top-3 sm:text-[10px]">
+                        <span className="absolute left-2 top-2 rounded-full bg-ribbon-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white sm:left-3 sm:top-3 sm:text-[10px]">
                           {category.badge}
                         </span>
                       )}
                     </div>
-                    <div className="p-3 sm:p-4">
-                      <h3 className="font-display text-sm font-bold text-stone-900 transition-colors group-hover:text-ribbon-600 sm:text-lg">
-                        {category.name}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-stone-600 sm:text-sm">
-                        {category.description || "Explore this collection of 3D-printed creations."}
-                      </p>
-                      <div className="mt-3 flex items-center justify-between border-t border-stone-200/80 pt-3 text-[10px] font-bold text-ribbon-600 sm:text-xs">
+                    <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
+                      <div>
+                        <h3 className="font-display text-sm font-bold text-stone-900 transition-colors group-hover:text-ribbon-600 sm:text-base line-clamp-1">
+                          {category.name}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-stone-600 sm:text-xs">
+                          {category.description || "Explore this collection of 3D-printed creations."}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between border-t border-stone-200/80 pt-2.5 text-[10px] font-bold text-ribbon-600 sm:text-xs">
                         <span>
                           {typeof category.productCount === "number" && category.productCount > 0
                             ? `${category.productCount} products`
@@ -391,8 +440,8 @@ export default function Home() {
       </section>
 
       {/* FEATURED PRODUCTS */}
-      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-        <div className="mx-auto max-w-7xl space-y-7 sm:space-y-9">
+      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12 lg:py-20">
+        <div className="mx-auto max-w-[1536px] space-y-7 sm:space-y-9">
           <SectionHeading
             eyebrow="Small things, big personality"
             title="Little Things Worth Keeping"
@@ -424,8 +473,8 @@ export default function Home() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
                 <div
                   key={item}
                   className="aspect-[3/4] animate-pulse rounded-2xl border border-stone-200 bg-white"
@@ -433,8 +482,8 @@ export default function Home() {
               ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
-              {filteredProducts.slice(0, 8).map((product, index) => (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {filteredProducts.slice(0, 10).map((product, index) => (
                 <ProductCard
                   key={product._id || product.slug}
                   product={product}

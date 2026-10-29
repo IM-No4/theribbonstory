@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -12,7 +12,10 @@ import {
   Camera,
   X,
   Award,
-  MapPin,
+  ArrowRight,
+  Trash2,
+  Minus,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
@@ -32,7 +35,7 @@ export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const addItem = useCartStore((s) => s.addItem);
+  const { items, addItem, updateQuantity, removeItem } = useCartStore();
   const { user } = useAuthStore();
 
   const [product, setProduct] = useState(null);
@@ -40,6 +43,19 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const mobileScrollRef = useRef(null);
+
+  const handleMobileScroll = (e) => {
+    const el = e.currentTarget;
+    if (!el) return;
+    const scrollLeft = el.scrollLeft;
+    const width = el.offsetWidth || 1;
+    const newIndex = Math.round(scrollLeft / width);
+    if (newIndex !== selectedImage && newIndex >= 0 && newIndex < galleryImages.length) {
+      setSelectedImage(newIndex);
+    }
+  };
 
   // Dynamic Options selection
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -48,7 +64,7 @@ export default function ProductDetail() {
   const [reviewsData, setReviewsData] = useState({
     reviews: [],
     totalReviews: 0,
-    averageRating: 4.9,
+    averageRating: 0,
     distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
   });
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -82,9 +98,20 @@ export default function ProductDetail() {
   const fetchReviews = async (productId) => {
     try {
       const { data } = await api.get(`/reviews/product/${productId}`);
-      setReviewsData(data);
+      setReviewsData({
+        reviews: data?.reviews || [],
+        totalReviews: data?.totalReviews || data?.reviews?.length || 0,
+        averageRating: data?.averageRating || 0,
+        distribution: data?.distribution || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+      });
     } catch (err) {
       console.error(err);
+      setReviewsData({
+        reviews: [],
+        totalReviews: 0,
+        averageRating: 0,
+        distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+      });
     }
   };
 
@@ -183,9 +210,14 @@ export default function ProductDetail() {
         setSelectedOptions(defaults);
 
         fetchReviews(data.product._id);
-        return api.get("/products", { params: { category: data.product.category } });
+        const currentCategory = data.product.category;
+        return api.get("/products").then(({ data: prodRes }) => {
+          const all = prodRes?.products || [];
+          const inCategory = all.filter((p) => p.slug !== slug && p.category === currentCategory);
+          const outside = all.filter((p) => p.slug !== slug && p.category !== currentCategory);
+          setRelated([...inCategory, ...outside].slice(0, 5));
+        });
       })
-      .then(({ data }) => setRelated((data.products || []).filter((p) => p.slug !== slug).slice(0, 3)))
       .catch(() => toast.error("Couldn't load this keepsake"))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -264,6 +296,22 @@ export default function ProductDetail() {
   );
   const unitPrice = product.price + optionsDelta;
 
+  const galleryImages = (Array.isArray(product.images) && product.images.length > 0)
+    ? product.images
+    : product.image
+    ? [product.image]
+    : ["/images/photo-magnet.webp"];
+
+  const hasReviews =
+    (reviewsData.totalReviews > 0 || (reviewsData.reviews && reviewsData.reviews.length > 0)) &&
+    reviewsData.averageRating > 0;
+
+  const productId = product?._id || product?.slug;
+  const cartItem = (items || []).find(
+    (i) => i.productId === productId && !i.customization?.photoUrl && !i.customization?.cuteImageUrl
+  );
+  const cartQuantity = cartItem ? cartItem.quantity : 0;
+
   const handleOptionChange = (groupName, val) => {
     setSelectedOptions((prev) => ({ ...prev, [groupName]: val }));
   };
@@ -280,16 +328,19 @@ export default function ProductDetail() {
       priceDelta: opt.priceDelta || 0,
     }));
 
-    addItem({
-      productId: product._id || product.slug,
-      name: product.name,
-      image: product.images?.[0] || "/images/photo-magnet.webp",
-      price: product.price, // option deltas are added by the cart subtotal
-      quantity,
-      selectedOptions: chosenOptionsList,
-      customization: {},
-    });
-    toast.success(`${product.name} added to your cart!`);
+    addItem(
+      {
+        productId: product._id || product.slug,
+        name: product.name,
+        image: product.images?.[0] || product.image || "/images/photo-magnet.webp",
+        price: product.price,
+        quantity: 1,
+        selectedOptions: chosenOptionsList,
+        customization: {},
+      },
+      false
+    );
+    toast.success(`Added "${product.name}" to cart!`, { icon: "🛍️" });
   };
 
   const handleReviewPhotoUpload = async (e) => {
@@ -345,8 +396,8 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="bg-[#FAF8F5] min-h-screen py-5 sm:py-8">
-      <div className="max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6">
+    <div className="bg-white min-h-screen py-5 sm:py-8">
+      <div className="mx-auto max-w-[1536px] px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Breadcrumbs */}
         <nav className="text-[11px] text-stone-400 mb-4 flex items-center gap-1.5">
           <Link to="/" className="hover:text-rose-900 transition">Home</Link>
@@ -356,49 +407,104 @@ export default function ProductDetail() {
           <span className="text-stone-800 font-semibold truncate max-w-xs">{product.name}</span>
         </nav>
 
-        {/* Product Grid - Compact & Perfectly Proportioned */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* Images Gallery - Proportionate & Sticky */}
-          <div className="md:col-span-5 space-y-2.5 md:sticky md:top-20">
-            <div className="aspect-square max-h-[380px] sm:max-h-[400px] w-full rounded-2xl overflow-hidden bg-white border border-stone-200/90 shadow-sm relative group flex items-center justify-center">
-              <img
-                src={assetUrl(product.images?.[selectedImage] || product.images?.[0])}
-                alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-102 transition duration-500"
-                onError={(e) => {
-                  e.target.src = "/images/photo-magnet.webp";
-                }}
-              />
+        {/* Product Layout - Natural spacing and clean gap between gallery and details */}
+        <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-10 xl:gap-12">
+          {/* Images Gallery */}
+          <div className="w-full lg:w-auto lg:shrink-0 lg:sticky lg:top-24">
+            {/* Mobile View (< sm): Swipeable Carousel, Auto-scroll disabled, No Thumbnails */}
+            <div className="sm:hidden w-full relative">
+              <div
+                ref={mobileScrollRef}
+                onScroll={handleMobileScroll}
+                className="w-full flex overflow-x-auto snap-x snap-mandatory rounded-2xl no-scrollbar aspect-square bg-stone-50 border border-stone-200/90 shadow-sm"
+              >
+                {galleryImages.map((img, idx) => (
+                  <div key={idx} className="w-full min-w-full shrink-0 snap-center aspect-square relative flex items-center justify-center">
+                    <img
+                      src={assetUrl(img)}
+                      alt={`${product.name} - ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/photo-magnet.webp";
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+
               {product.isBestseller && (
-                <span className="absolute top-3 left-3 bg-rose-600 text-white text-[9.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                <span className="absolute top-3 left-3 bg-rose-600 text-white text-[9.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs pointer-events-none z-10">
                   Bestseller
                 </span>
               )}
+
+              {/* Dots indicator for mobile carousel when multiple images */}
+              {galleryImages.length > 1 && (
+                <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                  {galleryImages.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`transition-all duration-300 rounded-full shadow-xs ${
+                        selectedImage === idx
+                          ? "w-5 h-1.5 bg-rose-600"
+                          : "w-1.5 h-1.5 bg-white/80 backdrop-blur-xs"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Thumbnails */}
-            {product.images?.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-0.5 max-w-[380px]">
-                {product.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedImage(idx)}
-                    className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition shrink-0 cursor-pointer ${
-                      selectedImage === idx
-                        ? "border-rose-600 ring-1 ring-rose-500/20 shadow-xs"
-                        : "border-stone-200 opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <img src={assetUrl(img)} alt="thumb" className="w-full h-full object-cover" />
-                  </button>
-                ))}
+            {/* Desktop / Tablet View (>= sm): Thumbnails on the left + Active Image on the right */}
+            <div className="hidden sm:flex flex-row gap-3 items-start">
+              {/* Thumbnails on the left */}
+              {galleryImages.length > 1 && (
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-[440px] no-scrollbar shrink-0">
+                  {galleryImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedImage(idx)}
+                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition shrink-0 cursor-pointer bg-white ${
+                        selectedImage === idx
+                          ? "border-rose-600 ring-2 ring-rose-500/20 shadow-xs"
+                          : "border-stone-200 opacity-70 hover:opacity-100 hover:border-stone-400"
+                      }`}
+                    >
+                      <img
+                        src={assetUrl(img)}
+                        alt={`Thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/images/photo-magnet.webp";
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Main Active Image */}
+              <div className="sm:w-[380px] md:w-[420px] lg:w-[440px] aspect-square rounded-2xl overflow-hidden bg-stone-50 border border-stone-200/90 shadow-sm relative group flex items-center justify-center">
+                <img
+                  src={assetUrl(galleryImages[selectedImage] || galleryImages[0])}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-102 transition duration-500"
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/photo-magnet.webp";
+                  }}
+                />
+                {product.isBestseller && (
+                  <span className="absolute top-3 left-3 bg-rose-600 text-white text-[9.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                    Bestseller
+                  </span>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Details & Customization Options - Balanced & Compact */}
-          <div className="md:col-span-7 space-y-3">
+          {/* Details & Customization Options - Natural width with breathing room */}
+          <div className="w-full max-w-xl space-y-3.5">
             <div>
               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200/70 text-[9.5px] font-bold text-rose-700 tracking-wider uppercase mb-1">
                 <Sparkles size={10} className="text-rose-500" />
@@ -415,20 +521,22 @@ export default function ProductDetail() {
                 </p>
               )}
 
-              {/* Rating header */}
-              <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-                <div className="flex items-center text-amber-500">
-                  <Star size={12} className="fill-amber-400 text-amber-400" />
-                  <span className="font-bold ml-1 text-stone-900 text-[11px]">{reviewsData.averageRating}</span>
+              {/* Rating header - only show if real reviews exist */}
+              {hasReviews && (
+                <div className="flex items-center gap-1.5 mt-1.5 text-xs">
+                  <div className="flex items-center text-amber-500">
+                    <Star size={12} className="fill-amber-400 text-amber-400" />
+                    <span className="font-bold ml-1 text-stone-900 text-[11px]">{reviewsData.averageRating}</span>
+                  </div>
+                  <span className="text-stone-300">•</span>
+                  <span
+                    onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}
+                    className="text-stone-500 hover:text-stone-800 underline underline-offset-2 cursor-pointer text-[11px]"
+                  >
+                    {reviewsData.totalReviews} verified customer reviews
+                  </span>
                 </div>
-                <span className="text-stone-300">•</span>
-                <span
-                  onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}
-                  className="text-stone-500 hover:text-stone-800 underline underline-offset-2 cursor-pointer text-[11px]"
-                >
-                  {reviewsData.totalReviews || product.reviewCount || 1} verified customer reviews
-                </span>
-              </div>
+              )}
             </div>
 
             {/* Price Box - Sleek & Compact */}
@@ -444,9 +552,22 @@ export default function ProductDetail() {
             </div>
 
             {/* Description */}
-            <p className="text-xs text-stone-600 leading-relaxed">
-              {product.description}
-            </p>
+            {product.description && (
+              <div className="text-xs text-stone-600 leading-relaxed">
+                <p className={!isDescExpanded ? "line-clamp-2 sm:line-clamp-none" : ""}>
+                  {product.description}
+                </p>
+                {product.description.length > 80 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                    className="sm:hidden mt-0.5 text-[11px] font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer"
+                  >
+                    {isDescExpanded ? "less" : "... more"}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Dynamic Option Groups */}
             {(product.optionGroups || []).map((group) => (
@@ -481,156 +602,135 @@ export default function ProductDetail() {
               </div>
             ))}
 
-            {/* Quantity and Actions */}
-            <div className="pt-2.5 border-t border-stone-100">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center rounded-lg border border-stone-200 bg-stone-50/70 h-9.5 shadow-2xs shrink-0">
+            {/* Responsive product actions */}
+            <div className="border-t border-stone-100 pt-3 sm:pt-4">
+              <div className="flex w-full min-w-0 items-center gap-2 sm:gap-3">
+                {product.isCustomizable ? (
                   <button
                     type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-2.5 h-full text-stone-600 hover:text-stone-900 font-bold transition cursor-pointer flex items-center justify-center select-none text-xs"
-                    title="Decrease quantity"
+                    onClick={() => setCustomizerModalOpen(true)}
+                    className="btn-primary flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wide shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 cursor-pointer"
                   >
-                    −
+                    <Sparkles size={15} className="shrink-0 text-amber-300" />
+                    <span className="truncate">Personalize — {formatPrice(unitPrice)}</span>
                   </button>
-                  <span className="px-2.5 text-xs font-bold text-stone-900 font-mono min-w-[20px] text-center select-none">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="px-2.5 h-full text-stone-600 hover:text-stone-900 font-bold transition cursor-pointer flex items-center justify-center select-none text-xs"
-                    title="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
+                ) : cartQuantity > 0 ? (
+                  <>
+                    {/* Remove item: separate from quantity adjustment */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeItem(cartItem.id);
+                        toast("Removed from cart", { icon: "🗑️" });
+                      }}
+                      aria-label="Remove from cart"
+                      title="Remove from cart"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 active:scale-[0.97] cursor-pointer"
+                    >
+                      <Trash2 size={17} strokeWidth={1.8} />
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="btn-primary flex-1 h-9.5 text-xs font-bold uppercase tracking-wider rounded-lg shadow-xs hover:shadow-md flex items-center justify-center gap-1.5 transition cursor-pointer"
-                >
-                  <Sparkles size={13} className="text-amber-300" />
-                  <span>
-                    {product.isCustomizable
-                      ? `Personalize & Add — ${formatPrice(unitPrice * quantity)}`
-                      : `Add to Cart — ${formatPrice(unitPrice * quantity)}`}
-                  </span>
-                </button>
+                    {/* Standard, unified quantity stepper */}
+                    <div
+                      className="inline-flex h-11 shrink-0 items-center overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+                      aria-label={`Quantity: ${cartQuantity}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (cartQuantity <= 1) {
+                            removeItem(cartItem.id);
+                            toast("Removed from cart", { icon: "🗑️" });
+                          } else {
+                            updateQuantity(cartItem.id, cartQuantity - 1);
+                          }
+                        }}
+                        aria-label="Decrease quantity"
+                        className="flex h-full w-9 items-center justify-center text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 focus-visible:outline-none focus-visible:bg-stone-100 active:bg-stone-100 cursor-pointer"
+                      >
+                        <Minus size={15} strokeWidth={2.2} />
+                      </button>
+                      <span className="min-w-8 select-none px-1 text-center text-sm font-semibold tabular-nums text-stone-900">
+                        {cartQuantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(cartItem.id, cartQuantity + 1)}
+                        aria-label="Increase quantity"
+                        className="flex h-full w-9 items-center justify-center text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 focus-visible:outline-none focus-visible:bg-stone-100 active:bg-stone-100 cursor-pointer"
+                      >
+                        <Plus size={15} strokeWidth={2.2} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="btn-primary flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wide shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 cursor-pointer"
+                  >
+                    <Sparkles size={15} className="shrink-0 text-amber-300" />
+                    <span className="truncate">Add to Cart — {formatPrice(unitPrice)}</span>
+                  </button>
+                )}
 
                 <ShareProduct product={product} />
-              </div>
-            </div>
-
-            {/* Delivery Pincode - Ultra-Compact Inline Row */}
-            <div className="pt-2 border-t border-stone-100 text-xs">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <MapPin size={13} className="text-rose-600 shrink-0" />
-                  <span className="text-[11px] text-stone-600 font-medium whitespace-nowrap">Deliver to:</span>
-                  <form onSubmit={handleCheckPincode} className="inline-flex items-center gap-1">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={pincode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        setPincode(val);
-                        if (val.length === 6) {
-                          checkPincodeServiceability(val, true);
-                        }
-                      }}
-                      placeholder="PIN code"
-                      className="w-16 px-1 py-0.5 text-[11px] font-mono border-b border-stone-300 focus:border-rose-600 bg-transparent outline-none text-stone-900 font-semibold transition"
-                    />
-                    <button
-                      type="submit"
-                      disabled={checkingPincode}
-                      className="text-[11px] font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer disabled:opacity-50"
-                    >
-                      {checkingPincode ? "..." : "Check"}
-                    </button>
-                  </form>
-                </div>
-
-                {pincodeStatus ? (
-                  <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 flex items-center gap-1 shrink-0">
-                    <Check size={11} className="stroke-[3]" />
-                    <span>{pincodeStatus.dateFormatted ? `By ${pincodeStatus.dateFormatted}` : "Serviceable"}</span>
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-stone-400">PAN-India Delivery</span>
-                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Customer Reviews Section - Refined & Compact */}
-        <section id="reviews" className="scroll-mt-24 mt-12 pt-8 border-t border-stone-200/80 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Customer Reviews Section - Only show when actual reviews exist */}
+        {hasReviews && (
+          <section id="reviews" className="scroll-mt-24 mt-12 pt-8 border-t border-stone-200/80 space-y-6">
             <div>
               <h2 className="font-display text-xl sm:text-2xl font-bold text-stone-900">
-                Customer Stories & Verified Reviews
+                Customer Stories &amp; Verified Reviews
               </h2>
               <p className="text-xs text-stone-500 mt-0.5">
                 Real keepsakes delivered to living rooms and desks across India.
               </p>
             </div>
-            <button
-              onClick={() => setReviewModalOpen(true)}
-              className="btn-outline !py-2 !px-4 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 rounded-xl"
-            >
-              <MessageSquare size={13} />
-              <span>Write a Review</span>
-            </button>
-          </div>
 
-          {/* Rating Summary Bar */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
-            <div className="flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-stone-100 pb-3 md:pb-0">
-              <div className="font-display text-3xl sm:text-4xl font-extrabold text-stone-900">
-                {reviewsData.averageRating}
+            {/* Rating Summary Bar */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/80 shadow-2xs">
+              <div className="flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-stone-100 pb-3 md:pb-0">
+                <div className="font-display text-3xl sm:text-4xl font-extrabold text-stone-900">
+                  {reviewsData.averageRating}
+                </div>
+                <div className="flex text-amber-400 my-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={14} className="fill-amber-400" />
+                  ))}
+                </div>
+                <span className="text-[11px] text-stone-400">
+                  Based on {reviewsData.totalReviews} verified customer reviews
+                </span>
               </div>
-              <div className="flex text-amber-400 my-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} size={14} className="fill-amber-400" />
-                ))}
-              </div>
-              <span className="text-[11px] text-stone-400">
-                Based on {reviewsData.totalReviews || 1} verified customer reviews
-              </span>
-            </div>
 
-            <div className="md:col-span-2 flex flex-col justify-center space-y-1.5">
-              {[5, 4, 3, 2, 1].map((star) => {
-                const count = reviewsData.distribution?.[star] || (star === 5 ? reviewsData.totalReviews || 1 : 0);
-                const percent = reviewsData.totalReviews > 0 ? (count / reviewsData.totalReviews) * 100 : star === 5 ? 100 : 0;
-                return (
-                  <div key={star} className="flex items-center gap-2.5 text-xs">
-                    <span className="w-7 font-medium text-stone-600 text-[11px]">{star} ★</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-stone-100 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full"
-                        style={{ width: `${percent}%` }}
-                      />
+              <div className="md:col-span-2 flex flex-col justify-center space-y-1.5">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = reviewsData.distribution?.[star] || 0;
+                  const percent = reviewsData.totalReviews > 0 ? (count / reviewsData.totalReviews) * 100 : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-2.5 text-xs">
+                      <span className="w-7 font-medium text-stone-600 text-[11px]">{star} ★</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-stone-100 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <span className="w-6 text-right text-stone-400 text-[11px] font-mono">{count}</span>
                     </div>
-                    <span className="w-6 text-right text-stone-400 text-[11px] font-mono">{count}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Reviews List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {reviewsData.reviews?.length === 0 ? (
-              <div className="col-span-2 p-6 text-center bg-white rounded-2xl border border-stone-200/80 text-stone-400 text-xs">
-                No reviews yet. Be the first to share your keepsake story!
+                  );
+                })}
               </div>
-            ) : (
-              reviewsData.reviews.map((rev) => (
+            </div>
+
+            {/* Reviews List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reviewsData.reviews.map((rev) => (
                 <div
                   key={rev._id}
                   className="p-4 rounded-2xl bg-white border border-stone-200/80 space-y-2 shadow-2xs"
@@ -676,17 +776,32 @@ export default function ProductDetail() {
                     </div>
                   )}
                 </div>
-              ))
-            )}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* You Might Also Like */}
         {related.length > 0 && (
-          <section className="mt-16 pt-12 border-t border-blush-200">
-            <h2 className="font-display text-2xl font-bold text-burgundy-900 mb-8">You might also like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {related.map((p, i) => (
+          <section className="mt-16 pt-12 pb-12 sm:pb-16 lg:pb-20 border-t border-stone-200/80">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600 mb-1">
+                  More to love
+                </p>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-stone-900">
+                  You might also like
+                </h2>
+              </div>
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-ribbon-600 hover:text-ribbon-700 transition"
+              >
+                View all keepsakes <ArrowRight size={15} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {related.slice(0, 5).map((p, i) => (
                 <ProductCard
                   key={p._id || p.slug}
                   product={p}
