@@ -95,10 +95,9 @@ export default function Checkout() {
     )
   );
 
-  // 3-Step Streamlined Checkout (1: Address, 2: Payment & Gifting, 3: Order Summary & Pay)
+  // 2-Step Streamlined Checkout (1: Delivery Address, 2: Review & Place Order)
   const [activeStep, setActiveStep] = useState(1);
   const [addressConfirmed, setAddressConfirmed] = useState(false);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   // Address State
   const [address, setAddress] = useState(emptyAddress);
@@ -372,12 +371,6 @@ export default function Checkout() {
     toast.success("Delivery address confirmed!");
   };
 
-  const handleConfirmPayment = () => {
-    setPaymentConfirmed(true);
-    setActiveStep(3);
-    toast.success("Proceeding to final order summary!");
-  };
-
   const handleApplyCouponCode = async (codeToApply) => {
     const cleanCode = (codeToApply || "").trim().toUpperCase();
     if (!cleanCode) return;
@@ -457,6 +450,7 @@ export default function Checkout() {
       return;
     }
 
+    setAddressConfirmed(true);
     setPlacing(true);
     try {
       if (paymentMethod === "cod") {
@@ -556,7 +550,7 @@ export default function Checkout() {
               <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/20">
                 {addressConfirmed && activeStep !== 1 ? <Check size={11} className="stroke-[3]" /> : "1"}
               </span>
-              <span>1. Address</span>
+              <span>1. Delivery Address</span>
             </button>
 
             <ChevronRight size={13} className="text-espresso-300" />
@@ -568,35 +562,14 @@ export default function Checkout() {
               onClick={() => addressConfirmed && setActiveStep(2)}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
                 activeStep === 2
-                  ? "bg-burgundy-900 text-white shadow-xs cursor-pointer"
-                  : paymentConfirmed
-                  ? "bg-emerald-100 text-emerald-800 cursor-pointer"
-                  : "bg-white text-espresso-400 border border-slate-200 disabled:opacity-50"
-              }`}
-            >
-              <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/20">
-                {paymentConfirmed && activeStep !== 2 ? <Check size={11} className="stroke-[3]" /> : "2"}
-              </span>
-              <span>2. Payment &amp; Gift Options</span>
-            </button>
-
-            <ChevronRight size={13} className="text-espresso-300" />
-
-            {/* Step 3 Pill */}
-            <button
-              type="button"
-              disabled={!paymentConfirmed}
-              onClick={() => paymentConfirmed && setActiveStep(3)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
-                activeStep === 3
                   ? "bg-ribbon-600 text-white shadow-md ring-2 ring-ribbon-300 cursor-pointer"
                   : "bg-white text-espresso-400 border border-slate-200 disabled:opacity-50"
               }`}
             >
               <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/20">
-                3
+                2
               </span>
-              <span>3. Order Summary &amp; Pay</span>
+              <span>2. Review &amp; Place Order</span>
             </button>
           </div>
         </div>
@@ -1193,241 +1166,54 @@ export default function Checkout() {
               )}
             </div>
 
-            {/* ================= STEP 2: PAYMENT METHOD & GIFT OPTIONS ================= */}
-            <div
-              className={`rounded-3xl bg-white border border-rose-100 shadow-sm overflow-hidden transition-all duration-300 ${
-                !addressConfirmed ? "opacity-60 pointer-events-none" : ""
-              }`}
-            >
-              <div
-                className={`p-5 sm:p-6 flex items-center justify-between border-b ${
-                  activeStep === 2 ? "border-rose-100 bg-rose-50/20" : "border-slate-100"
-                }`}
+            {/* Step 2 Keepsakes Review Card in Left Column */}
+            {activeStep === 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-3xl bg-white border border-rose-100 shadow-sm overflow-hidden transition-all duration-300"
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-2xl flex items-center justify-center text-xs font-bold ${
-                      paymentConfirmed
-                        ? "bg-emerald-600 text-white"
-                        : activeStep === 2
-                        ? "bg-burgundy-900 text-white"
-                        : "bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {paymentConfirmed ? <Check size={16} /> : "2"}
+                <div className="p-5 sm:p-6 flex items-center justify-between border-b border-rose-100 bg-rose-50/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-2xl bg-burgundy-900 text-white flex items-center justify-center text-xs font-bold">
+                      2
+                    </div>
+                    <div>
+                      <h2 className="font-display text-base sm:text-lg font-bold text-burgundy-900 flex items-center gap-2">
+                        <Sparkles size={18} className="text-ribbon-500" />
+                        <span>2. Review Keepsakes in Your Order</span>
+                      </h2>
+                      <p className="text-[11px] text-espresso-400">
+                        {items.length} bespoke keepsake{items.length > 1 ? "s" : ""} handcrafted at our studio
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="font-display text-base sm:text-lg font-bold text-burgundy-900 flex items-center gap-2">
-                      <CreditCard size={18} className="text-ribbon-500" />
-                      <span>2. Payment &amp; Gift Options</span>
-                    </h2>
-                    <p className="text-[11px] text-espresso-400">
-                      Choose payment method and personalize your luxury gift greeting card
-                    </p>
-                  </div>
-                </div>
 
-                {activeStep !== 2 && paymentConfirmed && (
                   <button
                     type="button"
-                    onClick={() => setActiveStep(2)}
+                    onClick={() => navigate("/cart")}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-ribbon-600 hover:text-ribbon-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1.5 rounded-full transition cursor-pointer"
                   >
                     <Edit2 size={12} />
-                    <span>Change</span>
+                    <span>Edit Bag</span>
                   </button>
-                )}
-              </div>
-
-              {activeStep === 2 && (
-                <div className="p-5 sm:p-7 space-y-6">
-                  {/* Payment Methods */}
-                  <div className="space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-burgundy-900">
-                      Select Payment Method
-                    </span>
-
-                    {/* Razorpay Online Payment */}
-                    <label
-                      onClick={() => setPaymentMethod("razorpay")}
-                      className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
-                        paymentMethod === "razorpay"
-                          ? "border-burgundy-900 bg-rose-50/40 shadow-xs ring-1 ring-burgundy-900/20"
-                          : "border-slate-200 hover:border-ribbon-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          checked={paymentMethod === "razorpay"}
-                          onChange={() => setPaymentMethod("razorpay")}
-                          className="text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
-                        />
-                        <div>
-                          <div className="font-bold text-xs sm:text-sm text-burgundy-900 flex items-center gap-2">
-                            <span>Online Payment (UPI, Cards, NetBanking, Wallets)</span>
-                          </div>
-                          <div className="text-[11px] text-espresso-400">
-                            Instant secure online payment • Priority workshop crafting &amp; dispatch
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                        Recommended
-                      </span>
-                    </label>
-
-                    {/* Cash on Delivery */}
-                    {hasCustomKeepsake ? (
-                      <div className="p-4 rounded-2xl border border-dashed border-stone-300 bg-stone-50/70 space-y-2 select-none">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-full border border-stone-300 bg-stone-200/90 flex items-center justify-center shrink-0">
-                              <Lock size={11} className="text-stone-500" />
-                            </div>
-                            <div>
-                              <div className="font-bold text-xs sm:text-sm text-stone-500 line-through">
-                                Cash on Delivery (COD)
-                              </div>
-                              <div className="text-[11px] text-stone-500">
-                                Unavailable for custom keepsake orders
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                            Prepaid Only
-                          </span>
-                        </div>
-                        <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
-                          <Sparkles size={14} className="text-amber-600 shrink-0 mt-0.5" />
-                          <span>
-                            <strong>Personalized Keepsake Attached:</strong> Because each 3D miniature figurine is uniquely handcrafted and made-to-order from your photograph, Cash on Delivery is disabled. Online prepayment (UPI, Cards, NetBanking) is required to begin 3D studio sculpting &amp; printing.
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <label
-                        onClick={() => setPaymentMethod("cod")}
-                        className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition ${
-                          paymentMethod === "cod"
-                            ? "border-burgundy-900 bg-rose-50/40 shadow-xs ring-1 ring-burgundy-900/20"
-                            : "border-slate-200 hover:border-ribbon-300 bg-white"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            checked={paymentMethod === "cod"}
-                            onChange={() => setPaymentMethod("cod")}
-                            className="text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
-                          />
-                          <div>
-                            <div className="font-bold text-xs sm:text-sm text-burgundy-900">
-                              Cash on Delivery (COD)
-                            </div>
-                            <div className="text-[11px] text-espresso-400">
-                              Pay in cash or UPI QR code at your doorstep upon package arrival
-                            </div>
-                          </div>
-                        </div>
-                      </label>
-                    )}
-                  </div>
-
-
-
-                  <div className="pt-2 flex items-center justify-end">
-                    <button
-                      type="button"
-                      onClick={handleConfirmPayment}
-                      className="btn-primary py-3.5 px-8 text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition cursor-pointer flex items-center gap-2"
-                    >
-                      <span>Review Order Summary</span>
-                      <ArrowRight size={15} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Collapsed Step 2 Summary */}
-              {activeStep !== 2 && paymentConfirmed && (
-                <div className="p-5 sm:p-6 bg-cream-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-espresso-700">
-                  <div>
-                    <div className="font-bold text-burgundy-900">
-                      {paymentMethod === "razorpay"
-                        ? "Online Payment (UPI, Cards, NetBanking)"
-                        : "Cash on Delivery (COD)"}
-                    </div>
-                    <div className="text-espresso-400 text-[11px]">
-                      {paymentMethod === "razorpay" ? "Prepaid Instant Dispatch" : "Pay at doorstep"}
-                    </div>
-                  </div>
-
-
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* ================= RIGHT COLUMN: ORDER SUMMARY ================= */}
-          <div className="lg:col-span-5 xl:col-span-5">
-            {activeStep === 3 ? (
-              /* ACTIVE FINAL ORDER SUMMARY CARD (ON STEP 3) */
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="sticky top-24 rounded-3xl bg-white border border-rose-200 shadow-2xl overflow-hidden"
-              >
-                {/* Header */}
-                <div className="p-5 sm:p-6 border-b border-rose-100 bg-gradient-to-br from-rose-50/40 via-white to-blush-50/50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-ribbon-600">
-                        Final Step 3
-                      </span>
-                      <h3 className="font-display text-lg sm:text-xl font-bold text-burgundy-900">
-                        Order Summary &amp; Review
-                      </h3>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                      {items.length} keepsake{items.length > 1 ? "s" : ""}
-                    </span>
-                  </div>
                 </div>
 
-                {/* Keepsakes Items Review Section */}
-                <div className="p-5 border-b border-rose-100 bg-cream-50/30 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-burgundy-900 flex items-center gap-1.5">
-                      <Sparkles size={13} className="text-ribbon-500" />
-                      <span>Review Keepsakes ({items.length})</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/cart")}
-                      className="text-[11px] font-semibold text-ribbon-600 hover:underline cursor-pointer"
-                    >
-                      Edit Cart
-                    </button>
-                  </div>
-
-                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                <div className="p-5 sm:p-7 space-y-4">
+                  <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                     {items.map((item) => (
                       <div
                         key={item.id}
-                        className="p-3.5 rounded-2xl bg-white border border-rose-100 flex items-center justify-between gap-3 text-xs shadow-2xs"
+                        className="p-3.5 rounded-2xl bg-cream-50/50 border border-rose-100/80 flex items-center justify-between gap-3 text-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <img
                             src={assetUrl(item.image)}
                             alt={item.name}
-                            className="w-12 h-12 rounded-xl object-cover border border-rose-100 bg-cream-50 shrink-0"
+                            className="w-14 h-14 rounded-xl object-cover border border-rose-100 bg-white shrink-0"
                           />
                           <div className="min-w-0">
-                            <h4 className="font-bold text-burgundy-900 text-xs truncate">{item.name}</h4>
+                            <h4 className="font-bold text-burgundy-900 text-sm truncate">{item.name}</h4>
                             <div className="text-espresso-500 text-[11px] mt-0.5">
                               Quantity: <strong className="font-mono">{item.quantity}</strong> × {formatPrice(item.price)}
                             </div>
@@ -1438,250 +1224,348 @@ export default function Checkout() {
                             )}
                           </div>
                         </div>
-                        <div className="font-mono font-bold text-burgundy-900 text-xs shrink-0">
+                        <div className="font-mono font-bold text-burgundy-900 text-sm shrink-0">
                           {formatPrice(item.price * item.quantity)}
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
 
-
-
-                {/* Promo Coupon Box */}
-                <div className="p-5 border-b border-slate-100 space-y-2">
-                  {appliedCoupon ? (
-                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 text-emerald-900 font-semibold">
-                        <Tag size={14} className="text-emerald-600" />
-                        <span>
-                          Code <strong>{appliedCoupon.code}</strong> Applied (-{formatPrice(discount)})
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={removeCoupon}
-                        className="text-[11px] font-bold text-rose-700 hover:underline cursor-pointer"
-                      >
-                        Remove
-                      </button>
+                  {/* Free Gift Packaging Notice */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-50/80 to-blush-50/80 border border-rose-100 flex items-center gap-3">
+                    <Sparkles size={18} className="text-ribbon-500 shrink-0" />
+                    <div className="text-xs">
+                      <span className="font-bold text-burgundy-900">Complimentary Luxury Gift Packaging Included</span>
+                      <p className="text-[11px] text-espresso-500 mt-0.5">
+                        Every order is carefully packaged in our signature keepsake box with artisan blush ribbon and personal greeting card.
+                      </p>
                     </div>
-                  ) : (
-                    <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          placeholder="Enter Promo Coupon"
-                          className="input-field text-xs py-2.5 pl-8 uppercase font-mono"
-                        />
-                        <Tag size={13} className="absolute left-2.5 top-3 text-espresso-300" />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={applyingCoupon || !couponInput.trim()}
-                        className="px-4 py-2 bg-burgundy-900 hover:bg-burgundy-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-40 cursor-pointer"
-                      >
-                        {applyingCoupon ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
-                      </button>
-                    </form>
-                  )}
-
-                  {!appliedCoupon && availableCoupons.length > 0 && (
-                    <div className="pt-1.5 space-y-1">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-espresso-400">
-                        Available Offers:
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {availableCoupons.slice(0, 3).map((cp) => (
-                          <button
-                            key={cp.code}
-                            type="button"
-                            onClick={() => handleApplyCouponCode(cp.code)}
-                            disabled={applyingCoupon}
-                            className="px-2 py-1 rounded-lg bg-cream-100 hover:bg-cream-200 border border-cream-300 text-burgundy-900 text-[11px] font-mono font-bold flex items-center gap-1 transition cursor-pointer"
-                          >
-                            <span>{cp.code}</span>
-                            <span className="text-[10px] font-sans font-normal text-burgundy-700">
-                              ({cp.discountType === "percentage" ? `${cp.discountAmount}% off` : `₹${cp.discountAmount} off`})
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Detailed Price Breakdown */}
-                <div className="p-5 sm:p-6 space-y-3 text-xs text-espresso-600">
-                  <div className="flex justify-between">
-                    <span>Items Subtotal</span>
-                    <span className="font-medium font-mono text-slate-900">{formatPrice(subtotal)}</span>
-                  </div>
-
-                  {discount > 0 && (
-                    <div className="flex justify-between text-emerald-700 font-semibold">
-                      <span>Coupon Discount</span>
-                      <span className="font-mono">- {formatPrice(discount)}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="font-medium text-slate-800">
-                        {selectedDeliveryTier === "express"
-                          ? "⚡ Express Priority Delivery"
-                          : "Standard Delivery"}
-                      </span>
-                      {shippingEstimate && (
-                        <span className="block text-[10px] text-espresso-500">
-                          Estimated ETA:{" "}
-                          <strong className="text-stone-700">
-                            {selectedDeliveryTier === "express"
-                              ? shippingEstimate.express?.formattedEDD || shippingEstimate.formattedEDD
-                              : shippingEstimate.standard?.formattedEDD || shippingEstimate.formattedEDD}
-                          </strong>
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-medium font-mono">
-                      {shippingFee === 0 ? (
-                        <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          FREE
-                        </span>
-                      ) : (
-                        formatPrice(shippingFee)
-                      )}
-                    </span>
-                  </div>
-
-                  {giftOptions.isGift && (
-                    <div className="flex justify-between text-ribbon-700">
-                      <span>Luxury Gift Packaging &amp; Card</span>
-                      <span className="font-bold text-emerald-700">FREE</span>
-                    </div>
-                  )}
-
-                  {/* Grand Total */}
-                  <div className="border-t border-rose-100 pt-4 flex justify-between items-baseline font-display">
-                    <span className="text-base font-bold text-burgundy-900">Grand Total</span>
-                    <span className="text-2xl font-bold text-ribbon-600 font-mono">
-                      {formatPrice(total)}
-                    </span>
-                  </div>
-
-                  {/* Place Order CTA Button */}
-                  <div className="pt-3">
-                    <button
-                      type="button"
-                      onClick={handlePlaceOrder}
-                      disabled={placing}
-                      className="btn-primary w-full py-4 text-sm font-bold uppercase tracking-wider justify-center flex items-center gap-2 shadow-soft cursor-pointer disabled:opacity-50"
-                    >
-                      {placing ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} />
-                          <span>Processing Order...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock size={16} />
-                          <span>
-                            {paymentMethod === "cod"
-                              ? `Confirm COD (${formatPrice(total)})`
-                              : `Pay ${formatPrice(total)} Now`}
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-2 text-[10px] text-espresso-400 pt-2">
-                    <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
-                    <span>256-bit Encrypted • 100% Secure Checkout</span>
                   </div>
                 </div>
               </motion.div>
-            ) : (
-              /* PROGRESS HELPER SIDEBAR (STEPS 1, 2) */
-              <div className="sticky top-24 rounded-3xl bg-white border border-rose-100 shadow-sm p-6 space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-burgundy-900 mb-1">
-                    <ShoppingBag size={15} className="text-ribbon-500" />
-                    <span>Your Keepsake Bag</span>
+            )}
+          </div>
+
+          {/* ================= RIGHT COLUMN: ORDER SUMMARY & PAYMENT ================= */}
+          <div className="lg:col-span-5 xl:col-span-5">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="sticky top-24 rounded-3xl bg-white border border-rose-200 shadow-xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-5 sm:p-6 border-b border-rose-100 bg-gradient-to-br from-rose-50/40 via-white to-blush-50/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-ribbon-600">
+                      {activeStep === 1 ? "Step 1: Address" : "Final Step: Place Order"}
+                    </span>
+                    <h3 className="font-display text-lg sm:text-xl font-bold text-burgundy-900">
+                      Order Summary &amp; Checkout
+                    </h3>
                   </div>
-                  <p className="text-xs text-espresso-400">
-                    {items.length} item{items.length > 1 ? "s" : ""} in cart • Order summary will appear in Step 3
-                  </p>
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                    {items.length} keepsake{items.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+              </div>
+
+              {/* Keepsakes Items Review Section */}
+              <div className="p-5 border-b border-rose-100 bg-cream-50/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-burgundy-900 flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-ribbon-500" />
+                    <span>Your Keepsakes ({items.length})</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/cart")}
+                    className="text-[11px] font-semibold text-ribbon-600 hover:underline cursor-pointer"
+                  >
+                    Edit Cart
+                  </button>
                 </div>
 
-                {/* Items Thumbnails */}
-                <div className="space-y-2.5 max-h-52 overflow-y-auto pr-1">
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 text-xs">
-                      <img
-                        src={assetUrl(item.image)}
-                        alt={item.name}
-                        className="w-11 h-11 rounded-xl object-cover border border-rose-100 bg-cream-50 shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-burgundy-900 truncate">{item.name}</div>
-                        <div className="text-[11px] text-espresso-400">Qty: {item.quantity}</div>
+                    <div
+                      key={item.id}
+                      className="p-3 rounded-2xl bg-white border border-rose-100 flex items-center justify-between gap-3 text-xs shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={assetUrl(item.image)}
+                          alt={item.name}
+                          className="w-11 h-11 rounded-xl object-cover border border-rose-100 bg-cream-50 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-burgundy-900 text-xs truncate">{item.name}</h4>
+                          <div className="text-espresso-500 text-[11px] mt-0.5">
+                            Qty: <strong className="font-mono">{item.quantity}</strong> × {formatPrice(item.price)}
+                          </div>
+                          {item.customization?.note && (
+                            <div className="text-[10px] text-ribbon-700 italic truncate mt-0.5">
+                              Note: &ldquo;{item.customization.note}&rdquo;
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="font-mono font-bold text-slate-800">
+                      <div className="font-mono font-bold text-burgundy-900 text-xs shrink-0">
                         {formatPrice(item.price * item.quantity)}
                       </div>
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* Free Shipping Meter */}
-                <div className="p-3.5 rounded-2xl bg-cream-50/80 border border-rose-100 space-y-2 text-xs">
-                  <div className="flex items-center justify-between font-semibold">
-                    <span className="flex items-center gap-1.5 text-burgundy-900 text-[11px]">
-                      <Truck size={14} className="text-ribbon-500" />
-                      {subtotal >= 999 ? (
-                        <span className="text-emerald-700">FREE Express Delivery Unlocked!</span>
-                      ) : (
-                        <span>Add {formatPrice(999 - subtotal)} for FREE Delivery</span>
-                      )}
-                    </span>
-                    <span className="text-espresso-400 font-mono text-[10px]">
-                      {Math.min(100, Math.round((subtotal / 999) * 100))}%
-                    </span>
+              {/* Promo Coupon Box */}
+              <div className="p-5 border-b border-slate-100 space-y-2">
+                {appliedCoupon ? (
+                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-emerald-900 font-semibold">
+                      <Tag size={14} className="text-emerald-600" />
+                      <span>
+                        Code <strong>{appliedCoupon.code}</strong> Applied (-{formatPrice(discount)})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-[11px] font-bold text-rose-700 hover:underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <div className="h-1.5 rounded-full bg-cream-200 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-ribbon-400 to-emerald-500 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(100, (subtotal / 999) * 100)}%` }}
-                    />
+                ) : (
+                  <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        placeholder="Enter Promo Coupon"
+                        className="input-field text-xs py-2.5 pl-8 uppercase font-mono"
+                      />
+                      <Tag size={13} className="absolute left-2.5 top-3 text-espresso-300" />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={applyingCoupon || !couponInput.trim()}
+                      className="px-4 py-2 bg-burgundy-900 hover:bg-burgundy-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-40 cursor-pointer"
+                    >
+                      {applyingCoupon ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+                    </button>
+                  </form>
+                )}
+
+                {!appliedCoupon && availableCoupons.length > 0 && (
+                  <div className="pt-1.5 space-y-1">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-espresso-400">
+                      Available Offers:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {availableCoupons.slice(0, 3).map((cp) => (
+                        <button
+                          key={cp.code}
+                          type="button"
+                          onClick={() => handleApplyCouponCode(cp.code)}
+                          disabled={applyingCoupon}
+                          className="px-2 py-1 rounded-lg bg-cream-100 hover:bg-cream-200 border border-cream-300 text-burgundy-900 text-[11px] font-mono font-bold flex items-center gap-1 transition cursor-pointer"
+                        >
+                          <span>{cp.code}</span>
+                          <span className="text-[10px] font-sans font-normal text-burgundy-700">
+                            ({cp.discountType === "percentage" ? `${cp.discountAmount}% off` : `₹${cp.discountAmount} off`})
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Detailed Price Breakdown */}
+              <div className="p-5 sm:p-6 space-y-3 text-xs text-espresso-600">
+                <div className="flex justify-between">
+                  <span>Items Subtotal</span>
+                  <span className="font-medium font-mono text-slate-900">{formatPrice(subtotal)}</span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-semibold">
+                    <span>Coupon Discount</span>
+                    <span className="font-mono">- {formatPrice(discount)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-medium text-slate-800">
+                      {selectedDeliveryTier === "express"
+                        ? "⚡ Express Priority Delivery"
+                        : "Standard Delivery"}
+                    </span>
+                    {shippingEstimate && (
+                      <span className="block text-[10px] text-espresso-500">
+                        Estimated ETA:{" "}
+                        <strong className="text-stone-700">
+                          {selectedDeliveryTier === "express"
+                            ? shippingEstimate.express?.formattedEDD || shippingEstimate.formattedEDD
+                            : shippingEstimate.standard?.formattedEDD || shippingEstimate.formattedEDD}
+                        </strong>
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium font-mono">
+                    {shippingFee === 0 ? (
+                      <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        FREE
+                      </span>
+                    ) : (
+                      formatPrice(shippingFee)
+                    )}
+                  </span>
+                </div>
+
+                {giftOptions.isGift && (
+                  <div className="flex justify-between text-ribbon-700">
+                    <span>Luxury Gift Packaging &amp; Card</span>
+                    <span className="font-bold text-emerald-700">FREE</span>
+                  </div>
+                )}
+
+                {/* Grand Total */}
+                <div className="border-t border-rose-100 pt-3 flex justify-between items-baseline font-display">
+                  <span className="text-base font-bold text-burgundy-900">Grand Total</span>
+                  <span className="text-2xl font-bold text-ribbon-600 font-mono">
+                    {formatPrice(total)}
+                  </span>
+                </div>
+
+                {/* ================= PAYMENT OPTION SELECTION (DIRECTLY ON CHECKOUT SECTION) ================= */}
+                <div className="pt-3 border-t border-rose-100 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-burgundy-900 flex items-center gap-1.5">
+                      <CreditCard size={13} className="text-ribbon-600" />
+                      <span>Select Payment Option</span>
+                    </span>
+                    <span className="text-[10px] text-espresso-400 font-medium">Online or COD</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Online Payment */}
+                    <label
+                      onClick={() => setPaymentMethod("razorpay")}
+                      className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-start justify-between gap-2 ${
+                        paymentMethod === "razorpay"
+                          ? "border-burgundy-900 bg-rose-50/50 shadow-xs ring-1 ring-burgundy-900/10"
+                          : "border-stone-200 hover:border-stone-300 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          checked={paymentMethod === "razorpay"}
+                          onChange={() => setPaymentMethod("razorpay")}
+                          className="mt-0.5 text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
+                        />
+                        <div>
+                          <div className="font-bold text-xs text-burgundy-900 flex items-center gap-1.5">
+                            <span>Online Payment</span>
+                            <span className="text-[10px] font-normal text-espresso-400">(UPI, Cards, NetBanking)</span>
+                          </div>
+                          <p className="text-[10.5px] text-espresso-500 mt-0.5 leading-tight">
+                            Instant secure checkout • Priority workshop crafting &amp; dispatch
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                        Recommended
+                      </span>
+                    </label>
+
+                    {/* Cash on Delivery (COD) */}
+                    {hasCustomKeepsake ? (
+                      <div className="p-3 rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 space-y-1 select-none">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Lock size={12} className="text-amber-700" />
+                            <span className="font-semibold text-xs text-stone-500 line-through">
+                              Cash on Delivery (COD)
+                            </span>
+                          </div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                            Prepaid Only
+                          </span>
+                        </div>
+                        <p className="text-[10.5px] text-amber-900 leading-snug">
+                          Custom 3D figurine keepsakes are made-to-order and require online prepayment to begin studio sculpting.
+                        </p>
+                      </div>
+                    ) : (
+                      <label
+                        onClick={() => setPaymentMethod("cod")}
+                        className={`p-3 rounded-2xl border-2 transition-all cursor-pointer flex items-start justify-between gap-2 ${
+                          paymentMethod === "cod"
+                            ? "border-burgundy-900 bg-rose-50/50 shadow-xs ring-1 ring-burgundy-900/10"
+                            : "border-stone-200 hover:border-stone-300 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            checked={paymentMethod === "cod"}
+                            onChange={() => setPaymentMethod("cod")}
+                            className="mt-0.5 text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
+                          />
+                          <div>
+                            <div className="font-bold text-xs text-burgundy-900">
+                              Cash on Delivery (COD)
+                            </div>
+                            <p className="text-[10.5px] text-espresso-500 mt-0.5 leading-tight">
+                              Pay in cash or UPI QR code at your doorstep upon package arrival
+                            </p>
+                          </div>
+                        </div>
+                      </label>
+                    )}
                   </div>
                 </div>
 
-                {/* Next Step Guidance Box */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-50/30 to-blush-50/40 border border-rose-100 text-xs space-y-2">
-                  <div className="flex items-center gap-1.5 font-bold text-burgundy-900">
-                    <Info size={14} className="text-ribbon-600" />
-                    <span>
-                      {activeStep === 1
-                        ? "Current Step: Delivery Address"
-                        : "Current Step: Payment & Gift Options"}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-espresso-500">
-                    {activeStep === 1
-                      ? "Enter your delivery PIN code and address. Real-time courier delivery fee and ETA will be calculated automatically."
-                      : "Select your payment method and personalize your free gift greeting card message if this order is a gift."}
-                  </p>
+                {/* Place Order CTA Button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handlePlaceOrder}
+                    disabled={placing}
+                    className="btn-primary w-full py-4 text-sm font-bold uppercase tracking-wider justify-center flex items-center gap-2 shadow-soft cursor-pointer disabled:opacity-50"
+                  >
+                    {placing ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        <span>Processing Order...</span>
+                      </>
+                    ) : paymentMethod === "cod" ? (
+                      <>
+                        <Check size={18} className="stroke-[3]" />
+                        <span>Confirm COD Order ({formatPrice(total)})</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={16} />
+                        <span>Pay {formatPrice(total)} Online</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 text-[10px] text-espresso-400">
-                  <ShieldCheck size={14} className="text-emerald-600" />
-                  <span>100% Handcrafted Artisan Guarantee</span>
+                <div className="flex items-center justify-center gap-2 text-[10px] text-espresso-400 pt-1">
+                  <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
+                  <span>256-bit Encrypted • 100% Secure Checkout</span>
                 </div>
               </div>
-            )}
+            </motion.div>
           </div>
         </div>
       </div>
