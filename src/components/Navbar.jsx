@@ -37,6 +37,9 @@ export default function Navbar() {
 
   const routerLocation = useLocation();
   const isDashboard = routerLocation.pathname.startsWith("/account");
+  const isCartOrCheckout =
+    routerLocation.pathname === "/cart" ||
+    routerLocation.pathname === "/checkout";
 
   const { totalItems, openCart } = useCartStore();
   const { items: wishlistItems, openDrawer: openWishlist } = useWishlistStore();
@@ -441,20 +444,22 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            {/* Cart Button: Clean Icon with Count Badge */}
-            <button
-              onClick={openCart}
-              aria-label="Shopping Bag"
-              className="relative p-1.5 sm:p-2.5 rounded-full text-stone-700 hover:text-stone-900 hover:bg-stone-100 transition-colors"
-              title="Cart"
-            >
-              <ShoppingBag size={19} />
-              {totalItems() > 0 && (
-                <span className="absolute top-0.5 sm:top-1 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-2xs">
-                  {totalItems()}
-                </span>
-              )}
-            </button>
+            {/* Cart Button: Clean Icon with Count Badge (Hidden on Cart and Checkout pages) */}
+            {!isCartOrCheckout && (
+              <button
+                onClick={openCart}
+                aria-label="Shopping Bag"
+                className="relative p-1.5 sm:p-2.5 rounded-full text-stone-700 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+                title="Cart"
+              >
+                <ShoppingBag size={19} />
+                {totalItems() > 0 && (
+                  <span className="absolute top-0.5 sm:top-1 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-2xs">
+                    {totalItems()}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Mobile Hamburger Menu */}
             <button

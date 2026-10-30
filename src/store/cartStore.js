@@ -53,6 +53,28 @@ export const productToCartItem = (product, quantity = 1) => ({
   customization: {},
 });
 
+export const WEEKLY_KEEPSAKE_THRESHOLD = 5;
+
+export const isCustomKeepsakeItem = (item) =>
+  Boolean(
+    item?.customization?.photoUrl ||
+    item?.customization?.cuteImageUrl ||
+    item?.customization?.reference3D ||
+    item?.customization?.category ||
+    item?.fromCatalog === false ||
+    item?.sizeId ||
+    item?.hamper?.keepsakeId === "3d-miniature" ||
+    (typeof item?.productId === "string" && (
+      item.productId.startsWith("custom-3d-") ||
+      item.productId.startsWith("keepsake-")
+    )) ||
+    (typeof item?.name === "string" && (
+      item.name.toLowerCase().includes("3d") ||
+      item.name.toLowerCase().includes("keepsake") ||
+      item.name.toLowerCase().includes("figurine")
+    ))
+  );
+
 export const useCartStore = create((set, get) => ({
   items: load(),
   appliedCoupon: loadCoupon(),
@@ -78,6 +100,21 @@ export const useCartStore = create((set, get) => ({
     const finalItem = cuteImg ? { ...item, image: cuteImg } : item;
     const key = lineKey(finalItem);
     const existingIndex = items.findIndex((i) => lineKey(i) === key);
+
+    // Enforce weekly studio threshold on custom 3D keepsakes
+    if (isCustomKeepsakeItem(finalItem)) {
+      const currentKeepsakeTotal = items
+        .filter(isCustomKeepsakeItem)
+        .reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+      const incomingQty = Number(finalItem.quantity) || 1;
+      if (currentKeepsakeTotal + incomingQty > WEEKLY_KEEPSAKE_THRESHOLD) {
+        toast.error(
+          `Weekly studio limit reached! Maximum ${WEEKLY_KEEPSAKE_THRESHOLD} custom 3D keepsakes allowed per order to ensure artisan quality.`,
+          { id: "weekly-threshold-alert", duration: 4000 }
+        );
+        return false;
+      }
+    }
 
     // If stock limit is provided, ensure total does not exceed available stock
     const availableStock = typeof finalItem.stock === "number" ? finalItem.stock : (existingIndex > -1 && typeof items[existingIndex].stock === "number" ? items[existingIndex].stock : undefined);
@@ -126,10 +163,24 @@ export const useCartStore = create((set, get) => ({
     const existing = get().items.find((i) => i.id === id);
     if (!existing) return;
 
-    if (quantity > existing.quantity && typeof existing.stock === "number") {
-      if (quantity > existing.stock) {
+    if (quantity > existing.quantity) {
+      if (typeof existing.stock === "number" && quantity > existing.stock) {
         toast.error(`Only ${existing.stock} available in stock`);
         return;
+      }
+
+      // Check weekly threshold for custom keepsakes
+      if (isCustomKeepsakeItem(existing)) {
+        const otherKeepsakes = get()
+          .items.filter((i) => i.id !== id && isCustomKeepsakeItem(i))
+          .reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+        if (otherKeepsakes + quantity > WEEKLY_KEEPSAKE_THRESHOLD) {
+          toast.error(
+            `Weekly studio limit reached! Maximum ${WEEKLY_KEEPSAKE_THRESHOLD} custom 3D keepsakes allowed per order.`,
+            { id: "weekly-threshold-alert", duration: 4000 }
+          );
+          return;
+        }
       }
     }
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2, ShoppingBag, ArrowRight, Tag, CheckCircle2, X, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCartStore } from "../store/cartStore";
+import { useCartStore, isCustomKeepsakeItem, WEEKLY_KEEPSAKE_THRESHOLD } from "../store/cartStore";
 import { api, assetUrl } from "../api/client";
 import toast from "react-hot-toast";
 import { useSeo } from "../utils/seo";
@@ -14,6 +14,12 @@ export default function Cart() {
   const { items, updateQuantity, removeItem, appliedCoupon, setCoupon, removeCoupon } = useCartStore();
   const subtotal = useCartStore((s) => s.subtotal());
   const navigate = useNavigate();
+
+  const totalKeepsakesInCart = items
+    .filter(isCustomKeepsakeItem)
+    .reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+  const hasCustomKeepsake = totalKeepsakesInCart > 0;
+  const isKeepsakeThresholdReached = totalKeepsakesInCart >= WEEKLY_KEEPSAKE_THRESHOLD;
 
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [validatingCoupon, setValidatingCoupon] = useState(false);
@@ -118,6 +124,26 @@ export default function Cart() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 lg:gap-10">
         {/* Items List */}
         <div className="space-y-4">
+          {hasCustomKeepsake && (
+            <div className="p-3 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-200 flex items-center justify-between gap-3 text-xs">
+              <span className="text-amber-950 font-medium">
+                Weekly Studio Capacity:{" "}
+                <strong className="text-burgundy-900 font-bold">
+                  {totalKeepsakesInCart} of {WEEKLY_KEEPSAKE_THRESHOLD}
+                </strong>{" "}
+                custom keepsakes reserved
+              </span>
+              {isKeepsakeThresholdReached ? (
+                <span className="text-[10px] font-bold text-rose-800 bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  Weekly Batch Full
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-full">
+                  {WEEKLY_KEEPSAKE_THRESHOLD - totalKeepsakesInCart} slot{WEEKLY_KEEPSAKE_THRESHOLD - totalKeepsakesInCart === 1 ? "" : "s"} left
+                </span>
+              )}
+            </div>
+          )}
           <AnimatePresence>
             {items.map((item) => {
               const optionsTotal = (item.selectedOptions || []).reduce((s, o) => s + (o.priceDelta || 0), 0);
@@ -192,8 +218,19 @@ export default function Cart() {
                         </button>
                         <span className="px-2 text-xs font-bold text-burgundy-900">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="px-3 py-1 text-sm font-bold text-espresso-600 hover:text-burgundy-900 cursor-pointer"
+                          disabled={isCustomKeepsakeItem(item) && isKeepsakeThresholdReached}
+                          onClick={() => {
+                            if (isCustomKeepsakeItem(item) && isKeepsakeThresholdReached) {
+                              toast.error(`Weekly studio limit reached! Maximum ${WEEKLY_KEEPSAKE_THRESHOLD} custom keepsakes allowed per order.`);
+                              return;
+                            }
+                            updateQuantity(item.id, item.quantity + 1);
+                          }}
+                          className={`px-3 py-1 text-sm font-bold transition ${
+                            isCustomKeepsakeItem(item) && isKeepsakeThresholdReached
+                              ? "text-espresso-300 opacity-40 cursor-not-allowed"
+                              : "text-espresso-600 hover:text-burgundy-900 cursor-pointer"
+                          }`}
                         >
                           +
                         </button>

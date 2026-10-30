@@ -409,7 +409,7 @@ export default function PersonalizedPage() {
     const cuteImage = design.customization?.cuteImageUrl || design.image;
     const originalPhoto = design.customization?.photoUrl || preview.originalUrl || localPhotoUrl;
 
-    addItem({
+    const ok = addItem({
       productId: uniqueId,
       name: `Custom 3D Keepsake (${currentCat?.name || "Personalized"} - ${currentOpt.name} ${currentOpt.dimensions})`,
       image: cuteImage,
@@ -436,6 +436,8 @@ export default function PersonalizedPage() {
         note: combinedNotes || undefined,
       },
     });
+
+    if (!ok) return;
 
     toast.success(`Added ${currentCat?.name || ""} (${activeStyleObj.name}) keepsake to your bag!`);
 

@@ -1,12 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Trash2, ArrowRight, Sparkles, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useCartStore } from "../store/cartStore";
+import { useCartStore, isCustomKeepsakeItem, WEEKLY_KEEPSAKE_THRESHOLD } from "../store/cartStore";
 import { assetUrl } from "../api/client";
+import toast from "react-hot-toast";
 
 export default function CartDrawer() {
   const { items, isCartOpen, closeCart, updateQuantity, removeItem, subtotal } = useCartStore();
   const navigate = useNavigate();
+
+  const totalKeepsakesInCart = items
+    .filter(isCustomKeepsakeItem)
+    .reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+  const isKeepsakeThresholdReached = totalKeepsakesInCart >= WEEKLY_KEEPSAKE_THRESHOLD;
 
   if (!isCartOpen) return null;
 
@@ -143,8 +149,19 @@ export default function CartDrawer() {
                             </button>
                             <span className="px-1.5 text-[11px] font-semibold text-burgundy-900">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="px-2 h-full text-[11px] text-espresso-500 hover:text-burgundy-900 font-bold flex items-center justify-center"
+                              disabled={isCustomKeepsakeItem(item) && isKeepsakeThresholdReached}
+                              onClick={() => {
+                                if (isCustomKeepsakeItem(item) && isKeepsakeThresholdReached) {
+                                  toast.error(`Weekly studio threshold reached! Maximum ${WEEKLY_KEEPSAKE_THRESHOLD} custom keepsakes allowed per order.`);
+                                  return;
+                                }
+                                updateQuantity(item.id, item.quantity + 1);
+                              }}
+                              className={`px-2 h-full text-[11px] font-bold flex items-center justify-center transition ${
+                                isCustomKeepsakeItem(item) && isKeepsakeThresholdReached
+                                  ? "text-espresso-300 opacity-40 cursor-not-allowed"
+                                  : "text-espresso-500 hover:text-burgundy-900 cursor-pointer"
+                              }`}
                             >
                               +
                             </button>

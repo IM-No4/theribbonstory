@@ -161,7 +161,7 @@ export default function Footer() {
               </p>
               <p className="flex items-center gap-2">
                 <MapPin size={13} className="text-stone-500 shrink-0" />
-                <span>Indiranagar, Bengaluru, Karnataka</span>
+                <span>New Delhi, India</span>
               </p>
             </div>
 

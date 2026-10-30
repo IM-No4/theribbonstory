@@ -374,21 +374,25 @@ export default function Home() {
 
           {loadingCategories ? (
             <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
-              {[1, 2, 3, 4, 5].map((item) => (
+              {[1, 2, 3, 4, 5].map((item, idx) => (
                 <div
                   key={item}
-                  className="aspect-[4/5] animate-pulse rounded-2xl bg-stone-100 sm:aspect-[4/3]"
+                  className={`aspect-[4/5] animate-pulse rounded-2xl bg-stone-100 sm:aspect-[4/3] ${
+                    idx >= 4 ? "hidden sm:block" : ""
+                  }`}
                 />
               ))}
             </div>
           ) : categories.length > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
-                {(showAllCollections ? categories : categories.slice(0, 5)).map((category) => (
+                {(showAllCollections ? categories : categories.slice(0, 5)).map((category, idx) => (
                   <Link
                     key={category._id || category.slug}
                     to={`/shop?category=${category.slug}`}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-[#FBF8F4] transition duration-300 hover:-translate-y-1 hover:border-ribbon-300 hover:shadow-lg"
+                    className={`group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-[#FBF8F4] transition duration-300 hover:-translate-y-1 hover:border-ribbon-300 hover:shadow-lg ${
+                      idx >= 4 ? "hidden sm:flex" : ""
+                    }`}
                   >
                     <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
                       <img
