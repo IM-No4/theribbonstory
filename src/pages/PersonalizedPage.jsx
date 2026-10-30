@@ -784,7 +784,7 @@ export default function PersonalizedPage() {
                       {/* Symmetrical Header */}
                       <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100 shrink-0">
                         <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose-950">
-                          <Sparkles size={14} className="text-rose-500 animate-spin" />
+                          <Sparkles size={14} className="text-rose-500" />
                           <span>3D Figurine Preview</span>
                         </div>
                         <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/80">
