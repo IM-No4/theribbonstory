@@ -322,25 +322,33 @@ export default function ProductDetail() {
       return;
     }
 
+    if (typeof product.stock === "number" && product.stock <= 0) {
+      toast.error(`Sorry, "${product.name}" is out of stock`);
+      return;
+    }
+
     const chosenOptionsList = Object.entries(selectedOptions).map(([name, opt]) => ({
       name,
       value: opt.label,
       priceDelta: opt.priceDelta || 0,
     }));
 
-    addItem(
+    const added = addItem(
       {
         productId: product._id || product.slug,
         name: product.name,
         image: product.images?.[0] || product.image || "/images/photo-magnet.webp",
         price: product.price,
         quantity: 1,
+        stock: typeof product.stock === "number" ? product.stock : undefined,
         selectedOptions: chosenOptionsList,
         customization: {},
       },
       false
     );
-    toast.success(`Added "${product.name}" to cart!`, { icon: "🛍️" });
+    if (added !== false) {
+      toast.success(`Added "${product.name}" to cart!`, { icon: "🛍️" });
+    }
   };
 
   const handleReviewPhotoUpload = async (e) => {
@@ -539,15 +547,33 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* Price Box - Sleek & Compact */}
-            <div className="flex items-baseline gap-2 py-1 border-b border-stone-100">
-              <span className="font-display text-2xl font-extrabold text-stone-900">
-                {formatPrice(unitPrice)}
-              </span>
-              {product.compareAtPrice && (
-                <span className="text-xs text-stone-400 line-through font-mono">
-                  {formatPrice(product.compareAtPrice)}
+            {/* Price Box & Stock Indicator - Sleek & Compact */}
+            <div className="flex items-center justify-between py-1 border-b border-stone-100">
+              <div className="flex items-baseline gap-2">
+                <span className="font-display text-2xl font-extrabold text-stone-900">
+                  {formatPrice(unitPrice)}
                 </span>
+                {product.compareAtPrice && (
+                  <span className="text-xs text-stone-400 line-through font-mono">
+                    {formatPrice(product.compareAtPrice)}
+                  </span>
+                )}
+              </div>
+
+              {typeof product.stock === "number" && (
+                product.stock <= 0 ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
+                    Out of Stock
+                  </span>
+                ) : product.stock <= 5 ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 border border-amber-200 animate-pulse">
+                    Only {product.stock} left in stock!
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                    In Stock ({product.stock})
+                  </span>
+                )
               )}
             </div>
 
@@ -655,7 +681,13 @@ export default function ProductDetail() {
                       </span>
                       <button
                         type="button"
-                        onClick={() => updateQuantity(cartItem.id, cartQuantity + 1)}
+                        onClick={() => {
+                          if (typeof product.stock === "number" && cartQuantity >= product.stock) {
+                            toast.error(`Only ${product.stock} available in stock`);
+                            return;
+                          }
+                          updateQuantity(cartItem.id, cartQuantity + 1);
+                        }}
                         aria-label="Increase quantity"
                         className="flex h-full w-9 items-center justify-center text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 focus-visible:outline-none focus-visible:bg-stone-100 active:bg-stone-100 cursor-pointer"
                       >
@@ -667,10 +699,19 @@ export default function ProductDetail() {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    className="btn-primary flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wide shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 cursor-pointer"
+                    disabled={typeof product.stock === "number" && product.stock <= 0}
+                    className={`flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wide shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 ${
+                      typeof product.stock === "number" && product.stock <= 0
+                        ? "bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-200"
+                        : "btn-primary hover:shadow-md cursor-pointer"
+                    }`}
                   >
-                    <Sparkles size={15} className="shrink-0 text-amber-300" />
-                    <span className="truncate">Add to Cart — {formatPrice(unitPrice)}</span>
+                    <Sparkles size={15} className={`shrink-0 ${typeof product.stock === "number" && product.stock <= 0 ? "text-stone-400" : "text-amber-300"}`} />
+                    <span className="truncate">
+                      {typeof product.stock === "number" && product.stock <= 0
+                        ? "Out of Stock"
+                        : `Add to Cart — ${formatPrice(unitPrice)}`}
+                    </span>
                   </button>
                 )}
 

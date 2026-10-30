@@ -12,17 +12,24 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
   if (!isOpen || !product) return null;
 
   const handleAddToCart = () => {
-    addItem({
+    if (typeof product.stock === "number" && product.stock <= 0) {
+      toast.error(`Sorry, "${product.name}" is out of stock`);
+      return;
+    }
+    const added = addItem({
       productId: product._id || product.slug,
       name: product.name,
-      image: product.images?.[0],
+      image: product.images?.[0] || product.image,
       price: product.price,
       quantity: 1,
+      stock: typeof product.stock === "number" ? product.stock : undefined,
       selectedOptions: [],
       customization: {},
     });
-    toast.success(`${product.name} added to cart!`);
-    onClose();
+    if (added !== false) {
+      toast.success(`${product.name} added to cart!`);
+      onClose();
+    }
   };
 
   return (

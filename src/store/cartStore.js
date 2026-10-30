@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import toast from "react-hot-toast";
 
 const STORAGE_KEY = "trs_cart";
 const COUPON_KEY = "trs_applied_coupon";
@@ -44,9 +45,10 @@ const lineKey = (item) => {
 export const productToCartItem = (product, quantity = 1) => ({
   productId: product._id || product.id,
   name: product.name,
-  image: product.images?.[0],
+  image: product.images?.[0] || product.image,
   price: product.price,
   quantity,
+  stock: typeof product.stock === "number" ? product.stock : undefined,
   selectedOptions: [],
   customization: {},
 });
@@ -76,16 +78,61 @@ export const useCartStore = create((set, get) => ({
     const finalItem = cuteImg ? { ...item, image: cuteImg } : item;
     const key = lineKey(finalItem);
     const existingIndex = items.findIndex((i) => lineKey(i) === key);
+
+    // If stock limit is provided, ensure total does not exceed available stock
+    const availableStock = typeof finalItem.stock === "number" ? finalItem.stock : (existingIndex > -1 && typeof items[existingIndex].stock === "number" ? items[existingIndex].stock : undefined);
+
     if (existingIndex > -1) {
-      items[existingIndex] = { ...items[existingIndex], quantity: items[existingIndex].quantity + finalItem.quantity };
+      const currentQty = items[existingIndex].quantity;
+      const targetQty = currentQty + finalItem.quantity;
+      if (typeof availableStock === "number") {
+        if (availableStock <= 0) {
+          toast.error(`Sorry, "${finalItem.name}" is out of stock`);
+          return false;
+        }
+        if (targetQty > availableStock) {
+          toast.error(`Sorry, only ${availableStock} left in stock for "${finalItem.name}"`);
+          return false;
+        }
+      }
+      items[existingIndex] = {
+        ...items[existingIndex],
+        quantity: targetQty,
+        ...(typeof availableStock === "number" ? { stock: availableStock } : {}),
+      };
     } else {
-      items.push({ ...finalItem, id: `${Date.now()}-${Math.round(Math.random() * 1e6)}` });
+      if (typeof availableStock === "number") {
+        if (availableStock <= 0) {
+          toast.error(`Sorry, "${finalItem.name}" is out of stock`);
+          return false;
+        }
+        if (finalItem.quantity > availableStock) {
+          toast.error(`Sorry, only ${availableStock} left in stock for "${finalItem.name}"`);
+          return false;
+        }
+      }
+      items.push({
+        ...finalItem,
+        id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+        ...(typeof availableStock === "number" ? { stock: availableStock } : {}),
+      });
     }
     persist(items);
     set({ items, ...(openDrawer ? { isCartOpen: true } : {}) });
+    return true;
   },
 
   updateQuantity: (id, quantity) => {
+    const existing = get().items.find((i) => i.id === id);
+    if (!existing) return;
+
+    if (quantity > existing.quantity && typeof existing.stock === "number") {
+      if (quantity > existing.stock) {
+        toast.error(`Only ${existing.stock} available in stock`);
+        return;
+      }
+    }
+
     let items = get().items.map((i) => (i.id === id ? { ...i, quantity } : i));
     items = items.filter((i) => i.quantity > 0);
     persist(items);

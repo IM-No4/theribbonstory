@@ -31,15 +31,25 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
       onPersonalize(product);
       return;
     }
+    if (typeof product.stock === "number" && product.stock <= 0) {
+      toast.error(`Sorry, "${product.name}" is out of stock`);
+      return;
+    }
     // Add silently without opening the cart sidebar drawer
-    addItem(productToCartItem(product), false);
-    toast.success(`Added "${product.name}" to cart!`, { icon: "🛍️" });
+    const added = addItem(productToCartItem(product), false);
+    if (added !== false) {
+      toast.success(`Added "${product.name}" to cart!`, { icon: "🛍️" });
+    }
   };
 
   const handleIncrement = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (cartItem) {
+      if (typeof product.stock === "number" && quantity >= product.stock) {
+        toast.error(`Only ${product.stock} available in stock`);
+        return;
+      }
       updateQuantity(cartItem.id, quantity + 1);
     } else {
       handleAddToCart(e);
@@ -230,6 +240,10 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
                 <Plus size={11} className="stroke-[2.5]" />
               </button>
             </div>
+          ) : typeof product.stock === "number" && product.stock <= 0 ? (
+            <span className="px-2 py-1 rounded-lg bg-stone-100 text-stone-400 text-[10px] font-bold uppercase tracking-wider border border-stone-200">
+              Sold Out
+            </span>
           ) : (
             <button
               type="button"
