@@ -71,8 +71,9 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`h-11 w-11 rounded-xl overflow-hidden border-2 transition ${
-                      selectedImage === i ? "border-ribbon-500 shadow-xs" : "border-transparent opacity-60"
+                    onMouseEnter={() => setSelectedImage(i)}
+                    className={`h-11 w-11 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                      selectedImage === i ? "border-ribbon-500 shadow-xs" : "border-transparent opacity-60 hover:opacity-100"
                     }`}
                   >
                     <img src={assetUrl(img)} alt="" className="w-full h-full object-cover" />

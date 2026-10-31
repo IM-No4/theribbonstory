@@ -473,7 +473,8 @@ export default function ProductDetail() {
                       key={idx}
                       type="button"
                       onClick={() => setSelectedImage(idx)}
-                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition shrink-0 cursor-pointer bg-white ${
+                      onMouseEnter={() => setSelectedImage(idx)}
+                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-200 shrink-0 cursor-pointer bg-white ${
                         selectedImage === idx
                           ? "border-rose-600 ring-2 ring-rose-500/20 shadow-xs"
                           : "border-stone-200 opacity-70 hover:opacity-100 hover:border-stone-400"
@@ -495,9 +496,10 @@ export default function ProductDetail() {
               {/* Main Active Image */}
               <div className="sm:w-[380px] md:w-[420px] lg:w-[440px] aspect-square rounded-2xl overflow-hidden bg-stone-50 border border-stone-200/90 shadow-sm relative group flex items-center justify-center">
                 <img
+                  key={selectedImage}
                   src={assetUrl(galleryImages[selectedImage] || galleryImages[0])}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-102 transition duration-500"
+                  className="w-full h-full object-cover group-hover:scale-102 transition duration-300"
                   onError={(e) => {
                     e.currentTarget.src = "/images/photo-magnet.webp";
                   }}

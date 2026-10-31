@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Eye, ArrowRight, Heart, Star, Zap, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
@@ -83,28 +84,100 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
   const rating = (4.7 + ((product.name.length % 4) * 0.1)).toFixed(1);
   const reviewsCount = 45 + (product.name.length * 12);
 
+  const images = useMemo(() => {
+    const raw = Array.isArray(product?.images) && product.images.length > 0
+      ? product.images
+      : product?.image
+      ? [product.image]
+      : [];
+    const valid = raw.filter((img) => typeof img === "string" && img.trim().length > 0);
+    return valid.length > 0 ? valid : ["/images/photo-magnet.webp"];
+  }, [product?.images, product?.image]);
+
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (isHovered && images.length > 1) {
+      // Preload next images to ensure smooth loop without flicker
+      images.forEach((img) => {
+        const preloader = new Image();
+        preloader.src = assetUrl(img) || "/images/photo-magnet.webp";
+      });
+
+      timerRef.current = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+      }, 1200);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setCurrentImageIndex(0);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isHovered, images]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.35, delay: (index % 4) * 0.05 }}
+      onMouseEnter={() => {
+        if (images.length > 1) setIsHovered(true);
+      }}
+      onMouseLeave={() => {
+        if (images.length > 1) setIsHovered(false);
+      }}
       className="group flex flex-col justify-between h-full bg-white rounded-2xl border border-slate-200/80 hover:border-ribbon-300 hover:shadow-xl transition-all duration-300 overflow-hidden"
     >
       <div>
         {/* Visual Frame & Badges */}
         <div className="relative aspect-square overflow-hidden bg-slate-100">
-          <Link to={`/product/${product.slug}`} className="block h-full w-full">
-            <img
-              src={assetUrl(product.images?.[0] || product.image) || "/images/photo-magnet.webp"}
-              alt={product.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              onError={(e) => {
-                e.currentTarget.src = "/images/photo-magnet.webp";
-              }}
-            />
+          <Link to={`/product/${product.slug}`} className="block h-full w-full relative">
+            {images.map((img, i) => (
+              <img
+                key={i}
+                src={assetUrl(img) || "/images/photo-magnet.webp"}
+                alt={`${product.name} - ${i + 1}`}
+                loading={i === 0 ? "lazy" : "eager"}
+                className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-105 ${
+                  i === currentImageIndex ? "opacity-100 z-0" : "opacity-0 pointer-events-none"
+                }`}
+                onError={(e) => {
+                  e.currentTarget.src = "/images/photo-magnet.webp";
+                }}
+              />
+            ))}
           </Link>
+
+          {/* Dots Indicator when multiple images available */}
+          {images.length > 1 && (
+            <div
+              className={`absolute bottom-7 inset-x-0 flex items-center justify-center gap-1 z-10 pointer-events-none transition-opacity duration-300 ${
+                isHovered ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {images.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    currentImageIndex === i
+                      ? "w-3.5 bg-white shadow-xs"
+                      : "w-1 bg-white/60 backdrop-blur-xs"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Top Left Badges */}
           <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none">
