@@ -142,21 +142,27 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
       <div>
         {/* Visual Frame & Badges */}
         <div className="relative aspect-square overflow-hidden bg-slate-100">
-          <Link to={`/product/${product.slug}`} className="block h-full w-full relative">
-            {images.map((img, i) => (
-              <img
-                key={i}
-                src={assetUrl(img) || "/images/photo-magnet.webp"}
-                alt={`${product.name} - ${i + 1}`}
-                loading={i === 0 ? "lazy" : "eager"}
-                className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-105 ${
-                  i === currentImageIndex ? "opacity-100 z-0" : "opacity-0 pointer-events-none"
-                }`}
-                onError={(e) => {
-                  e.currentTarget.src = "/images/photo-magnet.webp";
-                }}
-              />
-            ))}
+          <Link to={`/product/${product.slug}`} className="block h-full w-full relative overflow-hidden">
+            <div
+              className="flex h-full w-full transition-transform duration-500 ease-in-out"
+              style={{
+                transform: `translateX(-${currentImageIndex * 100}%)`,
+              }}
+            >
+              {images.map((img, i) => (
+                <div key={i} className="min-w-full w-full h-full shrink-0 relative overflow-hidden">
+                  <img
+                    src={assetUrl(img) || "/images/photo-magnet.webp"}
+                    alt={`${product.name} - ${i + 1}`}
+                    loading={i === 0 ? "lazy" : "eager"}
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/photo-magnet.webp";
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </Link>
 
           {/* Dots Indicator when multiple images available */}
