@@ -17,6 +17,7 @@ import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import { useSeo } from "../utils/seo";
+import { useConfigStore } from "../store/configStore";
 
 const KEEPSAKE_CATEGORY_IMAGES = {
   single: "/images/3d-single-keepsake.jpg",
@@ -170,6 +171,7 @@ function SectionHeading({ eyebrow, title, description, action }) {
 
 export default function Home() {
   useSeo({ path: "/" });
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -228,7 +230,7 @@ export default function Home() {
       product.category === "personalized-3d" ||
       product.slug === "custom-3d-keepsake-figurine"
     ) {
-      navigate("/personalized");
+      if (customKeepsakesEnabled) navigate("/personalized");
     } else {
       setSelectedProduct(product);
     }
@@ -277,12 +279,13 @@ export default function Home() {
             </h1>
 
             <p className="mt-5 max-w-xl text-sm leading-6 text-stone-600 sm:text-base sm:leading-7">
-              Discover cute 3D-printed collectibles for your desk and home, or
-              turn your favourite photo into a personalized figurine made just
-              for you.
+              {customKeepsakesEnabled
+                ? "Discover cute 3D-printed collectibles for your desk and home, or turn your favourite photo into a personalized figurine made just for you."
+                : "Discover cute 3D-printed collectibles for your desk and home, made to be kept and gifted."}
             </p>
 
             <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row">
+              {customKeepsakesEnabled && (
               <Link
                 to="/personalized"
                 className="btn-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-md transition hover:shadow-lg"
@@ -291,6 +294,7 @@ export default function Home() {
                 Create Your Figurine
                 <ArrowRight size={15} />
               </Link>
+              )}
               <Link
                 to="/shop"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white/90 px-5 py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:border-ribbon-300 hover:bg-white"
@@ -302,7 +306,7 @@ export default function Home() {
 
             <div className="mt-6 grid grid-cols-1 gap-2 border-t border-stone-300/70 pt-5 min-[420px]:grid-cols-2">
               {[
-                "Personalized figurines made to order",
+                ...(customKeepsakesEnabled ? ["Personalized figurines made to order"] : []),
                 "Cute collectibles for desks and homes",
                 "Thoughtful little gifts",
                 "Designed to make everyday moments special",
@@ -515,6 +519,7 @@ export default function Home() {
       </section>
 
       {/* PERSONALIZED FIGURINES */}
+      {customKeepsakesEnabled && (
       <section className="relative overflow-hidden bg-[#292321] px-4 py-12 text-white sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <div className="pointer-events-none absolute -left-24 top-0 h-80 w-80 rounded-full bg-rose-500/10 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
@@ -644,6 +649,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* BRAND BENEFITS */}
       <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
@@ -729,7 +735,9 @@ export default function Home() {
               Find a keepsake that feels like you.
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:text-base">
-              Shop the collection or create a personalized figurine from a favourite photo.
+              {customKeepsakesEnabled
+                ? "Shop the collection or create a personalized figurine from a favourite photo."
+                : "Shop the collection of cute 3D-printed collectibles and little gifts."}
             </p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -739,12 +747,14 @@ export default function Home() {
             >
               Shop collectibles <ArrowRight size={15} />
             </Link>
+            {customKeepsakesEnabled && (
             <Link
               to="/personalized"
               className="btn-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
             >
               <Sparkles size={16} /> Personalize yours
             </Link>
+            )}
           </div>
         </div>
       </section>

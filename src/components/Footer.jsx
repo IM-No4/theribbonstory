@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { LogoMark } from "./Logo";
 import toast from "react-hot-toast";
+import { useConfigStore } from "../store/configStore";
 
 const FOOTER_COLUMNS = [
   {
@@ -70,6 +71,13 @@ const TRUST_HIGHLIGHTS = [
 
 export default function Footer() {
   const [email, setEmail] = useState("");
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
+  const columns = customKeepsakesEnabled
+    ? FOOTER_COLUMNS
+    : FOOTER_COLUMNS.map((col) => ({
+        ...col,
+        links: col.links.filter((link) => link.to !== "/personalized"),
+      }));
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -205,7 +213,7 @@ export default function Footer() {
 
           {/* Clean 3 Navigation Columns (7 cols) */}
           <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
-            {FOOTER_COLUMNS.map((col, idx) => (
+            {columns.map((col, idx) => (
               <div key={idx} className="space-y-3.5">
                 <h4 className="font-semibold text-xs tracking-wider uppercase text-white/90 pb-1 border-b border-white/10">
                   {col.title}

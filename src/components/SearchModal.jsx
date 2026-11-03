@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api, assetUrl } from "../api/client";
+import { useConfigStore } from "../store/configStore";
 
 export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
   const [query, setQuery] = useState("");
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -18,13 +20,13 @@ export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
       setLoading(true);
       api
         .get("/products", { params: { search: query } })
-        .then(({ data }) => setResults(data.products || []))
+        .then(({ data }) => setResults((data.products || []).filter((p) => customKeepsakesEnabled || !p.isCustomizable)))
         .catch(() => {})
         .finally(() => setLoading(false));
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, customKeepsakesEnabled]);
 
   if (!isOpen) return null;
 

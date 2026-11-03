@@ -6,10 +6,12 @@ import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
+import { useConfigStore } from "../store/configStore";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function ProductCard({ product, index = 0, onQuickView, onPersonalize }) {
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
   const { isInWishlist, toggleWishlist } = useWishlistStore();
   const { items, addItem, updateQuantity, removeItem } = useCartStore();
 
@@ -124,6 +126,8 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
       }
     };
   }, [isHovered, images]);
+
+  if (product.isCustomizable && !customKeepsakesEnabled) return null;
 
   return (
     <motion.div

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUp, X, Sparkles, Truck, Gift, Palette, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useConfigStore } from "../store/configStore";
 
 // Cute 3D Keepsake Studio Bot / Mascot Face
 function CuteMascot({ size = 36, className = "" }) {
@@ -85,6 +86,7 @@ function CuteMascot({ size = 36, className = "" }) {
 }
 
 export default function FloatingHelp() {
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
 
@@ -159,14 +161,16 @@ export default function FloatingHelp() {
                   <span>Track Live Delivery Status</span>
                 </Link>
 
-                <Link
-                  to="/personalized"
-                  onClick={() => setShowChatPopup(false)}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-stone-50 hover:bg-rose-50 border border-stone-200/80 text-xs font-semibold text-stone-800 hover:text-rose-700 transition group"
-                >
-                  <Palette size={14} className="text-rose-500 group-hover:scale-110 transition" />
-                  <span>Photo to 3D Figurine Customizer</span>
-                </Link>
+                {customKeepsakesEnabled && (
+                  <Link
+                    to="/personalized"
+                    onClick={() => setShowChatPopup(false)}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-stone-50 hover:bg-rose-50 border border-stone-200/80 text-xs font-semibold text-stone-800 hover:text-rose-700 transition group"
+                  >
+                    <Palette size={14} className="text-rose-500 group-hover:scale-110 transition" />
+                    <span>Photo to 3D Figurine Customizer</span>
+                  </Link>
+                )}
 
                 <Link
                   to="/faqs"

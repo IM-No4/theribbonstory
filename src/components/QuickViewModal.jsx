@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useCartStore } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
+import { useConfigStore } from "../store/configStore";
 
 export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomizer }) {
   const { addItem } = useCartStore();
   const [selectedImage, setSelectedImage] = useState(0);
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
 
   if (!isOpen || !product) return null;
 
@@ -128,7 +130,11 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
             </div>
 
             <div className="space-y-2 pt-2">
-              {product.isCustomizable ? (
+              {product.isCustomizable && !customKeepsakesEnabled ? (
+                <button disabled className="w-full rounded-xl bg-stone-200 py-3 text-xs sm:text-sm font-semibold text-stone-500 cursor-not-allowed">
+                  Custom keepsakes unavailable right now
+                </button>
+              ) : product.isCustomizable ? (
                 <button
                   onClick={() => {
                     onClose();

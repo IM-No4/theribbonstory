@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { Loader2, Sparkles } from "lucide-react";
 
 import Navbar from "./components/Navbar";
@@ -10,6 +10,7 @@ import WishlistDrawer from "./components/WishlistDrawer";
 import FloatingHelp from "./components/FloatingHelp";
 import { useAuthStore } from "./store/authStore";
 import { useConfigStore } from "./store/configStore";
+import { useCartStore } from "./store/cartStore";
 
 // Lazy-Loaded Storefront Pages (High-Speed Code Splitting)
 const Home = lazy(() => import("./pages/Home"));
@@ -79,6 +80,21 @@ function App() {
   const fetchConfig = useConfigStore((s) => s.fetchConfig);
   const config = useConfigStore((s) => s.config);
   const isConfigLoaded = useConfigStore((s) => s.loaded);
+  const customKeepsakesEnabled = config?.customKeepsakesEnabled !== false;
+
+  // Drop personalized items from the cart while custom keepsakes are switched off
+  useEffect(() => {
+    if (!isConfigLoaded || customKeepsakesEnabled) return;
+    const { items, removeItem } = useCartStore.getState();
+    const custom = items.filter((i) => {
+      const c = i.customization || {};
+      return c.photoUrl || c.cuteImageUrl || c.reference3D || c.category || i.sizeId;
+    });
+    if (custom.length > 0) {
+      custom.forEach((i) => removeItem(i.id));
+      toast("Custom keepsakes are unavailable right now, so they were removed from your cart.", { icon: "ℹ️" });
+    }
+  }, [isConfigLoaded, customKeepsakesEnabled]);
 
   // Confirm the cookie session and load backend public configuration
   useEffect(() => {
@@ -153,8 +169,8 @@ function App() {
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
-              <Route path="/3d-keepsakes" element={<ThreeDKeepsakes />} />
-              <Route path="/personalized" element={<PersonalizedPage />} />
+              <Route path="/3d-keepsakes" element={customKeepsakesEnabled ? <ThreeDKeepsakes /> : <Navigate to="/shop" replace />} />
+              <Route path="/personalized" element={customKeepsakesEnabled ? <PersonalizedPage /> : <Navigate to="/shop" replace />} />
               <Route path="/build-a-box" element={<BuildABox />} />
               <Route path="/build-a-hamper" element={<BuildABox />} />
               <Route path="/how-it-works" element={<HowItWorksPage />} />

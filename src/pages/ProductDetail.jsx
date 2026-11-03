@@ -24,6 +24,7 @@ import { useAuthStore } from "../store/authStore";
 import { useLocationStore } from "../store/locationStore";
 import ProductCard from "../components/ProductCard";
 import ProductCustomizerModal from "../components/ProductCustomizerModal";
+import { useConfigStore } from "../store/configStore";
 import QuickViewModal from "../components/QuickViewModal";
 import VirtualUnboxingModal from "../components/VirtualUnboxingModal";
 import ShareProduct from "../components/ShareProduct";
@@ -77,6 +78,7 @@ export default function ProductDetail() {
 
   // Customizer modal
   const [customizerModalOpen, setCustomizerModalOpen] = useState(false);
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [unboxingModalOpen, setUnboxingModalOpen] = useState(false);
 
@@ -318,7 +320,7 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (product.isCustomizable) {
-      setCustomizerModalOpen(true);
+      if (customKeepsakesEnabled) setCustomizerModalOpen(true);
       return;
     }
 
@@ -633,7 +635,15 @@ export default function ProductDetail() {
             {/* Responsive product actions */}
             <div className="border-t border-stone-100 pt-3 sm:pt-4">
               <div className="flex w-full min-w-0 items-center gap-2 sm:gap-3">
-                {product.isCustomizable ? (
+                {product.isCustomizable && !customKeepsakesEnabled ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex h-11 min-w-0 flex-1 items-center justify-center rounded-xl bg-stone-200 px-3 text-xs font-bold uppercase tracking-wide text-stone-500 cursor-not-allowed"
+                  >
+                    <span className="truncate">Custom keepsakes unavailable right now</span>
+                  </button>
+                ) : product.isCustomizable ? (
                   <button
                     type="button"
                     onClick={() => setCustomizerModalOpen(true)}

@@ -18,6 +18,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LogoMark } from "./Logo";
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
+import { useConfigStore } from "../store/configStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import SearchModal from "./SearchModal";
 import { api } from "../api/client";
@@ -44,6 +45,7 @@ export default function Navbar() {
   const { totalItems, openCart } = useCartStore();
   const { items: wishlistItems, openDrawer: openWishlist } = useWishlistStore();
   const { user, logout } = useAuthStore();
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
   const navigate = useNavigate();
 
   // Fetch dynamic collections from database
@@ -191,6 +193,7 @@ export default function Navbar() {
             </div>
 
             {/* Personalize 3D with Subject Dropdown */}
+            {customKeepsakesEnabled && (
             <div
               className="relative"
               onMouseEnter={handleKeepsakeMouseEnter}
@@ -286,6 +289,7 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
+            )}
 
             {/* How It Works */}
             <NavLink
@@ -650,6 +654,7 @@ export default function Navbar() {
                     </div>
 
                     {/* Personalize 3D Keepsake Dropdown Accordion */}
+                    {customKeepsakesEnabled && (
                     <div className="mt-1">
                       <button
                         type="button"
@@ -711,6 +716,7 @@ export default function Navbar() {
                         )}
                       </AnimatePresence>
                     </div>
+                    )}
 
                     <NavLink
                       to="/how-it-works"
@@ -743,15 +749,17 @@ export default function Navbar() {
 
                 {/* Drawer Footer */}
                 <div className="p-4 border-t border-stone-100 bg-stone-50 space-y-2">
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false);
-                      navigate("/personalized");
-                    }}
-                    className="btn-primary w-full py-3 text-xs"
-                  >
-                    <span>Create 3D Figurine</span>
-                  </button>
+                  {customKeepsakesEnabled && (
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate("/personalized");
+                      }}
+                      className="btn-primary w-full py-3 text-xs"
+                    >
+                      <span>Create 3D Figurine</span>
+                    </button>
+                  )}
 
                   {user && (
                     <button

@@ -23,6 +23,7 @@ import { createPortal } from "react-dom";
 import { api, assetUrl } from "../../api/client";
 import { useSeo } from "../../utils/seo";
 import { useAdminThemeStore } from "../../store/adminThemeStore";
+import { useConfigStore } from "../../store/configStore";
 
 const PRESET_ICONS = ["👤", "💑", "👨‍👩‍👧", "👶", "🐾", "🎓", "🎉", "💍", "👵", "⭐"];
 
@@ -300,6 +301,34 @@ export default function AdminKeepsakes() {
     }
   };
 
+  const [customEnabled, setCustomEnabled] = useState(null);
+  const [savingCustomToggle, setSavingCustomToggle] = useState(false);
+
+  useEffect(() => {
+    api
+      .get("/admin/custom-keepsakes")
+      .then(({ data }) => setCustomEnabled(Boolean(data.enabled)))
+      .catch(() => toast.error("Could not load custom keepsake status"));
+  }, []);
+
+  const handleToggleCustomKeepsakes = async () => {
+    const next = !customEnabled;
+    try {
+      setSavingCustomToggle(true);
+      const { data } = await api.put("/admin/custom-keepsakes", { enabled: next });
+      setCustomEnabled(Boolean(data.enabled));
+      useConfigStore.setState((state) => ({
+        config: { ...state.config, customKeepsakesEnabled: Boolean(data.enabled) },
+      }));
+      toast.success(next ? "Custom keepsakes are now ON" : "Custom keepsakes are now OFF");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update custom keepsakes setting");
+    } finally {
+      setSavingCustomToggle(false);
+    }
+  };
+
   const handleResetDefaults = async () => {
     if (
       !window.confirm(
@@ -324,6 +353,34 @@ export default function AdminKeepsakes() {
 
   return (
     <div className="space-y-6">
+      {/* Custom keepsakes on/off */}
+      <div className="flex items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Custom keepsakes on the website</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+            {customEnabled === false
+              ? "OFF: the Personalize pages, menu links, home page section and customizable products are hidden from customers."
+              : "ON: customers can create personalized keepsakes. Turn off if generation is not working to hide it site-wide."}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={customEnabled !== false}
+          disabled={customEnabled === null || savingCustomToggle}
+          onClick={handleToggleCustomKeepsakes}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
+            customEnabled === false ? "bg-slate-300 dark:bg-slate-700" : "bg-emerald-500"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${
+              customEnabled === false ? "left-0.5" : "left-[22px]"
+            }`}
+          />
+        </button>
+      </div>
+
       {/* Top Banner & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
