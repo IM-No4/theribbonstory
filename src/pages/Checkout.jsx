@@ -404,17 +404,24 @@ export default function Checkout() {
   };
 
   const buildOrderItems = () =>
-    items.map((i) => ({
-      productId: i.productId,
-      name: i.name,
-      image: i.image,
-      sizeId: i.sizeId || i.customization?.size || "small",
-      price: i.price,
-      hamper: i.hamper,
-      quantity: i.quantity,
-      selectedOptions: i.selectedOptions,
-      customization: i.customization,
-    }));
+    items.map((i) => {
+      const item = {
+        productId: i.productId,
+        name: i.name,
+        image: i.image,
+        price: i.price,
+        quantity: i.quantity,
+        selectedOptions: i.selectedOptions || [],
+        customization: i.customization || {},
+      };
+      if (i.sizeId || i.customization?.size) {
+        item.sizeId = i.sizeId || i.customization?.size;
+      }
+      if (i.hamper) {
+        item.hamper = i.hamper;
+      }
+      return item;
+    });
 
   // Everything the server needs to price and save the order
   const buildOrderPayload = () => ({

@@ -57,21 +57,17 @@ export const WEEKLY_KEEPSAKE_THRESHOLD = 5;
 
 export const isCustomKeepsakeItem = (item) =>
   Boolean(
+    item?.isCustomKeepsake ||
     item?.customization?.photoUrl ||
     item?.customization?.cuteImageUrl ||
-    item?.customization?.reference3D ||
-    item?.customization?.category ||
+    item?.customization?.reference3D?.sessionId ||
+    item?.customization?.reference3D?.approvedPreview ||
+    item?.customization?.categorySlug ||
     item?.fromCatalog === false ||
-    item?.sizeId ||
     item?.hamper?.keepsakeId === "3d-miniature" ||
     (typeof item?.productId === "string" && (
       item.productId.startsWith("custom-3d-") ||
       item.productId.startsWith("keepsake-")
-    )) ||
-    (typeof item?.name === "string" && (
-      item.name.toLowerCase().includes("3d") ||
-      item.name.toLowerCase().includes("keepsake") ||
-      item.name.toLowerCase().includes("figurine")
     ))
   );
 

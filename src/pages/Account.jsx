@@ -503,8 +503,15 @@ export default function Account() {
                             <span className="text-slate-400">
                               Delivering to: {order.shippingAddress?.city}, {order.shippingAddress?.postalCode}
                             </span>
-                            <div className="font-bold text-sm text-slate-900">
-                              Total: {formatPrice(order.totalPrice)}
+                            <div className="text-right">
+                              {order.discountPrice > 0 && (
+                                <div className="text-[11px] text-emerald-600 font-medium">
+                                  Coupon ({order.couponCode || "Discount"}): -{formatPrice(order.discountPrice)}
+                                </div>
+                              )}
+                              <div className="font-bold text-sm text-slate-900">
+                                Total: {formatPrice(order.totalPrice)}
+                              </div>
                             </div>
                           </div>
                         </div>

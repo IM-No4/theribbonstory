@@ -105,6 +105,9 @@ export default function AdminOrders() {
   const [refundReason, setRefundReason] = useState("Customer requested cancellation");
   const [refunding, setRefunding] = useState(false);
 
+  // Status Change Confirmation Modal State
+  const [statusConfirmModal, setStatusConfirmModal] = useState(null);
+
   // Personalized Keepsake Asset States
   const [uploadingItemKey, setUploadingItemKey] = useState(null);
   const [generatingChibiKey, setGeneratingChibiKey] = useState(null);
@@ -354,6 +357,25 @@ export default function AdminOrders() {
     }
   };
 
+  const promptStatusChange = (order, newStatus) => {
+    if (!order || !newStatus || order.status === newStatus) return;
+    setStatusConfirmModal({
+      orderId: order._id,
+      orderNumber: (order._id || "").slice(-6).toUpperCase(),
+      currentStatus: order.status,
+      newStatus,
+      customerName: order.user?.name || order.shippingAddress?.name || "Customer",
+      totalPrice: order.totalPrice,
+    });
+  };
+
+  const confirmAndExecuteStatusChange = async () => {
+    if (!statusConfirmModal) return;
+    const { orderId, newStatus } = statusConfirmModal;
+    setStatusConfirmModal(null);
+    await handleStatusChange(orderId, newStatus);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -538,6 +560,12 @@ export default function AdminOrders() {
                       </td>
                       <td className="py-3 px-4 font-bold text-white text-sm">
                         <div>₹{order.totalPrice}</div>
+                        {order.discountPrice > 0 && (
+                          <div className="text-[10px] text-emerald-400 font-normal">
+                            Coupon: -₹{order.discountPrice}
+                            {order.couponCode ? ` (${order.couponCode})` : ""}
+                          </div>
+                        )}
                         {order.isRefunded && (
                           <div className="text-[10px] text-rose-400 font-normal">
                             Refunded: ₹{order.refundAmount}
@@ -572,7 +600,7 @@ export default function AdminOrders() {
                           <select
                             value={order.status}
                             disabled={updating}
-                            onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                            onChange={(e) => promptStatusChange(order, e.target.value)}
                             className={`text-[11px] font-bold uppercase rounded-lg px-2.5 py-1 border cursor-pointer ${getStatusBadgeStyle(
                               order.status
                             )}`}
@@ -1282,7 +1310,7 @@ export default function AdminOrders() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleStatusChange(selectedOrder._id, "ready")}
+                          onClick={() => promptStatusChange(selectedOrder, "ready")}
                           disabled={updating || selectedOrder.status === "cancelled" || selectedOrder.status === "delivered"}
                           className="px-3.5 py-2 rounded-xl bg-purple-950/70 hover:bg-purple-900 text-purple-200 border border-purple-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                         >
@@ -1339,7 +1367,7 @@ export default function AdminOrders() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleStatusChange(selectedOrder._id, "cancelled")}
+                        onClick={() => promptStatusChange(selectedOrder, "cancelled")}
                         className="mt-2 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs inline-flex items-center gap-1.5 transition cursor-pointer"
                       >
                         <RotateCcw size={13} />
@@ -1377,6 +1405,19 @@ export default function AdminOrders() {
                   <span>Delivery Charge</span>
                   <span>{selectedOrder.shippingPrice === 0 ? "FREE" : `₹${selectedOrder.shippingPrice}`}</span>
                 </div>
+                {selectedOrder.discountPrice > 0 && (
+                  <div className="flex justify-between text-emerald-400">
+                    <span className="flex items-center gap-1.5">
+                      <span>Coupon Discount</span>
+                      {selectedOrder.couponCode && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 border border-emerald-800 text-emerald-300">
+                          {selectedOrder.couponCode}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-mono font-medium">-₹{selectedOrder.discountPrice}</span>
+                  </div>
+                )}
                 <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-white text-sm">
                   <span>Total Amount</span>
                   <span className="text-rose-400 font-mono">₹{selectedOrder.totalPrice}</span>
@@ -1399,7 +1440,7 @@ export default function AdminOrders() {
                       value=""
                       disabled={updating}
                       onChange={(e) => {
-                        if (e.target.value) handleStatusChange(selectedOrder._id, e.target.value);
+                        if (e.target.value) promptStatusChange(selectedOrder, e.target.value);
                       }}
                       className="bg-slate-900 border border-slate-700 text-xs font-bold text-white rounded-xl px-3 py-2 cursor-pointer hover:border-slate-500 transition"
                     >
@@ -1436,6 +1477,154 @@ export default function AdminOrders() {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Status Update Confirmation Modal */}
+      {statusConfirmModal && createPortal(
+        <div className={`fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150 ${theme === "dark" ? "dark" : ""}`}>
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-md shadow-2xl shadow-black/95 overflow-hidden animate-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`h-9 w-9 rounded-xl flex items-center justify-center ${
+                    statusConfirmModal.newStatus === "cancelled"
+                      ? "bg-red-950/80 border border-red-800 text-red-400"
+                      : statusConfirmModal.newStatus === "delivered"
+                      ? "bg-emerald-950/80 border border-emerald-800 text-emerald-400"
+                      : statusConfirmModal.newStatus === "ready"
+                      ? "bg-purple-950/80 border border-purple-800 text-purple-400"
+                      : "bg-rose-950/80 border border-rose-800 text-rose-400"
+                  }`}
+                >
+                  {statusConfirmModal.newStatus === "cancelled" ? (
+                    <AlertTriangle size={18} />
+                  ) : statusConfirmModal.newStatus === "delivered" ? (
+                    <CheckCircle2 size={18} />
+                  ) : (
+                    <Sparkles size={18} />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-white">
+                    Confirm Status Update
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Order #{statusConfirmModal.orderNumber}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusConfirmModal(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4 text-xs">
+              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Customer:</span>
+                  <span className="font-semibold text-white">{statusConfirmModal.customerName}</span>
+                </div>
+                {statusConfirmModal.totalPrice !== undefined && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Order Total:</span>
+                    <span className="font-mono font-bold text-rose-400">₹{statusConfirmModal.totalPrice}</span>
+                  </div>
+                )}
+
+                {/* State Transition Visual */}
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-3">
+                  <div className="flex-1 text-center">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Current</span>
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase border inline-block ${getStatusBadgeStyle(statusConfirmModal.currentStatus)}`}>
+                      {statusConfirmModal.currentStatus === "ready" ? "Ready to Ship" : statusConfirmModal.currentStatus}
+                    </span>
+                  </div>
+                  <div className="text-slate-500 font-bold text-base shrink-0">→</div>
+                  <div className="flex-1 text-center">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1">New Status</span>
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase border inline-block ${getStatusBadgeStyle(statusConfirmModal.newStatus)}`}>
+                      {statusConfirmModal.newStatus === "ready" ? "Ready to Ship" : statusConfirmModal.newStatus}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Specific Description / Warning */}
+              <div
+                className={`p-3 rounded-xl border text-[11px] leading-relaxed ${
+                  statusConfirmModal.newStatus === "cancelled"
+                    ? "bg-red-950/40 border-red-900/60 text-red-300"
+                    : statusConfirmModal.newStatus === "delivered"
+                    ? "bg-emerald-950/40 border-emerald-900/60 text-emerald-300"
+                    : statusConfirmModal.newStatus === "ready"
+                    ? "bg-purple-950/40 border-purple-900/60 text-purple-300"
+                    : statusConfirmModal.newStatus === "shipped"
+                    ? "bg-indigo-950/40 border-indigo-900/60 text-indigo-300"
+                    : "bg-slate-900/60 border-slate-800 text-slate-300"
+                }`}
+              >
+                {statusConfirmModal.newStatus === "cancelled" && (
+                  <p>⚠️ <strong>Warning:</strong> Cancelling this order halts fulfillment and restores catalog stock. Customer will be notified.</p>
+                )}
+                {statusConfirmModal.newStatus === "processing" && (
+                  <p>🔨 Moves this order to artisan workshop crafting / queue. Customer will be notified that crafting has begun.</p>
+                )}
+                {statusConfirmModal.newStatus === "ready" && (
+                  <p>✨ Marks order as quality checked and packaged in Ribbon box, unlocking courier pickup.</p>
+                )}
+                {statusConfirmModal.newStatus === "shipped" && (
+                  <p>🚚 Marks order as dispatched. Automated dispatch and tracking details will be sent to the customer.</p>
+                )}
+                {statusConfirmModal.newStatus === "delivered" && (
+                  <p>🎉 Marks order as successfully delivered. Order lifecycle is completed.</p>
+                )}
+                {statusConfirmModal.newStatus === "confirmed" && (
+                  <p>📋 Confirms order and places it into the active crafting / dispatch queue.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-4 border-t border-slate-800 bg-slate-900/40 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setStatusConfirmModal(null)}
+                disabled={updating}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmAndExecuteStatusChange}
+                disabled={updating}
+                className={`px-4 py-2 rounded-xl text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm ${
+                  statusConfirmModal.newStatus === "cancelled"
+                    ? "bg-red-600 hover:bg-red-500"
+                    : statusConfirmModal.newStatus === "delivered"
+                    ? "bg-emerald-600 hover:bg-emerald-500"
+                    : "bg-rose-600 hover:bg-rose-500"
+                }`}
+              >
+                {updating ? (
+                  <>
+                    <RefreshCw size={13} className="animate-spin" />
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  <span>Confirm Status Update</span>
+                )}
+              </button>
             </div>
           </div>
         </div>,
