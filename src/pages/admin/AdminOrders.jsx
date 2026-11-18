@@ -295,10 +295,34 @@ export default function AdminOrders() {
     }
   };
 
-  const handleShiprocketDispatch = async (orderId) => {
+  const [courierOptions, setCourierOptions] = useState({ loading: false, couriers: [], suggestedId: null });
+  const [selectedCourierId, setSelectedCourierId] = useState(null);
+
+  const selectedOrderId = selectedOrder?._id;
+  const selectedOrderReady = selectedOrder?.status === "ready";
+  useEffect(() => {
+    if (!selectedOrderId || !selectedOrderReady) return;
+    let cancelled = false;
+    setCourierOptions({ loading: true, couriers: [], suggestedId: null });
+    api
+      .get(`/shipping/couriers/${selectedOrderId}`)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setCourierOptions({ loading: false, couriers: data.couriers || [], suggestedId: data.suggestedId });
+        setSelectedCourierId(data.suggestedId);
+      })
+      .catch(() => {
+        if (!cancelled) setCourierOptions({ loading: false, couriers: [], suggestedId: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedOrderId, selectedOrderReady]);
+
+  const handleShiprocketDispatch = async (orderId, courierId) => {
     setUpdating(true);
     try {
-      const { data } = await api.post(`/shipping/create-shipment/${orderId}`);
+      const { data } = await api.post(`/shipping/create-shipment/${orderId}`, { courierId });
       toast.success(data.message || "Shiprocket shipment & AWB generated!");
       if (selectedOrder && selectedOrder._id === orderId) {
         setSelectedOrder(data.order);
@@ -1316,16 +1340,68 @@ export default function AdminOrders() {
                     </div>
                   )}
 
+                  {selectedOrder.status === "ready" && (
+                    <div className="w-full space-y-2">
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-semibold text-slate-400">
+                        <span>Choose courier</span>
+                        <span className="normal-case tracking-normal text-slate-500">
+                          Customer chose: {selectedOrder.deliverySlot || "Standard"}
+                        </span>
+                      </div>
+                      {courierOptions.loading ? (
+                        <div className="text-xs text-slate-400">Loading courier prices…</div>
+                      ) : courierOptions.couriers.length === 0 ? (
+                        <div className="text-xs text-amber-400">
+                          Couldn&apos;t load courier options. Shipping will use the cheapest standard courier.
+                        </div>
+                      ) : (
+                        <div className="grid gap-1.5 max-h-56 overflow-y-auto pr-1">
+                          {courierOptions.couriers.map((c, idx) => {
+                            const active = selectedCourierId === c.id;
+                            const fastest = Math.min(...courierOptions.couriers.map((x) => x.days ?? 99)) === (c.days ?? 99);
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => setSelectedCourierId(c.id)}
+                                className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-xs transition cursor-pointer ${
+                                  active
+                                    ? "border-indigo-400 bg-indigo-950/70"
+                                    : "border-slate-800 bg-slate-950/60 hover:border-slate-600"
+                                }`}
+                              >
+                                <span className="min-w-0">
+                                  <span className="block font-semibold text-white truncate">{c.name}</span>
+                                  <span className="text-[11px] text-slate-400">
+                                    {c.mode}
+                                    {c.days ? ` · ${c.days} day${c.days > 1 ? "s" : ""}` : ""}
+                                    {c.etd ? ` · by ${new Date(c.etd).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}
+                                  </span>
+                                </span>
+                                <span className="flex items-center gap-1.5 shrink-0">
+                                  {idx === 0 && <span className="rounded-full bg-emerald-950 px-2 py-0.5 text-[9px] font-bold text-emerald-300">CHEAPEST</span>}
+                                  {fastest && <span className="rounded-full bg-sky-950 px-2 py-0.5 text-[9px] font-bold text-sky-300">FASTEST</span>}
+                                  {c.premium && <span className="rounded-full bg-amber-950 px-2 py-0.5 text-[9px] font-bold text-amber-300">PREMIUM</span>}
+                                  <span className="font-bold text-white">₹{c.rate}</span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2">
-                    {!selectedOrder.shiprocketShipmentId ? (
+                    {!selectedOrder.shiprocketShipmentId || selectedOrder.status === "ready" ? (
                       selectedOrder.status === "ready" ? (
                         <button
-                          onClick={() => handleShiprocketDispatch(selectedOrder._id)}
+                          onClick={() => handleShiprocketDispatch(selectedOrder._id, selectedCourierId)}
                           disabled={updating}
                           className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-indigo-950/50 transition cursor-pointer"
                         >
                           <Truck size={15} />
-                          <span>⚡ Ship with Shiprocket Now</span>
+                          <span>{selectedOrder.shiprocketShipmentId ? "⚡ Re-ship with New Courier" : "⚡ Ship with Shiprocket Now"}</span>
                         </button>
                       ) : (
                         <button
