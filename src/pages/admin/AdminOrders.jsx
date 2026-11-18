@@ -1297,6 +1297,25 @@ export default function AdminOrders() {
                     )}
                   </div>
 
+                  {selectedOrder.shiprocketShipmentId && (
+                    <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+                      {[
+                        ["Pickup", selectedOrder.pickupScheduledDate, "Not scheduled yet"],
+                        ["Expected delivery", selectedOrder.estimatedDelivery, "Awaiting courier"],
+                        ["Delivered", selectedOrder.deliveredAt, "Not delivered yet"],
+                      ].map(([label, value, empty]) => (
+                        <div key={label} className="rounded-xl bg-slate-950/60 border border-slate-800 px-3 py-2">
+                          <span className="block text-[10px] uppercase tracking-wider text-slate-500 font-semibold">{label}</span>
+                          <span className={value ? "text-white font-semibold" : "text-slate-500"}>
+                            {value
+                              ? new Date(value).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+                              : empty}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2">
                     {!selectedOrder.shiprocketShipmentId ? (
                       selectedOrder.status === "ready" ? (
