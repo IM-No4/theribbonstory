@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, Eye, ArrowRight, Heart, Star, Zap, Plus, Minus } from "lucide-react";
+import { Sparkles, Eye, ArrowRight, Heart, Star, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
@@ -236,20 +236,15 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
                 Personalizable
               </span>
             )}
-            <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-emerald-600/90 backdrop-blur-xs px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              <Zap size={9} className="fill-current" /> Express
-            </span>
           </div>
         </div>
 
         {/* Product Details */}
         <div className="p-2.5 sm:p-3 pb-1 space-y-1">
-          {/* Category & Rating */}
+          {/* Rating */}
+          {product.rating > 0 && (product.reviewCount > 0 || product.reviewsCount > 0) && (
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-bold uppercase tracking-wider text-ribbon-500 text-[10px] truncate max-w-[110px]">
-              {product.category?.replace("-", " ")}
-            </span>
-            {product.rating > 0 && (product.reviewCount > 0 || product.reviewsCount > 0) && (
+            {(
               <div className="flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded text-emerald-800 font-bold text-[10px]">
                 <span>{product.rating}</span>
                 <Star size={10} className="fill-emerald-600 text-emerald-600" />
@@ -257,6 +252,7 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
               </div>
             )}
           </div>
+          )}
 
           {/* Title */}
           <Link
