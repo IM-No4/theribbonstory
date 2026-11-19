@@ -310,7 +310,7 @@ export default function Home() {
         </div>
         )}
 
-        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[560px] content-end py-12 sm:min-h-[560px] sm:content-center lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
+        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[calc(100svh-7.5rem)] content-end py-10 sm:min-h-[560px] sm:content-center sm:py-12 lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -329,7 +329,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className={`mt-5 max-w-xl text-sm leading-6 sm:text-base sm:leading-7 ${themedHero ? "text-white/90" : "text-stone-600"}`}>
+            <p className={`mt-5 max-w-xl text-sm leading-6 sm:text-base sm:leading-7 ${themedHero ? "hidden text-white/90 sm:block" : "text-stone-600"}`}>
               {heroTheme?.subtext ||
                 (customKeepsakesEnabled
                   ? "Discover cute 3D-printed collectibles for your desk and home, or turn your favourite photo into a personalized figurine made just for you."
@@ -337,7 +337,7 @@ export default function Home() {
             </p>
 
             {themedHero && heroTheme?.overlayText && (
-              <p className="mt-3 max-w-xl text-base font-bold text-white sm:text-lg">{heroTheme.overlayText}</p>
+              <p className="mt-3 hidden max-w-xl text-base font-bold text-white sm:block sm:text-lg">{heroTheme.overlayText}</p>
             )}
 
             <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row">
@@ -363,7 +363,7 @@ export default function Home() {
               )}
               <Link
                 to="/shop"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white/90 px-5 py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:border-ribbon-300 hover:bg-white"
+                className={`min-h-12 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white/90 px-5 py-3 text-sm font-semibold text-stone-800 shadow-sm transition hover:border-ribbon-300 hover:bg-white ${themedHero ? "hidden sm:inline-flex" : "inline-flex"}`}
               >
                 <ShoppingBag size={16} />
                 Shop Collectibles
