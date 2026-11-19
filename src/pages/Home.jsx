@@ -292,7 +292,6 @@ export default function Home() {
                 }}
               />
             </picture>
-            <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/55 to-stone-950/10 max-sm:hidden" />
             {heroSlides > 1 && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
                 {Array.from({ length: heroSlides }, (_, i) => (
@@ -330,14 +329,14 @@ export default function Home() {
               {heroTheme?.badge || "Little things. Big meaning."}
             </div>
 
-            <h1 className={`max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-stone-900 sm:text-white sm:drop-shadow-lg" : "text-stone-900"}`}>
+            <h1 className={`max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-stone-900" : "text-stone-900"}`}>
               {heroTheme?.headline || "Your Memories,"}
-              <span className={`block ${themedHero ? `${accent.highlight} sm:text-white/90` : accent.highlight}`}>
+              <span className={`block ${themedHero ? accent.highlight : accent.highlight}`}>
                 {heroTheme?.highlight || (heroTheme?.headline ? "" : "Made to Keep.")}
               </span>
             </h1>
 
-            <p className={`mt-5 max-w-xl text-sm leading-6 sm:text-base sm:leading-7 ${themedHero ? "hidden text-white/90 sm:block" : "text-stone-600"}`}>
+            <p className={`mt-5 max-w-xl text-sm leading-6 sm:text-base sm:leading-7 ${themedHero ? "hidden text-stone-700 sm:block" : "text-stone-600"}`}>
               {heroTheme?.subtext ||
                 (customKeepsakesEnabled
                   ? "Discover cute 3D-printed collectibles for your desk and home, or turn your favourite photo into a personalized figurine made just for you."
@@ -345,7 +344,7 @@ export default function Home() {
             </p>
 
             {themedHero && heroTheme?.overlayText && (
-              <p className="mt-3 hidden max-w-xl text-base font-bold text-white sm:block sm:text-lg">{heroTheme.overlayText}</p>
+              <p className="mt-3 hidden max-w-xl text-base font-bold text-stone-900 sm:block sm:text-lg">{heroTheme.overlayText}</p>
             )}
 
             <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row">
