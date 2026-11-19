@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUp, X, Sparkles, Truck, Gift, Palette, MessageCircle } from "lucide-react";
+import { X, Sparkles, Truck, Gift, Palette, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useConfigStore } from "../store/configStore";
 
@@ -87,20 +87,7 @@ function CuteMascot({ size = 36, className = "" }) {
 
 export default function FloatingHelp() {
   const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
-
-  useEffect(() => {
-    const checkScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", checkScroll);
-    return () => window.removeEventListener("scroll", checkScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const openWhatsApp = (customMessage) => {
     const phone = "917905275048";
@@ -209,23 +196,6 @@ export default function FloatingHelp() {
           </span>
         </button>
       </div>
-
-      {/* Scroll to Top Button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={scrollToTop}
-            aria-label="Scroll to top"
-            className="pointer-events-auto h-10 w-10 rounded-full bg-white/95 hover:bg-white text-stone-700 border border-stone-200 flex items-center justify-center shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-            title="Scroll to Top"
-          >
-            <ArrowUp size={16} />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
