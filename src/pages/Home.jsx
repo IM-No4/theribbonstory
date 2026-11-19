@@ -748,22 +748,24 @@ export default function Home() {
       </section>
       )}
 
+      <div className={pageBg ? "px-4 py-5 sm:px-6 sm:py-8 lg:px-8" : undefined}>
+      <div className={pageBg ? "mx-auto max-w-7xl divide-y divide-stone-200 overflow-hidden rounded-3xl bg-white shadow-lg" : undefined}>
       {/* BRAND BENEFITS */}
-      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 sm:px-6 lg:px-8 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
+      <section className={pageBg ? "px-6 py-8 sm:px-10 sm:py-10" : "border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8"}>
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
-            <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${pageBg ? "text-red-100" : "text-ribbon-600"}`}>
+            <p className={`text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600`}>
               The Ribbon Story touch
             </p>
-            <h2 className={`mt-2 font-display text-2xl font-bold sm:text-3xl ${pageBg ? "text-white" : "text-stone-900"}`}>
+            <h2 className={`mt-2 font-display text-2xl font-bold sm:text-3xl text-stone-900`}>
               Little Details. Lots of Meaning.
             </h2>
-            <p className={`mt-2 text-sm leading-relaxed ${pageBg ? "text-white/85" : "text-stone-600"}`}>
+            <p className={`mt-2 text-sm leading-relaxed text-stone-600`}>
               {customKeepsakesEnabled ? "Whether it is a tiny collectible or a personalized figurine, we want it to feel worth keeping." : "Whether it is a tiny collectible or a little gift, we want it to feel worth keeping."}
             </p>
           </div>
 
-          <div className={pageBg ? "overflow-hidden rounded-3xl bg-white shadow-lg grid grid-cols-1 divide-y divide-stone-200 md:grid-flow-col md:auto-cols-fr md:divide-x md:divide-y-0" : "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"}>
+          <div className={pageBg ? "grid grid-cols-1 divide-y divide-stone-200 overflow-hidden rounded-2xl border border-stone-200 md:grid-flow-col md:auto-cols-fr md:divide-x md:divide-y-0" : "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"}>
             {TRUST_ITEMS.filter((item) => customKeepsakesEnabled || !item.custom).map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
@@ -785,10 +787,9 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className={`px-4 sm:px-6 lg:px-8 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
+      <section className={pageBg ? "px-6 py-8 sm:px-10 sm:py-10" : "px-4 py-12 sm:px-6 sm:py-16 lg:px-8"}>
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            light={Boolean(pageBg)}
             eyebrow={customKeepsakesEnabled ? "Simple and personal" : "Simple and easy"}
             title="From Little Idea to Keepsake"
             description={customKeepsakesEnabled ? "A simple path from discovering something you love to making it yours." : "A simple path from discovering something you love to having it at your door."}
@@ -829,8 +830,8 @@ export default function Home() {
       </section>
 
       {/* FINAL CTA */}
-      <section className={`px-4 sm:px-6 lg:px-8 ${pageBg ? "pb-8 pt-2 sm:pb-12" : "pb-12 sm:pb-16"}`}>
-        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 rounded-3xl bg-[#F0E3D8] p-6 sm:p-8 md:flex-row md:items-center md:p-10">
+      <section className={pageBg ? "" : "px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8"}>
+        <div className={`mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 bg-[#F0E3D8] ${pageBg ? "" : "rounded-3xl"} p-6 sm:p-8 md:flex-row md:items-center md:p-10`}>
           <div className="max-w-2xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600">A little something special</p>
             <h2 className="mt-2 font-display text-2xl font-extrabold text-stone-900 sm:text-3xl">
@@ -860,6 +861,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
+      </div>
       </div>
 
       {/* Modals */}
