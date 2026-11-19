@@ -20,6 +20,7 @@ const EMPTY = {
   bannerText: "",
   images: [],
   mobileImages: [],
+  pageBackground: "",
 };
 
 const FIELDS = [
@@ -73,6 +74,23 @@ export default function AdminHeroTheme() {
         if (data?.url) urls.push(data.url);
       }
       setForm((prev) => ({ ...prev, [field]: [...prev[field], ...urls].slice(0, 5) }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleBackgroundUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("photo", file);
+      const { data } = await api.post("/upload", body, { headers: { "Content-Type": "multipart/form-data" } });
+      if (data?.url) set("pageBackground", data.url);
     } catch (err) {
       toast.error(err.response?.data?.message || "Image upload failed");
     } finally {
@@ -188,8 +206,36 @@ export default function AdminHeroTheme() {
         </section>
       ))}
 
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">4. Page background (optional)</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          A repeating pattern behind the home page sections below the hero, like a red Christmas pattern. Headings switch to white; product cards stay light. Use a darker image so white text stays readable.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {form.pageBackground ? (
+            <div className="relative h-32 w-24 overflow-hidden rounded-xl border border-slate-300 dark:border-slate-700">
+              <img src={assetUrl(form.pageBackground)} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => set("pageBackground", "")}
+                className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white hover:bg-red-600"
+                aria-label="Remove background"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ) : (
+            <label className="flex h-32 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-500 hover:border-rose-400">
+              {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              <span>{uploading ? "Uploading…" : "Add image"}</span>
+              <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundUpload} disabled={uploading} />
+            </label>
+          )}
+        </div>
+      </section>
+
       <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white">4. Text</h2>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">5. Text</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {FIELDS.map((f) => (
             <label key={f.key} className={`block space-y-1 ${f.multiline ? "sm:col-span-2" : ""}`}>

@@ -148,20 +148,20 @@ function mixProductsByCollection(products, categories = []) {
   return mixed;
 }
 
-function SectionHeading({ eyebrow, title, description, action }) {
+function SectionHeading({ eyebrow, title, description, action, light }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
       <div className="max-w-2xl">
         {eyebrow && (
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600 mb-2">
+          <p className={`text-[11px] font-bold uppercase tracking-[0.16em] mb-2 ${light ? "text-red-100" : "text-ribbon-600"}`}>
             {eyebrow}
           </p>
         )}
-        <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-stone-900">
+        <h2 className={`font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight ${light ? "text-white" : "text-stone-900"}`}>
           {title}
         </h2>
         {description && (
-          <p className="mt-2 text-sm sm:text-base leading-relaxed text-stone-600">
+          <p className={`mt-2 text-sm sm:text-base leading-relaxed ${light ? "text-white/85" : "text-stone-600"}`}>
             {description}
           </p>
         )}
@@ -250,10 +250,11 @@ export default function Home() {
     }
   };
 
+  const pageBg = themedHero && heroTheme?.pageBackground ? assetUrl(heroTheme.pageBackground) : null;
   const categoryAction = (title) => (
     <Link
       to="/shop"
-      className="inline-flex items-center gap-2 text-sm font-semibold text-ribbon-600 hover:text-ribbon-700 transition-colors"
+      className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors ${pageBg ? "text-white hover:text-red-100" : "text-ribbon-600 hover:text-ribbon-700"}`}
     >
       {title} <ArrowRight size={16} />
     </Link>
@@ -454,10 +455,15 @@ export default function Home() {
         </div>
       </section>
 
+      <div
+        className={pageBg ? "bg-red-800" : undefined}
+        style={pageBg ? { backgroundImage: `url("${pageBg}")`, backgroundSize: "min(100vw, 800px) auto", backgroundRepeat: "repeat" } : undefined}
+      >
       {/* COLLECTIONS */}
-      <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12">
+      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12`}>
         <div className="mx-auto max-w-[1536px] space-y-6 sm:space-y-8">
           <SectionHeading
+            light={Boolean(pageBg)}
             eyebrow="Find your kind of little thing"
             title="Shop by Collection"
             description="From tiny desk companions to thoughtful home accents, find something that feels like you."
@@ -539,6 +545,7 @@ export default function Home() {
       <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12 lg:py-20">
         <div className="mx-auto max-w-[1536px] space-y-7 sm:space-y-9">
           <SectionHeading
+            light={Boolean(pageBg)}
             eyebrow="Small things, big personality"
             title="Little Things Worth Keeping"
             description="Explore our ready-to-buy 3D-printed pieces for desks, shelves, refrigerators and thoughtful gifting."
@@ -740,16 +747,16 @@ export default function Home() {
       )}
 
       {/* BRAND BENEFITS */}
-      <section className="border-b border-stone-200/70 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 py-12 sm:px-6 sm:py-16 lg:px-8`}>
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600">
+            <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${pageBg ? "text-red-100" : "text-ribbon-600"}`}>
               The Ribbon Story touch
             </p>
-            <h2 className="mt-2 font-display text-2xl font-bold text-stone-900 sm:text-3xl">
+            <h2 className={`mt-2 font-display text-2xl font-bold sm:text-3xl ${pageBg ? "text-white" : "text-stone-900"}`}>
               Little Details. Lots of Meaning.
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-stone-600">
+            <p className={`mt-2 text-sm leading-relaxed ${pageBg ? "text-white/85" : "text-stone-600"}`}>
               {customKeepsakesEnabled ? "Whether it is a tiny collectible or a personalized figurine, we want it to feel worth keeping." : "Whether it is a tiny collectible or a little gift, we want it to feel worth keeping."}
             </p>
           </div>
@@ -779,6 +786,7 @@ export default function Home() {
       <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
+            light={Boolean(pageBg)}
             eyebrow={customKeepsakesEnabled ? "Simple and personal" : "Simple and easy"}
             title="From Little Idea to Keepsake"
             description={customKeepsakesEnabled ? "A simple path from discovering something you love to making it yours." : "A simple path from discovering something you love to having it at your door."}
@@ -850,6 +858,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* Modals */}
       <QuickViewModal
