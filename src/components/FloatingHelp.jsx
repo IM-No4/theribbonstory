@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { X, Sparkles, Truck, Gift, Palette, MessageCircle } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ShoppingBag, X, Sparkles, Truck, Gift, Palette, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useConfigStore } from "../store/configStore";
+import { useCartStore } from "../store/cartStore";
 
 // Cute 3D Keepsake Studio Bot / Mascot Face
 function CuteMascot({ size = 36, className = "" }) {
@@ -88,6 +89,9 @@ function CuteMascot({ size = 36, className = "" }) {
 export default function FloatingHelp() {
   const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
   const [showChatPopup, setShowChatPopup] = useState(false);
+  const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
+  const { pathname } = useLocation();
+  const showCartFab = cartCount > 0 && !/^\/(cart|checkout|order-success|admin)/.test(pathname);
 
   const openWhatsApp = (customMessage) => {
     const phone = "917905275048";
@@ -99,6 +103,29 @@ export default function FloatingHelp() {
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none">
+      {/* Go-to-cart button, shown once something is in the cart */}
+      <AnimatePresence>
+        {showCartFab && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: 12 }}
+            className="pointer-events-auto"
+          >
+            <Link
+              to="/cart"
+              aria-label={`Go to cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+              className="relative flex h-14 w-14 items-center justify-center rounded-full bg-ribbon-600 text-white shadow-lg transition hover:bg-ribbon-700 hover:shadow-2xl active:scale-95"
+            >
+              <ShoppingBag size={22} />
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-ribbon-700 shadow ring-1 ring-ribbon-200">
+                {cartCount}
+              </span>
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Cute Mascot Concierge Help Button & Quick Action Drawer */}
       <div className="pointer-events-auto relative">
         <AnimatePresence>
