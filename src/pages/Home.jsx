@@ -178,6 +178,7 @@ export default function Home() {
   const accent = (HERO_PRESETS[heroTheme?.preset] || HERO_PRESETS.custom).accent;
   const heroImages = heroTheme?.images?.length ? heroTheme.images.map((u) => assetUrl(u)) : ["/images/keepsake-3d.jpeg"];
   const heroMobileImages = heroTheme?.mobileImages?.length ? heroTheme.mobileImages.map((u) => assetUrl(u)) : null;
+  const themedHero = Boolean(heroTheme?.images?.length || heroMobileImages);
   const heroSlides = Math.max(heroImages.length, heroMobileImages?.length || 0);
   const [heroIndex, setHeroIndex] = useState(0);
   useEffect(() => {
@@ -268,6 +269,34 @@ export default function Home() {
 
       {/* HERO */}
       <section className="relative isolate overflow-hidden border-b border-stone-200/70 bg-[#F8F1E9]">
+        {themedHero ? (
+          <div className="absolute inset-0 -z-10 bg-stone-900">
+            <picture key={heroIndex}>
+              {heroMobileImages && (
+                <source media="(max-width: 639px)" srcSet={heroMobileImages[heroIndex % heroMobileImages.length]} />
+              )}
+              <img
+                src={heroImages[heroIndex % heroImages.length]}
+                alt=""
+                className="h-full w-full object-cover object-center"
+                onError={(event) => {
+                  event.currentTarget.src = "/images/photo-magnet.webp";
+                }}
+              />
+            </picture>
+            <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/55 to-stone-950/10 max-sm:bg-gradient-to-t max-sm:from-stone-950/85 max-sm:via-stone-950/45 max-sm:to-stone-950/10" />
+            {heroSlides > 1 && (
+              <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
+                {Array.from({ length: heroSlides }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 rounded-full bg-white transition-all ${i === heroIndex % heroSlides ? "w-4" : "w-1.5 opacity-60"}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
         <div className="absolute inset-0 -z-10">
           <img
             src="/images/studio-bg.jpg"
@@ -279,32 +308,37 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#FBF8F4]/65 via-transparent to-white/10" />
           <div className={`absolute -right-24 top-1/4 h-72 w-72 sm:h-96 sm:w-96 rounded-full blur-3xl ${accent.glow}`} />
         </div>
+        )}
 
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-16 xl:py-20">
+        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[560px] content-end py-12 sm:min-h-[560px] sm:content-center lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="order-2 max-w-2xl lg:order-1"
+            className={`max-w-2xl ${themedHero ? "" : "order-2 lg:order-1"}`}
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-700 shadow-sm sm:text-xs">
               <span className={`h-2 w-2 rounded-full ${accent.dot}`} />
               {heroTheme?.badge || "Little things. Big meaning."}
             </div>
 
-            <h1 className="max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight text-stone-900 sm:text-4xl md:text-5xl xl:text-6xl">
+            <h1 className={`max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-white drop-shadow-lg" : "text-stone-900"}`}>
               {heroTheme?.headline || "Your Memories,"}
-              <span className={`block ${accent.highlight}`}>
+              <span className={`block ${themedHero ? "text-white/90" : accent.highlight}`}>
                 {heroTheme?.highlight || (heroTheme?.headline ? "" : "Made to Keep.")}
               </span>
             </h1>
 
-            <p className="mt-5 max-w-xl text-sm leading-6 text-stone-600 sm:text-base sm:leading-7">
+            <p className={`mt-5 max-w-xl text-sm leading-6 sm:text-base sm:leading-7 ${themedHero ? "text-white/90" : "text-stone-600"}`}>
               {heroTheme?.subtext ||
                 (customKeepsakesEnabled
                   ? "Discover cute 3D-printed collectibles for your desk and home, or turn your favourite photo into a personalized figurine made just for you."
                   : "Discover cute 3D-printed collectibles for your desk and home, made to be kept and gifted.")}
             </p>
+
+            {themedHero && heroTheme?.overlayText && (
+              <p className="mt-3 max-w-xl text-base font-bold text-white sm:text-lg">{heroTheme.overlayText}</p>
+            )}
 
             <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row">
               {heroTheme?.ctaText && (
@@ -336,6 +370,7 @@ export default function Home() {
               </Link>
             </div>
 
+            {!themedHero && (
             <div className="mt-6 grid grid-cols-1 gap-2 border-t border-stone-300/70 pt-5 min-[420px]:grid-cols-2">
               {[
                 ...(customKeepsakesEnabled ? ["Personalized figurines made to order"] : []),
@@ -349,8 +384,10 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            )}
           </motion.div>
 
+          {!themedHero && (
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -413,6 +450,7 @@ export default function Home() {
               )}
             </div>
           </motion.div>
+          )}
         </div>
       </section>
 
