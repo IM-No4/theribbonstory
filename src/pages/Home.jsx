@@ -284,7 +284,7 @@ export default function Home() {
                 }}
               />
             </picture>
-            <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/55 to-stone-950/10 max-sm:bg-gradient-to-t max-sm:from-stone-950/85 max-sm:via-stone-950/45 max-sm:to-stone-950/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/55 to-stone-950/10 max-sm:hidden" />
             {heroSlides > 1 && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
                 {Array.from({ length: heroSlides }, (_, i) => (
@@ -310,7 +310,7 @@ export default function Home() {
         </div>
         )}
 
-        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[calc(100svh-6.5rem)] content-center py-10 sm:min-h-[560px] sm:py-12 lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
+        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[calc(100svh-6.5rem)] content-start pt-10 sm:min-h-[560px] sm:content-center sm:pt-12 sm:py-12 lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -322,9 +322,9 @@ export default function Home() {
               {heroTheme?.badge || "Little things. Big meaning."}
             </div>
 
-            <h1 className={`max-w-xl max-sm:mx-auto font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-white drop-shadow-lg" : "text-stone-900"}`}>
+            <h1 className={`max-w-xl max-sm:mx-auto font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-stone-900 sm:text-white sm:drop-shadow-lg" : "text-stone-900"}`}>
               {heroTheme?.headline || "Your Memories,"}
-              <span className={`block ${themedHero ? "text-white/90" : accent.highlight}`}>
+              <span className={`block ${themedHero ? `${accent.highlight} sm:text-white/90` : accent.highlight}`}>
                 {heroTheme?.highlight || (heroTheme?.headline ? "" : "Made to Keep.")}
               </span>
             </h1>
