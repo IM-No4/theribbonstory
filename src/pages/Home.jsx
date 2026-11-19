@@ -310,19 +310,19 @@ export default function Home() {
         </div>
         )}
 
-        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[calc(100svh-6.5rem)] content-start pt-10 sm:min-h-[560px] sm:content-center sm:pt-12 sm:py-12 lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
+        <div className={`mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-16 xl:py-20 ${themedHero ? "min-h-[calc(100svh-6.5rem)] content-start pt-20 sm:min-h-[560px] sm:content-center sm:pt-12 sm:py-12 lg:min-h-[640px]" : "lg:grid-cols-2"}`}>
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className={`max-w-2xl ${themedHero ? "max-sm:mx-auto max-sm:text-center" : "order-2 lg:order-1"}`}
+            className={`max-w-2xl ${themedHero ? "" : "order-2 lg:order-1"}`}
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-700 shadow-sm sm:text-xs">
               <span className={`h-2 w-2 rounded-full ${accent.dot}`} />
               {heroTheme?.badge || "Little things. Big meaning."}
             </div>
 
-            <h1 className={`max-w-xl max-sm:mx-auto font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-stone-900 sm:text-white sm:drop-shadow-lg" : "text-stone-900"}`}>
+            <h1 className={`max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl xl:text-6xl ${themedHero ? "text-stone-900 sm:text-white sm:drop-shadow-lg" : "text-stone-900"}`}>
               {heroTheme?.headline || "Your Memories,"}
               <span className={`block ${themedHero ? `${accent.highlight} sm:text-white/90` : accent.highlight}`}>
                 {heroTheme?.highlight || (heroTheme?.headline ? "" : "Made to Keep.")}
