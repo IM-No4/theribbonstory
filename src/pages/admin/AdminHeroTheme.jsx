@@ -45,19 +45,34 @@ export default function AdminHeroTheme() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Each theme keeps its own images and text; switching themes loads that theme's saved details.
+  const [drafts, setDrafts] = useState({});
+
   useEffect(() => {
     api
       .get("/admin/hero-theme")
-      .then(({ data }) => setForm({ ...EMPTY, ...data.heroTheme }))
+      .then(({ data }) => {
+        setForm({ ...EMPTY, ...data.heroTheme });
+        setDrafts(data.drafts || {});
+      })
       .catch(() => toast.error("Could not load hero theme"))
       .finally(() => setLoading(false));
   }, []);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
+  const themeFields = (f) => {
+    const { enabled, preset, ...fields } = f;
+    return fields;
+  };
+
   const applyPreset = (key) => {
-    const preset = HERO_PRESETS[key];
-    setForm((prev) => ({ ...prev, preset: key, ...(preset.text || {}) }));
+    if (key === form.preset) return;
+    const nextDrafts = { ...drafts, [form.preset]: themeFields(form) };
+    setDrafts(nextDrafts);
+    const saved = nextDrafts[key];
+    const base = { ...themeFields(EMPTY), ...(HERO_PRESETS[key].text || {}) };
+    setForm((prev) => ({ enabled: prev.enabled, preset: key, ...(saved ? { ...themeFields(EMPTY), ...saved } : base) }));
   };
 
   const handleUpload = async (e, field = "images") => {
@@ -101,8 +116,9 @@ export default function AdminHeroTheme() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data } = await api.put("/admin/hero-theme", form);
+      const { data } = await api.put("/admin/hero-theme", { ...form, drafts: { ...drafts, [form.preset]: themeFields(form) } });
       setForm({ ...EMPTY, ...data.heroTheme });
+      setDrafts(data.drafts || {});
       const { enabled, ...theme } = data.heroTheme;
       useConfigStore.setState((state) => ({
         config: { ...state.config, heroTheme: enabled ? theme : null },
@@ -145,7 +161,7 @@ export default function AdminHeroTheme() {
 
       <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
         <h2 className="text-sm font-bold text-slate-900 dark:text-white">1. Pick a theme</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">Choosing a theme fills in the text below and sets the colours. You can edit anything afterwards.</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Each theme keeps its own images and text. Switch between themes to edit them, then press Save to publish the one that is selected.</p>
         <div className="flex flex-wrap gap-2">
           {Object.entries(HERO_PRESETS).map(([key, preset]) => (
             <button
