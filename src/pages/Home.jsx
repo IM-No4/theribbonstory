@@ -463,7 +463,7 @@ export default function Home() {
       </section>
 
       {/* COLLECTIONS */}
-      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12`}>
+      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 sm:px-6 lg:px-8 xl:px-12 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
         <div className="mx-auto max-w-[1536px] space-y-6 sm:space-y-8">
           <SectionHeading
             light={Boolean(pageBg)}
@@ -545,7 +545,7 @@ export default function Home() {
       </section>
 
       {/* FEATURED PRODUCTS */}
-      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12 lg:py-20">
+      <section className={`px-4 sm:px-6 lg:px-8 xl:px-12 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16 lg:py-20"}`}>
         <div className="mx-auto max-w-[1536px] space-y-7 sm:space-y-9">
           <SectionHeading
             light={Boolean(pageBg)}
@@ -750,7 +750,7 @@ export default function Home() {
       )}
 
       {/* BRAND BENEFITS */}
-      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 py-12 sm:px-6 sm:py-16 lg:px-8`}>
+      <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 sm:px-6 lg:px-8 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
             <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${pageBg ? "text-red-100" : "text-ribbon-600"}`}>
@@ -786,7 +786,7 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <section className={`px-4 sm:px-6 lg:px-8 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
         <div className="mx-auto max-w-7xl">
           <SectionHeading
             light={Boolean(pageBg)}
@@ -830,7 +830,7 @@ export default function Home() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
+      <section className={`px-4 sm:px-6 lg:px-8 ${pageBg ? "pb-8 pt-2 sm:pb-12" : "pb-12 sm:pb-16"}`}>
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 rounded-3xl bg-[#F0E3D8] p-6 sm:p-8 md:flex-row md:items-center md:p-10">
           <div className="max-w-2xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ribbon-600">A little something special</p>
