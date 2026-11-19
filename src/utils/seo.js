@@ -1,11 +1,14 @@
 import { useEffect } from "react";
 import { assetUrl } from "../api/client";
+import { useConfigStore } from "../store/configStore";
 
 export const SITE_NAME = "The Ribbon Story";
 export const SITE_URL = (import.meta.env.VITE_SITE_URL || "https://theribbonstory.com").replace(/\/$/, "");
 const API_ORIGIN = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api$/, "");
 const DEFAULT_DESCRIPTION =
   "Turn your favorite moments into beautiful physical keepsakes. Personalized photo magnets, 3D keepsakes and bespoke gift hampers, handcrafted in India.";
+const COLLECTIBLES_DESCRIPTION =
+  "Cute 3D-printed collectibles, fridge magnets, desk buddies and little gifts, handcrafted in India.";
 const DEFAULT_IMAGE = "/images/og-default.jpg";
 
 /** Shareable link for a product: the API page that carries its preview tags */
@@ -60,8 +63,11 @@ const setJsonLd = (data) => {
 export function useSeo({ title, description, path, image, type = "website", noindex = false, jsonLd = null }) {
   const jsonLdKey = jsonLd ? JSON.stringify(jsonLd) : "";
   useEffect(() => {
-    const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} | Personalised Photo & 3D Keepsakes`;
-    const desc = String(description || DEFAULT_DESCRIPTION).replace(/\s+/g, " ").trim().slice(0, 160);
+    const customEnabled = useConfigStore.getState().config.customKeepsakesEnabled !== false;
+    const fullTitle = title
+      ? `${title} | ${SITE_NAME}`
+      : `${SITE_NAME} | ${customEnabled ? "Personalised Photo & 3D Keepsakes" : "3D Printed Collectibles"}`;
+    const desc = String(description || (customEnabled ? DEFAULT_DESCRIPTION : COLLECTIBLES_DESCRIPTION)).replace(/\s+/g, " ").trim().slice(0, 160);
     const url = `${SITE_URL}${path ?? window.location.pathname}`;
     const img = absoluteUrl(image);
 

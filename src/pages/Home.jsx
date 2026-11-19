@@ -18,6 +18,7 @@ import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import { useSeo } from "../utils/seo";
 import { useConfigStore } from "../store/configStore";
+import { HERO_PRESETS } from "../data/heroPresets";
 
 const KEEPSAKE_CATEGORY_IMAGES = {
   single: "/images/3d-single-keepsake.jpg",
@@ -80,6 +81,7 @@ const DEFAULT_KEEPSAKE_CARDS = [
 
 const TRUST_ITEMS = [
   {
+    custom: true,
     icon: Camera,
     title: "Made from your photo",
     description: "Personalized figurines created to order from your reference photo.",
@@ -172,6 +174,17 @@ function SectionHeading({ eyebrow, title, description, action }) {
 export default function Home() {
   useSeo({ path: "/" });
   const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
+  const heroTheme = useConfigStore((s) => s.config.heroTheme);
+  const accent = (HERO_PRESETS[heroTheme?.preset] || HERO_PRESETS.custom).accent;
+  const heroImages = heroTheme?.images?.length ? heroTheme.images.map((u) => assetUrl(u)) : ["/images/keepsake-3d.jpeg"];
+  const heroMobileImages = heroTheme?.mobileImages?.length ? heroTheme.mobileImages.map((u) => assetUrl(u)) : null;
+  const heroSlides = Math.max(heroImages.length, heroMobileImages?.length || 0);
+  const [heroIndex, setHeroIndex] = useState(0);
+  useEffect(() => {
+    if (Math.max(heroImages.length, heroMobileImages?.length || 0) < 2) return undefined;
+    const timer = setInterval(() => setHeroIndex((i) => i + 1), 4500);
+    return () => clearInterval(timer);
+  }, [heroImages.length, heroMobileImages?.length]);
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -247,6 +260,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FBF8F4] text-stone-800">
+      {heroTheme?.bannerText && (
+        <div className={`px-4 py-2 text-center text-xs font-semibold sm:text-sm ${accent.banner}`}>
+          {heroTheme.bannerText}
+        </div>
+      )}
+
       {/* HERO */}
       <section className="relative isolate overflow-hidden border-b border-stone-200/70 bg-[#F8F1E9]">
         <div className="absolute inset-0 -z-10">
@@ -258,7 +277,7 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#FBF6EF]/95 via-[#FBF6EF]/85 to-[#FBF6EF]/45" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#FBF8F4]/65 via-transparent to-white/10" />
-          <div className="absolute -right-24 top-1/4 h-72 w-72 sm:h-96 sm:w-96 rounded-full bg-rose-200/35 blur-3xl" />
+          <div className={`absolute -right-24 top-1/4 h-72 w-72 sm:h-96 sm:w-96 rounded-full blur-3xl ${accent.glow}`} />
         </div>
 
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-16 xl:py-20">
@@ -269,22 +288,35 @@ export default function Home() {
             className="order-2 max-w-2xl lg:order-1"
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-700 shadow-sm sm:text-xs">
-              <span className="h-2 w-2 rounded-full bg-rose-500" />
-              Little things. Big meaning.
+              <span className={`h-2 w-2 rounded-full ${accent.dot}`} />
+              {heroTheme?.badge || "Little things. Big meaning."}
             </div>
 
             <h1 className="max-w-xl font-display text-3xl font-extrabold leading-[1.1] tracking-tight text-stone-900 sm:text-4xl md:text-5xl xl:text-6xl">
-              Your Memories,
-              <span className="block text-ribbon-600">Made to Keep.</span>
+              {heroTheme?.headline || "Your Memories,"}
+              <span className={`block ${accent.highlight}`}>
+                {heroTheme?.highlight || (heroTheme?.headline ? "" : "Made to Keep.")}
+              </span>
             </h1>
 
             <p className="mt-5 max-w-xl text-sm leading-6 text-stone-600 sm:text-base sm:leading-7">
-              {customKeepsakesEnabled
-                ? "Discover cute 3D-printed collectibles for your desk and home, or turn your favourite photo into a personalized figurine made just for you."
-                : "Discover cute 3D-printed collectibles for your desk and home, made to be kept and gifted."}
+              {heroTheme?.subtext ||
+                (customKeepsakesEnabled
+                  ? "Discover cute 3D-printed collectibles for your desk and home, or turn your favourite photo into a personalized figurine made just for you."
+                  : "Discover cute 3D-printed collectibles for your desk and home, made to be kept and gifted.")}
             </p>
 
             <div className="mt-6 flex flex-col gap-3 min-[420px]:flex-row">
+              {heroTheme?.ctaText && (
+                <Link
+                  to={heroTheme.ctaLink || "/shop"}
+                  className="btn-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-md transition hover:shadow-lg"
+                >
+                  <Sparkles size={16} />
+                  {heroTheme.ctaText}
+                  <ArrowRight size={15} />
+                </Link>
+              )}
               {customKeepsakesEnabled && (
               <Link
                 to="/personalized"
@@ -326,27 +358,44 @@ export default function Home() {
             className="order-1 mx-auto w-full max-w-xl lg:order-2"
           >
             <div className="relative overflow-hidden rounded-[1.75rem] border border-white/80 bg-white p-2 shadow-[0_24px_70px_-28px_rgba(70,45,35,0.35)] sm:p-3">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-[#F7F0E8] sm:aspect-[5/4]">
+              <div className={`relative overflow-hidden rounded-[1.25rem] bg-[#F7F0E8] sm:aspect-[5/4] ${heroMobileImages ? "aspect-[4/5]" : "aspect-[4/3]"}`}>
+                <picture key={heroIndex}>
+                  {heroMobileImages && (
+                    <source media="(max-width: 639px)" srcSet={heroMobileImages[heroIndex % heroMobileImages.length]} />
+                  )}
                 <img
-                  src="/images/keepsake-3d.jpeg"
-                  alt="Personalized 3D-printed figurine"
-                  className="h-full w-full object-contain object-center"
+                  src={heroImages[heroIndex % heroImages.length]}
+                  alt={heroTheme?.headline || (customKeepsakesEnabled ? "Personalized 3D-printed figurine" : "3D-printed collectible")}
+                  className={`h-full w-full object-center ${heroTheme?.images?.length || heroMobileImages ? "object-cover" : "object-contain"}`}
                   onError={(event) => {
                     event.currentTarget.src = "/images/photo-magnet.webp";
                   }}
                 />
+                </picture>
+
+                {heroSlides > 1 && (
+                  <div className="absolute right-3 top-3 flex gap-1.5">
+                    {Array.from({ length: heroSlides }, (_, i) => (
+                      <span
+                        key={i}
+                        className={`h-1.5 rounded-full bg-white transition-all ${i === heroIndex % heroSlides ? "w-4" : "w-1.5 opacity-60"}`}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-950/75 via-stone-950/25 to-transparent p-4 pt-16 sm:p-6 sm:pt-20">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-3 py-1.5 text-[10px] font-semibold text-white backdrop-blur sm:text-xs">
                     <Sparkles size={13} />
-                    Made personal, made to keep
+                    {heroTheme?.badge || (customKeepsakesEnabled ? "Made personal, made to keep" : "Cute collectibles, made to keep")}
                   </span>
 
                   <p className="mt-2 max-w-sm text-lg font-bold leading-snug text-white sm:text-2xl">
-                    A favourite moment, turned into a keepsake.
+                    {heroTheme?.overlayText || (customKeepsakesEnabled ? "A favourite moment, turned into a keepsake." : "Little things that bring big smiles.")}
                   </p>
                 </div>
               </div>
+              {customKeepsakesEnabled && !heroTheme && (
               <div className="grid grid-cols-3 gap-2 px-1 pb-1 pt-3 sm:gap-3 sm:px-2 sm:pb-2">
                 <div className="rounded-xl bg-[#FBF6EF] px-2 py-3 text-center">
                   <Camera size={17} className="mx-auto text-ribbon-600" />
@@ -361,6 +410,7 @@ export default function Home() {
                   <p className="mt-1.5 text-[10px] font-semibold text-stone-700 sm:text-xs">Your keepsake</p>
                 </div>
               </div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -662,12 +712,12 @@ export default function Home() {
               Little Details. Lots of Meaning.
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-stone-600">
-              Whether it is a tiny collectible or a personalized figurine, we want it to feel worth keeping.
+              {customKeepsakesEnabled ? "Whether it is a tiny collectible or a personalized figurine, we want it to feel worth keeping." : "Whether it is a tiny collectible or a little gift, we want it to feel worth keeping."}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-            {TRUST_ITEMS.map(({ icon: Icon, title, description }) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            {TRUST_ITEMS.filter((item) => customKeepsakesEnabled || !item.custom).map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
                 className="rounded-2xl border border-stone-200 bg-[#FBF8F4] p-5 sm:p-6"
@@ -691,28 +741,32 @@ export default function Home() {
       <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="Simple and personal"
+            eyebrow={customKeepsakesEnabled ? "Simple and personal" : "Simple and easy"}
             title="From Little Idea to Keepsake"
-            description="A simple path from discovering something you love to making it yours."
+            description={customKeepsakesEnabled ? "A simple path from discovering something you love to making it yours." : "A simple path from discovering something you love to having it at your door."}
           />
-          <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+          <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
             {[
               {
                 number: "01",
                 title: "Find your favourite",
-                description: "Explore ready-to-buy collectibles or choose the personalized figurine that suits your occasion.",
+                description: customKeepsakesEnabled
+                  ? "Explore ready-to-buy collectibles or choose the personalized figurine that suits your occasion."
+                  : "Explore our ready-to-buy 3D-printed collectibles and pick the one that makes you smile.",
               },
-              {
-                number: "02",
-                title: "Make it yours",
-                description: "For custom figurines, share your reference photo and select from the options available.",
-              },
+              ...(customKeepsakesEnabled
+                ? [{
+                    number: "02",
+                    title: "Make it yours",
+                    description: "For custom figurines, share your reference photo and select from the options available.",
+                  }]
+                : []),
               {
                 number: "03",
                 title: "We prepare your order",
                 description: "Your selected item is prepared and packed for delivery. Check the product page for current timelines.",
               },
-            ].map((step) => (
+            ].map((step, i) => ({ ...step, number: String(i + 1).padStart(2, "0") })).map((step) => (
               <div
                 key={step.number}
                 className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"

@@ -5,12 +5,15 @@ import toast from "react-hot-toast";
 import { api } from "../api/client";
 import SectionHeading from "../components/SectionHeading";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
 export default function Contact() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
   useSeo({
     title: "Contact Us | The Ribbon Story",
-    description:
-      "Questions about an order, custom 3D keepsakes, or bespoke gifting? Get in touch with The Ribbon Story studio team.",
+    description: customKeepsakesEnabled
+      ? "Questions about an order, custom 3D keepsakes, or bespoke gifting? Get in touch with The Ribbon Story studio team."
+      : "Questions about an order or gifting? Get in touch with The Ribbon Story studio team.",
   });
 
   const [form, setForm] = useState({
@@ -41,7 +44,7 @@ export default function Contact() {
       <SectionHeading
         eyebrow="Say hello"
         title="We'd love to hear from you"
-        subtitle="Questions about an order, a custom keepsake, or want to say hi? Reach out anytime."
+        subtitle={customKeepsakesEnabled ? "Questions about an order, a custom keepsake, or want to say hi? Reach out anytime." : "Questions about an order, or want to say hi? Reach out anytime."}
       />
 
       <div className="mt-6 sm:mt-8 lg:mt-10 grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-4 sm:gap-6 lg:gap-10 items-start max-w-5xl mx-auto">

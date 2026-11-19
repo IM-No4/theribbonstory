@@ -11,29 +11,34 @@ import {
   Check,
 } from "lucide-react";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
-const steps = [
+const buildSteps = (custom) => [
   {
     num: "01",
     title: "Choose your keepsake",
-    desc: "Explore our ready-made 3D-printed collectibles or create a personalized figurine inspired by your photo.",
+    desc: custom
+      ? "Explore our ready-made 3D-printed collectibles or create a personalized figurine inspired by your photo."
+      : "Explore our range of cute ready-made 3D-printed collectibles.",
     detail: "Find something playful for yourself or meaningful for someone special.",
     icon: Camera,
     tag: "Choose",
   },
-  {
+  ...(custom ? [{
     num: "02",
     title: "Make it personal",
     desc: "For personalized figurines, share your reference photo and choose the available options for your keepsake.",
     detail: "Add optional base text where supported, then review your selections before ordering.",
     icon: Palette,
     tag: "Customize",
-  },
+  }] : []),
   {
     num: "03",
     title: "Made for your order",
     desc: "We prepare your chosen creation using our 3D-printing process, with attention to its shape, details and finish.",
-    detail: "Personalized figurines are made to order. Ready-made items follow their listed availability.",
+    detail: custom
+      ? "Personalized figurines are made to order. Ready-made items follow their listed availability."
+      : "Items follow their listed availability.",
     icon: Printer,
     tag: "Create",
   },
@@ -48,10 +53,14 @@ const steps = [
 ];
 
 export default function HowItWorksPage() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
+  const steps = buildSteps(customKeepsakesEnabled).map((step, i) => ({ ...step, num: String(i + 1).padStart(2, "0") }));
   useSeo({
     title: "How It Works | The Ribbon Story",
     description:
-      "Discover how The Ribbon Story turns your ideas and favourite photos into cute 3D-printed collectibles and personalized keepsakes.",
+      customKeepsakesEnabled
+        ? "Discover how The Ribbon Story turns your ideas and favourite photos into cute 3D-printed collectibles and personalized keepsakes."
+        : "Discover how The Ribbon Story makes and delivers cute 3D-printed collectibles.",
   });
 
   return (
@@ -80,9 +89,9 @@ export default function HowItWorksPage() {
             </h1>
 
             <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-stone-600 sm:mt-5 sm:text-base sm:leading-7">
-              Discover a collectible you love, make it personal if you wish,
-              and let us turn it into a little keepsake for your home or
-              someone special.
+              {customKeepsakesEnabled
+                ? "Discover a collectible you love, make it personal if you wish, and let us turn it into a little keepsake for your home or someone special."
+                : "Discover a collectible you love and let us deliver it as a little keepsake for your home or someone special."}
             </p>
           </motion.div>
         </div>
@@ -179,8 +188,9 @@ export default function HowItWorksPage() {
           </h2>
 
           <p className="mx-auto mt-3 max-w-lg text-xs leading-6 text-stone-300 sm:text-sm sm:leading-7">
-            Choose a cute collectible or create a personalized figurine
-            inspired by a favourite memory.
+            {customKeepsakesEnabled
+              ? "Choose a cute collectible or create a personalized figurine inspired by a favourite memory."
+              : "Choose a cute collectible that makes you smile."}
           </p>
 
           <div className="mt-6 flex flex-col justify-center gap-3 sm:mt-7 sm:flex-row">
@@ -192,12 +202,14 @@ export default function HowItWorksPage() {
               <ArrowRight size={16} />
             </Link>
 
+            {customKeepsakesEnabled && (
             <Link
               to="/personalized"
               className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/20 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10"
             >
               Personalize a Figurine
             </Link>
+            )}
           </div>
         </div>
       </section>

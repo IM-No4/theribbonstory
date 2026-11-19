@@ -14,6 +14,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
 const PACKAGING_PILLARS = [
   {
@@ -76,6 +77,7 @@ const COURIER_PARTNERS = [
 ];
 
 export default function PackagingDeliveryPage() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
   useSeo({
     title: "Packaging & Delivery | The Ribbon Story",
     description:
@@ -185,7 +187,7 @@ export default function PackagingDeliveryPage() {
               Estimated Delivery Times
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-stone-600">
-              Personalized figurines are handcrafted to order, then dispatched via express couriers:
+              {customKeepsakesEnabled ? "Personalized figurines are handcrafted to order, then dispatched via express couriers:" : "Every order is carefully packed, then dispatched via express couriers:"}
             </p>
           </div>
 

@@ -125,7 +125,9 @@ export default function Footer() {
             <LogoMark to="/" size="compact" light />
 
             <p className="text-xs sm:text-[13px] text-stone-400 leading-relaxed max-w-sm">
-              The Ribbon Story transforms your cherished photographs into adorable heirloom 3D chibi figurines and bespoke personalized keepsakes with laser-engraved stands.
+              {customKeepsakesEnabled
+                ? "The Ribbon Story transforms your cherished photographs into adorable heirloom 3D chibi figurines and bespoke personalized keepsakes with laser-engraved stands."
+                : "The Ribbon Story makes cute 3D-printed collectibles, fridge magnets and desk buddies, handcrafted in India."}
             </p>
 
             {/* Streamlined Newsletter Box */}

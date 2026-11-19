@@ -16,6 +16,7 @@ import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import { OCCASIONS } from "../data/occasions";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
 const SORTS = [
   { value: "", label: "Featured" },
@@ -75,10 +76,12 @@ function mixProductsByCollection(products, categories = []) {
 }
 
 export default function Shop() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
   useSeo({
-    title: "Shop 3D Printed Models & Personalized Keepsakes",
-    description:
-      "Discover cute 3D-printed fridge magnets, desk buddies, flexi creatures, miniature decor and personalized figurines.",
+    title: customKeepsakesEnabled ? "Shop 3D Printed Models & Personalized Keepsakes" : "Shop 3D Printed Collectibles",
+    description: customKeepsakesEnabled
+      ? "Discover cute 3D-printed fridge magnets, desk buddies, flexi creatures, miniature decor and personalized figurines."
+      : "Discover cute 3D-printed fridge magnets, desk buddies, flexi creatures and miniature decor.",
   });
 
   const navigate = useNavigate();
@@ -451,6 +454,7 @@ export default function Shop() {
                 </select>
               </div>
 
+              {customKeepsakesEnabled && (
               <div className="rounded-2xl border border-stone-200 bg-white p-4">
                 <p className="font-display text-base font-bold text-stone-900">
                   Something personal?
@@ -466,6 +470,7 @@ export default function Shop() {
                   Create your figurine <ArrowRight size={13} />
                 </button>
               </div>
+              )}
             </div>
           </aside>
 

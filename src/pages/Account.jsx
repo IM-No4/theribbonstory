@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import OrderItemPersonalization from "../components/OrderItemPersonalization";
 import InvoiceButton from "../components/InvoiceButton";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 import { useAuthStore } from "../store/authStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
@@ -30,6 +31,7 @@ import { useSeo } from "../utils/seo";
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function Account() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
   useSeo({ title: "My Account", noindex: true });
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "orders";
@@ -382,7 +384,7 @@ export default function Account() {
                           No keepsake orders yet
                         </h3>
                         <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                          Transform your cherished memories into handcrafted 3D crystal figurines, photo magnets & hampers.
+                          {customKeepsakesEnabled ? "Transform your cherished memories into handcrafted 3D crystal figurines, photo magnets & hampers." : "Explore our cute 3D-printed collectibles and little gifts."}
                         </p>
                       </div>
                       <Link
@@ -547,7 +549,7 @@ export default function Account() {
                     <div className="space-y-1">
                       <h3 className="font-bold text-base text-slate-800">Your wishlist is currently empty</h3>
                       <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                        Explore our handcrafted 3D crystal figurines, custom photo magnets, and curated gift hampers to save your favorite gifts.
+                        {customKeepsakesEnabled ? "Explore our handcrafted 3D crystal figurines, custom photo magnets, and curated gift hampers to save your favorite gifts." : "Explore our 3D-printed collectibles to save your favorite gifts."}
                       </p>
                     </div>
                     <Link

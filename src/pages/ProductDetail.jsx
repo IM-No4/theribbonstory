@@ -520,7 +520,7 @@ export default function ProductDetail() {
             <div>
               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200/70 text-[9.5px] font-bold text-rose-700 tracking-wider uppercase mb-1">
                 <Sparkles size={10} className="text-rose-500" />
-                <span>{product.category?.replace("-", " ") || "Personalized 3D"}</span>
+                <span>{product.category?.replace("-", " ") || "3D Printed"}</span>
               </div>
 
               <h1 className="font-display text-xl sm:text-2xl font-bold text-stone-900 tracking-tight leading-snug">

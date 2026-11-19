@@ -40,6 +40,7 @@ export default function AdminLayout() {
     { to: "/admin/products", label: "Products & Pricing", icon: Package },
     { to: "/admin/collections", label: "Collections", icon: Layers },
     { to: "/admin/keepsakes", label: "Keepsake Pricing & Sizes", icon: Sparkles },
+    { to: "/admin/hero-theme", label: "Seasonal Hero Theme", icon: Sparkles },
     { to: "/admin/print-colors", label: "3D Filament Colors", icon: Palette },
     { to: "/admin/notifications", label: "Email Notifications", icon: Mail },
     { to: "/admin/coupons", label: "Coupons & Discounts", icon: Tag },

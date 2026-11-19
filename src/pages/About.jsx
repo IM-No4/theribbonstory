@@ -13,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import { LogoMark } from "../components/Logo";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
 const values = [
   {
@@ -23,7 +24,7 @@ const values = [
   {
     icon: Sparkles,
     title: "Made to Feel Special",
-    text: "From playful collectibles to personalized figurines, each creation is designed to bring a little joy.",
+    text: "From playful desk buddies to cute fridge magnets, each creation is designed to bring a little joy.",
   },
   {
     icon: Users,
@@ -47,6 +48,7 @@ const offerings = [
     linkText: "Explore collections",
   },
   {
+    custom: true,
     icon: Camera,
     number: "02",
     title: "Personalized figurines",
@@ -65,10 +67,16 @@ const offerings = [
 ];
 
 export default function About() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
+  const visibleOfferings = offerings
+    .filter((o) => customKeepsakesEnabled || !o.custom)
+    .map((o, i) => ({ ...o, number: String(i + 1).padStart(2, "0") }));
   useSeo({
     title: "Our Story | The Ribbon Story",
     description:
-      "Discover The Ribbon Story: cute 3D-printed collectibles, personalized figurines and little keepsakes inspired by the moments that matter.",
+      customKeepsakesEnabled
+        ? "Discover The Ribbon Story: cute 3D-printed collectibles, personalized figurines and little keepsakes inspired by the moments that matter."
+        : "Discover The Ribbon Story: cute 3D-printed collectibles and little keepsakes inspired by the moments that matter.",
   });
 
   return (
@@ -99,15 +107,15 @@ export default function About() {
 
               <p className="mt-4 max-w-xl text-sm leading-6 text-stone-600 sm:mt-5 sm:text-base sm:leading-7">
                 Some things are too special to leave in a camera roll.
-                At The Ribbon Story, we create 3D-printed collectibles
-                and personalized figurines that give your favourite
-                moments a little place in the real world.
+                {customKeepsakesEnabled
+                  ? "At The Ribbon Story, we create 3D-printed collectibles and personalized figurines that give your favourite moments a little place in the real world."
+                  : "At The Ribbon Story, we create cute 3D-printed collectibles that give your favourite moments a little place in the real world."}
               </p>
 
               <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600 sm:text-base sm:leading-7">
-                From a tiny creature for your desk to a figurine inspired
-                by someone you love, we believe meaningful gifts don't
-                have to be big. They just have to mean something.
+                {customKeepsakesEnabled
+                  ? "From a tiny creature for your desk to a figurine inspired by someone you love, we believe meaningful gifts don't have to be big. They just have to mean something."
+                  : "From a tiny creature for your desk to a fridge magnet that makes you smile, we believe meaningful gifts don't have to be big. They just have to mean something."}
               </p>
 
               <p className="mt-5 font-script text-xl text-rose-700 sm:text-2xl">
@@ -151,7 +159,7 @@ export default function About() {
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-2">
-                  {["Collectibles", "Personalized gifts", "3D keepsakes"].map(
+                  {["Collectibles", ...(customKeepsakesEnabled ? ["Personalized gifts"] : []), "3D keepsakes"].map(
                     (label) => (
                       <span
                         key={label}
@@ -184,7 +192,7 @@ export default function About() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {offerings.map((item, index) => {
+          {visibleOfferings.map((item, index) => {
             const Icon = item.icon;
 
             return (
@@ -279,8 +287,9 @@ export default function About() {
           </h2>
 
           <p className="mx-auto mt-3 max-w-lg text-xs leading-6 text-stone-300 sm:text-sm sm:leading-7">
-            Find a collectible that makes you smile, or create a
-            personalized figurine inspired by someone special.
+            {customKeepsakesEnabled
+              ? "Find a collectible that makes you smile, or create a personalized figurine inspired by someone special."
+              : "Find a collectible that makes you smile, or a little gift for someone special."}
           </p>
 
           <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
@@ -292,12 +301,14 @@ export default function About() {
               <ArrowRight size={16} />
             </Link>
 
+            {customKeepsakesEnabled && (
             <Link
               to="/personalized"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10"
             >
               Create Your Figurine
             </Link>
+            )}
           </div>
         </div>
       </section>

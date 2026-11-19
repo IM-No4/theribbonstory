@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { useConfigStore } from "../store/configStore";
 import { useWishlistStore } from "../store/wishlistStore";
 import { useCartStore, productToCartItem } from "../store/cartStore";
 import { assetUrl } from "../api/client";
@@ -8,7 +9,9 @@ import { assetUrl } from "../api/client";
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function WishlistDrawer() {
-  const { items, isDrawerOpen, closeDrawer, removeItem, clearWishlist } = useWishlistStore();
+  const { items: allItems, isDrawerOpen, closeDrawer, removeItem, clearWishlist } = useWishlistStore();
+  const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
+  const items = allItems.filter((item) => customKeepsakesEnabled || !item.isCustomizable);
   const { addItem, openCart } = useCartStore();
   const navigate = useNavigate();
 

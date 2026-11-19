@@ -20,6 +20,7 @@ import {
   Check,
 } from "lucide-react";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
 const CARE_TIPS = [
   {
@@ -59,16 +60,19 @@ const FAQ_CATEGORIES = [
 const FAQS = [
   {
     category: "personalization",
+    custom: true,
     q: "What kind of photos work best for custom 3D keepsakes?",
     a: "Clear, well-lit photos taken from front or 3/4 angles work best. Selfies, candid portraits, wedding photos, and phone snapshots are all welcome! Make sure facial features, hair, and preferred outfits are clearly visible.",
   },
   {
     category: "personalization",
+    custom: true,
     q: "Will I get to preview what my 3D figurine looks like?",
     a: "Absolutely! Our live online 3D customizer generates an instant stylized preview right on your screen so you can inspect the look, choose sizing, and add your personalized engraved stand inscription before placing your order.",
   },
   {
     category: "personalization",
+    custom: true,
     q: "What can I engrave on the keepsake stand?",
     a: "You can engrave names, anniversary dates, heartfelt messages, nicknames, coordinates, or inside jokes (up to 40 characters).",
   },
@@ -85,7 +89,7 @@ const FAQS = [
   {
     category: "shipping",
     q: "How long does it take from order to doorstep delivery?",
-    a: "Personalized photo figurines take 1–3 business days for precision 3D slicing, multi-color printing, and gift packaging. Once dispatched, express courier transit takes 2–3 business days for metro cities and 3–5 business days across the rest of India.",
+    a: "Orders take 1–3 business days for precision 3D printing and gift packaging. Once dispatched, express courier transit takes 2–3 business days for metro cities and 3–5 business days across the rest of India.",
   },
   {
     category: "shipping",
@@ -105,10 +109,12 @@ const FAQS = [
 ];
 
 export default function FaqPage() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
   useSeo({
     title: "FAQs & Keepsake Care | The Ribbon Story",
-    description:
-      "Frequently asked questions about personalized 3D figurines, photo requirements, materials, express delivery, and keepsake care instructions.",
+    description: customKeepsakesEnabled
+      ? "Frequently asked questions about personalized 3D figurines, photo requirements, materials, express delivery, and keepsake care instructions."
+      : "Frequently asked questions about our 3D-printed collectibles, materials, express delivery, and care instructions.",
   });
 
   const [activeCategory, setActiveCategory] = useState("all");
@@ -116,7 +122,7 @@ export default function FaqPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
   const filteredFaqs = useMemo(() => {
-    return FAQS.filter((faq) => {
+    return FAQS.filter((faq) => customKeepsakesEnabled || !faq.custom).filter((faq) => {
       const matchesCategory =
         activeCategory === "all" || faq.category === activeCategory;
       const matchesSearch =
@@ -125,7 +131,7 @@ export default function FaqPage() {
         faq.a.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, customKeepsakesEnabled]);
 
   const toggleFaq = (idx) => {
     setOpenFaqIndex(openFaqIndex === idx ? null : idx);
@@ -148,8 +154,9 @@ export default function FaqPage() {
             </h1>
 
             <p className="mt-3 text-sm leading-relaxed text-stone-600 sm:text-base">
-              Everything you need to know about photo-to-3D keepsakes, our solid-pigment
-              materials, safe delivery, and keeping your figurines beautiful for a lifetime.
+              {customKeepsakesEnabled
+                ? "Everything you need to know about photo-to-3D keepsakes, our solid-pigment materials, safe delivery, and keeping your figurines beautiful for a lifetime."
+                : "Everything you need to know about our solid-pigment materials, safe delivery, and keeping your collectibles beautiful for a lifetime."}
             </p>
 
             {/* Live Search Input */}
@@ -162,7 +169,7 @@ export default function FaqPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search questions (e.g. photo, cleaning, delivery, materials)..."
+                placeholder={customKeepsakesEnabled ? "Search questions (e.g. photo, cleaning, delivery, materials)..." : "Search questions (e.g. cleaning, delivery, materials)..."}
                 className="w-full pl-11 pr-4 py-3 bg-[#FBF8F4] border border-stone-200 rounded-2xl text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100 transition shadow-2xs"
               />
               {searchQuery && (
@@ -242,7 +249,7 @@ export default function FaqPage() {
 
           {/* Category Tabs */}
           <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap mb-8">
-            {FAQ_CATEGORIES.map((cat) => {
+            {FAQ_CATEGORIES.filter((cat) => customKeepsakesEnabled || cat.id !== "personalization").map((cat) => {
               const active = activeCategory === cat.id;
               return (
                 <button
@@ -341,7 +348,7 @@ export default function FaqPage() {
               Have a question not answered here?
             </h3>
             <p className="text-xs sm:text-sm text-stone-300 max-w-lg leading-relaxed">
-              Our studio artisans are ready to help with special photo requests, bulk corporate gifting, or order inquiries.
+              {customKeepsakesEnabled ? "Our studio artisans are ready to help with special photo requests, bulk corporate gifting, or order inquiries." : "Our studio artisans are ready to help with bulk corporate gifting or order inquiries."}
             </p>
           </div>
 

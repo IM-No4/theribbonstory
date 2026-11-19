@@ -17,10 +17,12 @@ import { api, assetUrl } from "../api/client";
 import OrderItemPersonalization from "../components/OrderItemPersonalization";
 import InvoiceButton from "../components/InvoiceButton";
 import { useSeo } from "../utils/seo";
+import { useCustomKeepsakes } from "../hooks/useCustomKeepsakes";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function OrderSuccess() {
+  const customKeepsakesEnabled = useCustomKeepsakes();
   useSeo({ title: "Order Placed", noindex: true });
   const { id } = useParams();
 
@@ -175,7 +177,7 @@ export default function OrderSuccess() {
                       </span>
                     </div>
                     <p className="text-xs text-rose-100/80 mt-0.5">
-                      Handcrafted 3D Sculptures, Keepsakes &amp; Personalized Hampers
+                      {customKeepsakesEnabled ? "Handcrafted 3D Sculptures, Keepsakes & Personalized Hampers" : "Handcrafted 3D Printed Collectibles & Gifts"}
                     </p>
                   </div>
                   <div className="text-left sm:text-right text-xs">
@@ -415,7 +417,7 @@ export default function OrderSuccess() {
               The Ribbon Story
             </h1>
             <p className="text-xs font-semibold text-slate-600 tracking-wide mt-0.5">
-              Bespoke 3D Sculptures, Keepsakes &amp; Personalized Hampers
+              {customKeepsakesEnabled ? "Bespoke 3D Sculptures, Keepsakes & Personalized Hampers" : "3D Printed Collectibles & Gifts"}
             </p>
             <p className="text-xs text-slate-500 mt-1">contact@theribbonstory.com</p>
           </div>
@@ -594,7 +596,7 @@ export default function OrderSuccess() {
             Thank you for trusting The Ribbon Story with your keepsake!
           </p>
           <p>
-            Each figurine is custom-sculpted and inspected individually. For any assistance, contact contact@theribbonstory.com
+            {customKeepsakesEnabled ? "Each figurine is custom-sculpted and inspected individually." : "Each item is inspected individually before it ships."} For any assistance, contact contact@theribbonstory.com
           </p>
         </div>
       </div>
