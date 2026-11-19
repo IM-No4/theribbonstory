@@ -269,7 +269,7 @@ export default function Home() {
       )}
 
       {/* HERO */}
-      <section className="relative isolate overflow-hidden border-b border-stone-200/70 bg-[#F8F1E9]">
+      <section className={`relative isolate overflow-hidden bg-[#F8F1E9] ${themedHero ? "" : "border-b border-stone-200/70"}`}>
         {themedHero ? (
           <div className="absolute inset-0 -z-10 bg-stone-900">
             <picture key={heroIndex}>
@@ -286,6 +286,7 @@ export default function Home() {
               />
             </picture>
             <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/55 to-stone-950/10 max-sm:hidden" />
+            {pageBg && <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-red-800 sm:h-32" />}
             {heroSlides > 1 && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
                 {Array.from({ length: heroSlides }, (_, i) => (
