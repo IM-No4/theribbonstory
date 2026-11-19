@@ -21,6 +21,7 @@ const EMPTY = {
   images: [],
   mobileImages: [],
   pageBackground: "",
+  collectionSlug: "",
 };
 
 const FIELDS = [
@@ -47,6 +48,7 @@ export default function AdminHeroTheme() {
 
   // Each theme keeps its own images and text; switching themes loads that theme's saved details.
   const [drafts, setDrafts] = useState({});
+  const [collections, setCollections] = useState([]);
 
   useEffect(() => {
     api
@@ -57,6 +59,10 @@ export default function AdminHeroTheme() {
       })
       .catch(() => toast.error("Could not load hero theme"))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    api.get("/categories").then(({ data }) => setCollections(data?.categories || [])).catch(() => {});
   }, []);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -251,7 +257,20 @@ export default function AdminHeroTheme() {
       </section>
 
       <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white">5. Text</h2>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">5. Theme collection</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Products from this collection are shown right below the hero. Leave empty to skip.
+        </p>
+        <select value={form.collectionSlug} onChange={(e) => set("collectionSlug", e.target.value)} className={inputClass}>
+          <option value="">None</option>
+          {collections.map((c) => (
+            <option key={c.slug} value={c.slug}>{c.name}</option>
+          ))}
+        </select>
+      </section>
+
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">6. Text</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {FIELDS.map((f) => (
             <label key={f.key} className={`block space-y-1 ${f.multiline ? "sm:col-span-2" : ""}`}>

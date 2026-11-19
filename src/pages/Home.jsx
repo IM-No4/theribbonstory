@@ -236,6 +236,12 @@ export default function Home() {
     return products.filter((product) => product.category === activeTab);
   }, [products, categories, activeTab]);
 
+  const themeCategory = heroTheme?.collectionSlug ? categories.find((c) => c.slug === heroTheme.collectionSlug) : null;
+  const themeProducts = useMemo(
+    () => (heroTheme?.collectionSlug ? products.filter((p) => p.category === heroTheme.collectionSlug).slice(0, 5) : []),
+    [products, heroTheme?.collectionSlug]
+  );
+
   const keepsakeCards =
     keepsakeCategories.length > 0 ? keepsakeCategories : DEFAULT_KEEPSAKE_CARDS;
 
@@ -460,6 +466,39 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* THEME COLLECTION */}
+      {themeProducts.length > 0 && (
+        <section className={`px-4 sm:px-6 lg:px-8 xl:px-12 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
+          <div className="mx-auto max-w-[1536px] space-y-6 sm:space-y-8">
+            <SectionHeading
+              light={Boolean(pageBg)}
+              eyebrow={(HERO_PRESETS[heroTheme?.preset]?.label || "Featured") + " picks"}
+              title={themeCategory?.name || "Featured collection"}
+              description={themeCategory?.description}
+              action={
+                <Link
+                  to={`/shop?category=${heroTheme.collectionSlug}`}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors ${pageBg ? "text-white hover:text-red-100" : "text-ribbon-600 hover:text-ribbon-700"}`}
+                >
+                  View all <ArrowRight size={16} />
+                </Link>
+              }
+            />
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {themeProducts.map((product, index) => (
+                <ProductCard
+                  key={product._id || product.slug}
+                  product={product}
+                  index={index}
+                  onQuickView={(item) => setQuickViewProduct(item)}
+                  onPersonalize={openProductCustomizer}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* COLLECTIONS */}
       <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 sm:px-6 lg:px-8 xl:px-12 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
