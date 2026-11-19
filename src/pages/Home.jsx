@@ -268,10 +268,17 @@ export default function Home() {
         </div>
       )}
 
+      <div
+        className={pageBg ? "bg-red-800" : undefined}
+        style={pageBg ? { backgroundImage: `url("${pageBg}")`, backgroundSize: "min(100vw, 800px) auto", backgroundRepeat: "repeat" } : undefined}
+      >
       {/* HERO */}
-      <section className={`relative isolate overflow-hidden bg-[#F8F1E9] ${themedHero ? "" : "border-b border-stone-200/70"}`}>
+      <section className={`relative isolate overflow-hidden ${themedHero ? "" : "border-b border-stone-200/70 bg-[#F8F1E9]"}`}>
         {themedHero ? (
-          <div className="absolute inset-0 -z-10 bg-stone-900">
+          <div
+            className="absolute inset-0 -z-10"
+            style={pageBg ? { WebkitMaskImage: "linear-gradient(to bottom, #000 calc(100% - 7rem), transparent)", maskImage: "linear-gradient(to bottom, #000 calc(100% - 7rem), transparent)" } : undefined}
+          >
             <picture key={heroIndex}>
               {heroMobileImages && (
                 <source media="(max-width: 639px)" srcSet={heroMobileImages[heroIndex % heroMobileImages.length]} />
@@ -286,7 +293,6 @@ export default function Home() {
               />
             </picture>
             <div className="absolute inset-0 bg-gradient-to-r from-stone-950/80 via-stone-950/55 to-stone-950/10 max-sm:hidden" />
-            {pageBg && <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-red-800 sm:h-32" />}
             {heroSlides > 1 && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
                 {Array.from({ length: heroSlides }, (_, i) => (
@@ -456,10 +462,6 @@ export default function Home() {
         </div>
       </section>
 
-      <div
-        className={pageBg ? "bg-red-800" : undefined}
-        style={pageBg ? { backgroundImage: `url("${pageBg}")`, backgroundSize: "min(100vw, 800px) auto", backgroundRepeat: "repeat" } : undefined}
-      >
       {/* COLLECTIONS */}
       <section className={`${pageBg ? "" : "border-b border-stone-200/70 bg-white"} px-4 py-12 sm:px-6 sm:py-16 lg:px-8 xl:px-12`}>
         <div className="mx-auto max-w-[1536px] space-y-6 sm:space-y-8">
