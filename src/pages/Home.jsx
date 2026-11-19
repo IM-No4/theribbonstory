@@ -763,11 +763,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <div className={pageBg ? "overflow-hidden rounded-3xl bg-white shadow-lg grid grid-cols-1 divide-y divide-stone-200 md:grid-flow-col md:auto-cols-fr md:divide-x md:divide-y-0" : "grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3"}>
             {TRUST_ITEMS.filter((item) => customKeepsakesEnabled || !item.custom).map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-stone-200 bg-[#FBF8F4] p-5 sm:p-6"
+                className={pageBg ? "p-5 sm:p-6" : "rounded-2xl border border-stone-200 bg-[#FBF8F4] p-5 sm:p-6"}
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-stone-200 bg-white text-ribbon-600 shadow-sm">
                   <Icon size={20} />
@@ -793,7 +793,7 @@ export default function Home() {
             title="From Little Idea to Keepsake"
             description={customKeepsakesEnabled ? "A simple path from discovering something you love to making it yours." : "A simple path from discovering something you love to having it at your door."}
           />
-          <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
+          <div className={pageBg ? "mt-7 overflow-hidden rounded-3xl bg-white shadow-lg grid grid-cols-1 divide-y divide-stone-200 md:grid-flow-col md:auto-cols-fr md:divide-x md:divide-y-0" : "mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5"}>
             {[
               {
                 number: "01",
@@ -817,7 +817,7 @@ export default function Home() {
             ].map((step, i) => ({ ...step, number: String(i + 1).padStart(2, "0") })).map((step) => (
               <div
                 key={step.number}
-                className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"
+                className={pageBg ? "p-5 sm:p-6" : "rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"}
               >
                 <span className="font-mono text-sm font-bold text-ribbon-600">{step.number}</span>
                 <h3 className="mt-3 font-display text-lg font-bold text-stone-900">{step.title}</h3>
