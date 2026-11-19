@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -115,6 +115,7 @@ export default function Checkout() {
 
   // Shiprocket Logistics State (Calculated automatically)
   const [shippingEstimate, setShippingEstimate] = useState(null);
+  const orderPlacedRef = useRef(false);
   const [loadingShiprocket, setLoadingShiprocket] = useState(false);
 
   // Gifting Option
@@ -270,6 +271,13 @@ export default function Checkout() {
       }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Leave checkout as soon as the bag is empty (removing the last item, "Remove all", etc.)
+  useEffect(() => {
+    if (items.length === 0 && !orderPlacedRef.current) {
+      navigate("/cart", { replace: true });
+    }
+  }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectSavedAddress = (addr, idx) => {
     setSelectedSavedIdx(idx);
@@ -441,6 +449,7 @@ export default function Checkout() {
   });
 
   const completeOrder = (orderId) => {
+    orderPlacedRef.current = true;
     clearCart();
     toast.success("Order placed successfully! We're crafting your keepsakes.");
     navigate(`/order-success/${orderId}`);
