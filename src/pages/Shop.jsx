@@ -1,14 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import {
-  SlidersHorizontal,
-  X,
-  ArrowRight,
-  ShoppingBag,
-  RotateCcw,
-  ChevronRight,
-} from "lucide-react";
+import { X, ShoppingBag, RotateCcw } from "lucide-react";
 
 import { api } from "../api/client";
 import ProductCard from "../components/ProductCard";
@@ -97,43 +90,9 @@ export default function Shop() {
 
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  const [draftCategory, setDraftCategory] = useState(category);
-  const [draftOccasion, setDraftOccasion] = useState(occasion);
-  const [draftSort, setDraftSort] = useState(sort);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-
-  // Keep draft filters synchronized with URL filters.
-  useEffect(() => {
-    setDraftCategory(category);
-    setDraftOccasion(occasion);
-    setDraftSort(sort);
-  }, [category, occasion, sort]);
-
-  // Lock background scrolling while the filter drawer is open.
-  useEffect(() => {
-    if (!filtersOpen) return;
-
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setFiltersOpen(false);
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [filtersOpen]);
 
   // Load product collections.
   useEffect(() => {
@@ -203,41 +162,8 @@ export default function Shop() {
     setParams(next);
   };
 
-  const openFilters = () => {
-    setDraftCategory(category);
-    setDraftOccasion(occasion);
-    setDraftSort(sort);
-    setFiltersOpen(true);
-  };
-
-  const applyFilters = () => {
-    const next = new URLSearchParams(params);
-
-    if (draftCategory && draftCategory !== "all") {
-      next.set("category", draftCategory);
-    } else {
-      next.delete("category");
-    }
-
-    if (draftOccasion) next.set("occasion", draftOccasion);
-    else next.delete("occasion");
-
-    if (draftSort) next.set("sort", draftSort);
-    else next.delete("sort");
-
-    setParams(next);
-    setFiltersOpen(false);
-  };
-
-  const resetDraftFilters = () => {
-    setDraftCategory("all");
-    setDraftOccasion("");
-    setDraftSort("");
-  };
-
   const clearAllFilters = () => {
     setParams(new URLSearchParams());
-    setFiltersOpen(false);
   };
 
   const handlePersonalize = (product) => {
@@ -266,25 +192,12 @@ export default function Shop() {
     );
   }, [category, occasion, search, categories]);
 
-  const activeFilterCount =
-    (category !== "all" ? 1 : 0) +
-    (occasion ? 1 : 0) +
-    (sort ? 1 : 0);
-
   const displayedProducts = useMemo(() => {
     if ((category === "all" || !category) && !sort && !search) {
       return mixProductsByCollection(products, categories);
     }
     return products;
   }, [products, categories, category, sort, search]);
-
-  // The page title already names one filter (search > occasion > collection), so chips only show the rest.
-  const showCategoryChip = category !== "all" && Boolean(search || occasion);
-  const showOccasionChip = Boolean(occasion && search);
-
-  const selectedCategoryName =
-    categories.find((item) => item.slug === category)?.name ||
-    "All Creations";
 
   return (
     <main className="min-h-screen bg-white text-stone-800">
@@ -293,21 +206,9 @@ export default function Shop() {
         <div className="mx-auto max-w-[1536px] px-4 py-3 sm:px-6 sm:py-4 lg:px-8 xl:px-12">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h1 className="font-display text-xl font-bold leading-tight tracking-tight text-stone-900 sm:text-2xl">
-                  {heading}
-                </h1>
-                {category !== "all" && !search && !occasion && (
-                  <button
-                    type="button"
-                    onClick={() => setParam("category", "")}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-800"
-                  >
-                    <X size={13} />
-                    Clear
-                  </button>
-                )}
-              </div>
+              <h1 className="font-display text-xl font-bold leading-tight tracking-tight text-stone-900 sm:text-2xl">
+                {heading}
+              </h1>
 
               {search && (
                 <button
@@ -325,355 +226,109 @@ export default function Shop() {
       </section>
 
       <div className="mx-auto max-w-[1536px] bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8 xl:px-12">
-        {/* COMPACT TOOLBAR: NO HORIZONTAL OCCASION CAROUSEL */}
-        <section className="flex items-center justify-between gap-3 border-y border-stone-200 py-3">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-stone-500 sm:text-sm">
-              Browse our collection
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={openFilters}
-            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-3.5 text-xs font-semibold text-stone-800 transition hover:border-rose-300 sm:px-4"
+        {/* ONE ROW: collections on the left, occasion + sort on the right */}
+        <section className="flex flex-col gap-3 pb-4 lg:flex-row lg:items-center lg:justify-between">
+          <nav
+            aria-label="Product collections"
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
           >
-            <SlidersHorizontal size={15} />
-            <span>Filter &amp; Sort</span>
+            {categories.map((item) => {
+              const selected = category === item.slug;
+              return (
+                <button
+                  key={item.slug}
+                  type="button"
+                  onClick={() => setParam("category", item.slug === "all" ? "" : item.slug)}
+                  aria-current={selected ? "page" : undefined}
+                  className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
+                    selected
+                      ? "bg-rose-600 text-white shadow-sm"
+                      : "border border-stone-200 bg-white text-stone-700 hover:border-rose-300 hover:text-rose-700"
+                  }`}
+                >
+                  {item.name}
+                </button>
+              );
+            })}
+          </nav>
 
-            {activeFilterCount > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <select
+              aria-label="Occasion"
+              value={occasion}
+              onChange={(event) => setParam("occasion", event.target.value)}
+              className="min-h-10 flex-1 rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-700 outline-none focus:border-rose-400 sm:flex-none sm:text-sm"
+            >
+              <option value="">All occasions</option>
+              {OCCASIONS.map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sort products"
+              value={sort}
+              onChange={(event) => setParam("sort", event.target.value)}
+              className="min-h-10 flex-1 rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-700 outline-none focus:border-rose-400 sm:flex-none sm:text-sm"
+            >
+              {SORTS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </section>
 
-        {/* ACTIVE FILTER CHIPS */}
-        {(showCategoryChip || showOccasionChip) && (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-stone-500">Showing:</span>
-
-            {showCategoryChip && (
-              <button
-                type="button"
-                onClick={() => setParam("category", "")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-800"
-              >
-                {selectedCategoryName}
-                <X size={12} />
-              </button>
-            )}
-
-            {showOccasionChip && (
-              <button
-                type="button"
-                onClick={() => setParam("occasion", "")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-800"
-              >
-                {OCCASIONS.find((item) => item.slug === occasion)?.name ||
-                  occasion}
-                <X size={12} />
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="ml-1 text-[11px] font-semibold text-stone-500 underline underline-offset-2 hover:text-rose-700"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
-
-        {/* SHOP CONTENT */}
-        <div className="mt-5 grid grid-cols-1 gap-6 lg:mt-7 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
-          {/* DESKTOP SIDEBAR */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-7">
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-stone-900">
-                    Collections
-                  </h2>
-                </div>
-
-                <nav aria-label="Product collections" className="space-y-1">
-                  {categories.map((item) => {
-                    const selected = category === item.slug;
-
-                    return (
-                      <button
-                        key={item.slug}
-                        type="button"
-                        onClick={() =>
-                          setParam(
-                            "category",
-                            item.slug === "all" ? "" : item.slug
-                          )
-                        }
-                        aria-current={selected ? "page" : undefined}
-                        className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-xs transition ${
-                          selected
-                            ? "bg-rose-50 font-bold text-rose-800 ring-1 ring-inset ring-rose-100"
-                            : "text-stone-600 hover:bg-white hover:text-stone-900"
-                        }`}
-                      >
-                        <span>{item.name}</span>
-                        {selected && <ChevronRight size={14} />}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              <div className="rounded-2xl border border-stone-200 bg-white p-4">
-                <h2 className="mb-3 text-xs font-bold text-stone-900">
-                  Sort products
-                </h2>
-
-                <select
-                  aria-label="Sort products"
-                  value={sort}
-                  onChange={(event) => setParam("sort", event.target.value)}
-                  className="min-h-10 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-700 outline-none focus:border-rose-400"
-                >
-                  {SORTS.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {customKeepsakesEnabled && (
-              <div className="rounded-2xl border border-stone-200 bg-white p-4">
-                <p className="font-display text-base font-bold text-stone-900">
-                  Something personal?
-                </p>
-                <p className="mt-1.5 text-xs leading-relaxed text-stone-600">
-                  Turn a favourite photo into a personalized figurine.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate("/personalized")}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-900"
-                >
-                  Create your figurine <ArrowRight size={13} />
-                </button>
-              </div>
-              )}
-            </div>
-          </aside>
-
-          {/* PRODUCT GRID */}
-          <section className="min-w-0" aria-label="Products">
-            {loading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1120px]:grid-cols-4 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="overflow-hidden rounded-2xl border border-stone-100 bg-white"
-                  >
-                    <div className="aspect-square animate-pulse bg-stone-100" />
-                    <div className="space-y-2 p-3 sm:p-4">
-                      <div className="h-3 w-3/4 animate-pulse rounded bg-stone-100" />
-                      <div className="h-3 w-1/2 animate-pulse rounded bg-stone-100" />
-                      <div className="mt-3 h-8 animate-pulse rounded-lg bg-stone-100" />
-                    </div>
+        {/* PRODUCT GRID */}
+        <section className="min-w-0" aria-label="Products">
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <div key={index} className="overflow-hidden rounded-2xl border border-stone-100 bg-white">
+                  <div className="aspect-square animate-pulse bg-stone-100" />
+                  <div className="space-y-2 p-3 sm:p-4">
+                    <div className="h-3 w-3/4 animate-pulse rounded bg-stone-100" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-stone-100" />
+                    <div className="mt-3 h-8 animate-pulse rounded-lg bg-stone-100" />
                   </div>
-                ))}
-              </div>
-            ) : displayedProducts.length === 0 ? (
-              <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-10 text-center sm:min-h-[360px] sm:rounded-3xl">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
-                  <ShoppingBag size={24} />
                 </div>
-
-                <h2 className="mt-4 font-display text-xl font-bold text-stone-900 sm:text-2xl">
-                  No keepsakes found
-                </h2>
-
-                <p className="mt-2 max-w-sm text-xs leading-relaxed text-stone-500 sm:text-sm">
-                  Try another collection or clear your filters to explore all
-                  available creations.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={clearAllFilters}
-                  className="btn-primary mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-bold sm:text-sm"
-                >
-                  <RotateCcw size={14} />
-                  View all creations
-                </button>
+              ))}
+            </div>
+          ) : displayedProducts.length === 0 ? (
+            <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-stone-200 bg-white px-5 py-10 text-center sm:min-h-[360px] sm:rounded-3xl">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
+                <ShoppingBag size={24} />
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 min-[1120px]:grid-cols-4 xl:grid-cols-4">
-                {displayedProducts.map((product, index) => (
-                  <ProductCard
-                    key={product._id || product.slug}
-                    product={product}
-                    index={index}
-                    onQuickView={setQuickViewProduct}
-                    onPersonalize={handlePersonalize}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
-
-      {/* UNIFIED FILTER & SORT DRAWER */}
-      {filtersOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          <button
-            type="button"
-            aria-label="Close filters"
-            onClick={() => setFiltersOpen(false)}
-            className="fixed inset-0 bg-stone-950/45 backdrop-blur-[2px] transition-opacity"
-          />
-
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="filter-dialog-title"
-            className="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-2xl rounded-none overflow-hidden"
-          >
-            {/* MODAL HEADER */}
-            <div className="flex items-center justify-between border-b border-stone-200 bg-white px-5 py-4">
-              <div>
-                <h2
-                  id="filter-dialog-title"
-                  className="font-display text-xl font-bold text-stone-900"
-                >
-                  Filter &amp; Sort
-                </h2>
-                <p className="mt-0.5 text-xs text-stone-500">
-                  Find your perfect keepsake
-                </p>
-              </div>
-
+              <h2 className="mt-4 font-display text-xl font-bold text-stone-900 sm:text-2xl">No products found</h2>
+              <p className="mt-2 max-w-sm text-xs leading-relaxed text-stone-500 sm:text-sm">
+                Try another collection or clear your filters to explore everything.
+              </p>
               <button
                 type="button"
-                onClick={() => setFiltersOpen(false)}
-                aria-label="Close filters"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 transition"
+                onClick={clearAllFilters}
+                className="btn-primary mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-bold sm:text-sm"
               >
-                <X size={18} />
+                <RotateCcw size={14} />
+                View all
               </button>
             </div>
-
-            {/* MODAL CONTENT */}
-            <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
-              {/* COLLECTIONS */}
-              <div>
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-stone-800">
-                  Collections
-                </h3>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {categories.map((item) => {
-                    const selected = draftCategory === item.slug;
-
-                    return (
-                      <button
-                        key={item.slug}
-                        type="button"
-                        onClick={() => setDraftCategory(item.slug)}
-                        aria-pressed={selected}
-                        className={`flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition ${
-                          selected
-                            ? "border-rose-300 bg-rose-50 text-rose-800"
-                            : "border-stone-200 bg-white text-stone-700"
-                        }`}
-                      >
-                        <span>{item.name}</span>
-                        {selected && (
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-rose-600" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* OCCASION */}
-              <div>
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-stone-800">
-                  Occasion
-                </h3>
-
-                <select
-                  value={draftOccasion}
-                  onChange={(event) => setDraftOccasion(event.target.value)}
-                  className="min-h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-sm text-stone-800 outline-none focus:border-rose-400"
-                >
-                  <option value="">All occasions</option>
-                  {OCCASIONS.map((item) => (
-                    <option key={item.slug} value={item.slug}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* SORT */}
-              <div>
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-stone-800">
-                  Sort by
-                </h3>
-
-                <div className="space-y-2">
-                  {SORTS.map((item) => (
-                    <label
-                      key={item.value}
-                      className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-stone-200 bg-white px-3.5 py-3"
-                    >
-                      <input
-                        type="radio"
-                        name="mobile-sort"
-                        value={item.value}
-                        checked={draftSort === item.value}
-                        onChange={() => setDraftSort(item.value)}
-                        className="accent-rose-600"
-                      />
-                      <span className="text-xs font-medium text-stone-700">
-                        {item.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {displayedProducts.map((product, index) => (
+                <ProductCard
+                  key={product._id || product.slug}
+                  product={product}
+                  index={index}
+                  onQuickView={setQuickViewProduct}
+                  onPersonalize={handlePersonalize}
+                />
+              ))}
             </div>
-
-            {/* MODAL FOOTER */}
-            <div className="border-t border-stone-200 bg-white px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={resetDraftFilters}
-                  className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 text-xs font-bold text-stone-700"
-                >
-                  <RotateCcw size={14} />
-                  Reset
-                </button>
-
-                <button
-                  type="button"
-                  onClick={applyFilters}
-                  className="btn-primary inline-flex min-h-12 flex-[1.5] items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold"
-                >
-                  Apply filters
-                  <ArrowRight size={15} />
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
+          )}
+        </section>
+      </div>
 
       {/* PRODUCT MODALS */}
       <ProductCustomizerModal
