@@ -286,24 +286,12 @@ export default function Shop() {
     <main className="min-h-screen bg-white text-stone-800">
       {/* PAGE HEADER */}
       <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-[1536px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8 xl:px-12 lg:py-6">
+        <div className="mx-auto max-w-[1536px] px-4 py-3 sm:px-6 sm:py-4 lg:px-8 xl:px-12">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <div className="mb-1.5 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-700 sm:text-[11px]">
-                  The Ribbon Story Collection
-                </span>
-              </div>
-
-              <h1 className="font-display text-2xl font-bold leading-tight tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
+              <h1 className="font-display text-xl font-bold leading-tight tracking-tight text-stone-900 sm:text-2xl">
                 {heading}
               </h1>
-
-              <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-stone-600 sm:text-sm">
-                Little collectibles, playful desk companions and thoughtful keepsakes
-                made to bring a little personality to everyday life.
-              </p>
 
               {search && (
                 <button
