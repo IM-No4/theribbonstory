@@ -18,6 +18,7 @@ import ProductCustomizerModal from "../components/ProductCustomizerModal";
 import QuickViewModal from "../components/QuickViewModal";
 import { useSeo } from "../utils/seo";
 import { useConfigStore } from "../store/configStore";
+import SeasonalEffect from "../components/SeasonalEffect";
 import { HERO_PRESETS } from "../data/heroPresets";
 
 const KEEPSAKE_CATEGORY_IMAGES = {
@@ -268,6 +269,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#FBF8F4] text-stone-800">
+      {heroTheme?.effect && heroTheme.effect !== "none" && <SeasonalEffect effect={heroTheme.effect} />}
       {heroTheme?.bannerText && (
         <div className={`px-4 py-2 text-center text-xs font-semibold sm:text-sm ${accent.banner}`}>
           {heroTheme.bannerText}

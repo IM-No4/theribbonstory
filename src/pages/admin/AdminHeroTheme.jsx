@@ -6,6 +6,7 @@ import { api, assetUrl } from "../../api/client";
 import { useSeo } from "../../utils/seo";
 import { useConfigStore } from "../../store/configStore";
 import { HERO_PRESETS } from "../../data/heroPresets";
+import { EFFECT_OPTIONS } from "../../components/SeasonalEffect";
 
 const EMPTY = {
   enabled: false,
@@ -22,6 +23,7 @@ const EMPTY = {
   mobileImages: [],
   pageBackground: "",
   collectionSlug: "",
+  effect: "none",
 };
 
 const FIELDS = [
@@ -77,7 +79,7 @@ export default function AdminHeroTheme() {
     const nextDrafts = { ...drafts, [form.preset]: themeFields(form) };
     setDrafts(nextDrafts);
     const saved = nextDrafts[key];
-    const base = { ...themeFields(EMPTY), ...(HERO_PRESETS[key].text || {}) };
+    const base = { ...themeFields(EMPTY), effect: HERO_PRESETS[key].effect || "none", ...(HERO_PRESETS[key].text || {}) };
     setForm((prev) => ({ enabled: prev.enabled, preset: key, ...(saved ? { ...themeFields(EMPTY), ...saved } : base) }));
   };
 
@@ -270,7 +272,19 @@ export default function AdminHeroTheme() {
       </section>
 
       <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white">6. Text</h2>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">6. Animation (optional)</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          A light animation over the home page, like falling snow. Turned off automatically for visitors who prefer reduced motion.
+        </p>
+        <select value={form.effect || "none"} onChange={(e) => set("effect", e.target.value)} className={inputClass}>
+          {EFFECT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </section>
+
+      <section className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">7. Text</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {FIELDS.map((f) => (
             <label key={f.key} className={`block space-y-1 ${f.multiline ? "sm:col-span-2" : ""}`}>

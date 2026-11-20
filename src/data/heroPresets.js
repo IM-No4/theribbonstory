@@ -10,6 +10,7 @@ export const HERO_PRESETS = {
   },
   christmas: {
     label: "Christmas",
+    effect: "snow",
     emoji: "🎄",
     accent: { highlight: "text-red-600", dot: "bg-emerald-600", glow: "bg-red-200/40", banner: "bg-red-700 text-white" },
     text: {
@@ -25,6 +26,7 @@ export const HERO_PRESETS = {
   },
   newyear: {
     label: "New Year",
+    effect: "sparkles",
     emoji: "🎆",
     accent: { highlight: "text-violet-600", dot: "bg-violet-500", glow: "bg-violet-200/40", banner: "bg-violet-700 text-white" },
     text: {
@@ -40,6 +42,7 @@ export const HERO_PRESETS = {
   },
   diwali: {
     label: "Diwali",
+    effect: "sparkles",
     emoji: "🪔",
     accent: { highlight: "text-amber-600", dot: "bg-amber-500", glow: "bg-amber-200/45", banner: "bg-amber-600 text-white" },
     text: {
@@ -55,6 +58,7 @@ export const HERO_PRESETS = {
   },
   valentine: {
     label: "Valentine's",
+    effect: "hearts",
     emoji: "💖",
     accent: { highlight: "text-rose-600", dot: "bg-rose-500", glow: "bg-rose-300/40", banner: "bg-rose-600 text-white" },
     text: {
