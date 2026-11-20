@@ -202,35 +202,27 @@ export default function Shop() {
   return (
     <main className="min-h-screen bg-white text-stone-800">
       {/* PAGE HEADER */}
-      <section className="border-b border-stone-200 bg-white">
-        <div className="mx-auto max-w-[1536px] px-4 py-3 sm:px-6 sm:py-4 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="font-display text-xl font-bold leading-tight tracking-tight text-stone-900 sm:text-2xl">
-                {heading}
-              </h1>
-
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setParam("search", "")}
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-rose-700"
-                >
-                  <X size={14} />
-                  Clear search
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* The selected collection is highlighted below, so the heading is only shown for searches. */}
+      <h1 className={search ? "mx-auto max-w-[1536px] px-4 pt-5 font-display text-xl font-bold text-stone-900 sm:px-6 sm:text-2xl lg:px-8 xl:px-12" : "sr-only"}>
+        {heading}
+        {search && (
+          <button
+            type="button"
+            onClick={() => setParam("search", "")}
+            className="ml-3 inline-flex items-center gap-1 align-middle font-sans text-xs font-semibold text-rose-700"
+          >
+            <X size={13} />
+            Clear search
+          </button>
+        )}
+      </h1>
 
       <div className="mx-auto max-w-[1536px] bg-white px-4 py-4 sm:px-6 sm:py-6 lg:px-8 xl:px-12">
         {/* ONE ROW: collections on the left, occasion + sort on the right */}
-        <section className="flex flex-col gap-3 pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <section className="space-y-3 pb-4">
           <nav
             aria-label="Product collections"
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 no-scrollbar sm:mx-0 sm:px-0"
           >
             {categories.map((item) => {
               const selected = category === item.slug;
@@ -252,7 +244,11 @@ export default function Shop() {
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
+            <p className="hidden text-xs text-stone-500 sm:block">
+              {loading ? "Loading…" : `${displayedProducts.length} ${displayedProducts.length === 1 ? "product" : "products"}`}
+            </p>
+            <div className="flex w-full items-center gap-2 sm:w-auto">
             <select
               aria-label="Occasion"
               value={occasion}
@@ -278,6 +274,7 @@ export default function Shop() {
                 </option>
               ))}
             </select>
+            </div>
           </div>
         </section>
 
