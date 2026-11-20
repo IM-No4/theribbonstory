@@ -278,6 +278,10 @@ export default function Shop() {
     return products;
   }, [products, categories, category, sort, search]);
 
+  // The page title already names one filter (search > occasion > collection), so chips only show the rest.
+  const showCategoryChip = category !== "all" && Boolean(search || occasion);
+  const showOccasionChip = Boolean(occasion && search);
+
   const selectedCategoryName =
     categories.find((item) => item.slug === category)?.name ||
     "All Creations";
@@ -334,11 +338,11 @@ export default function Shop() {
         </section>
 
         {/* ACTIVE FILTER CHIPS */}
-        {(category !== "all" || occasion || search) && (
+        {(showCategoryChip || showOccasionChip) && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-[11px] text-stone-500">Showing:</span>
 
-            {category !== "all" && (
+            {showCategoryChip && (
               <button
                 type="button"
                 onClick={() => setParam("category", "")}
@@ -349,7 +353,7 @@ export default function Shop() {
               </button>
             )}
 
-            {occasion && (
+            {showOccasionChip && (
               <button
                 type="button"
                 onClick={() => setParam("occasion", "")}
@@ -357,17 +361,6 @@ export default function Shop() {
               >
                 {OCCASIONS.find((item) => item.slug === occasion)?.name ||
                   occasion}
-                <X size={12} />
-              </button>
-            )}
-
-            {search && (
-              <button
-                type="button"
-                onClick={() => setParam("search", "")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-800"
-              >
-                {search}
                 <X size={12} />
               </button>
             )}
