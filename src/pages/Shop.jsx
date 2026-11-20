@@ -224,21 +224,28 @@ export default function Shop() {
             aria-label="Product collections"
             className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 no-scrollbar sm:mx-0 sm:px-0"
           >
-            {categories.map((item) => {
-              const selected = category === item.slug;
+            {/* The selected collection comes first, with a cross to remove it */}
+            {[
+              ...categories.filter((item) => item.slug === category && item.slug !== "all"),
+              ...categories.filter((item) => item.slug !== category || item.slug === "all"),
+            ].map((item) => {
+              const selected = category === item.slug && item.slug !== "all";
+              const allSelected = category === "all" && item.slug === "all";
               return (
                 <button
                   key={item.slug}
                   type="button"
-                  onClick={() => setParam("category", item.slug === "all" ? "" : item.slug)}
-                  aria-current={selected ? "page" : undefined}
-                  className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
-                    selected
+                  onClick={() => setParam("category", selected || item.slug === "all" ? "" : item.slug)}
+                  aria-current={selected || allSelected ? "page" : undefined}
+                  aria-label={selected ? `${item.name}, remove filter` : undefined}
+                  className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
+                    selected || allSelected
                       ? "bg-rose-600 text-white shadow-sm"
                       : "border border-stone-200 bg-white text-stone-700 hover:border-rose-300 hover:text-rose-700"
                   }`}
                 >
                   {item.name}
+                  {selected && <X size={14} />}
                 </button>
               );
             })}
