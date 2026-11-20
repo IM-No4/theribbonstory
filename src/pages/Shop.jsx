@@ -293,9 +293,21 @@ export default function Shop() {
         <div className="mx-auto max-w-[1536px] px-4 py-3 sm:px-6 sm:py-4 lg:px-8 xl:px-12">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="font-display text-xl font-bold leading-tight tracking-tight text-stone-900 sm:text-2xl">
-                {heading}
-              </h1>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h1 className="font-display text-xl font-bold leading-tight tracking-tight text-stone-900 sm:text-2xl">
+                  {heading}
+                </h1>
+                {category !== "all" && !search && !occasion && (
+                  <button
+                    type="button"
+                    onClick={() => setParam("category", "")}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:text-rose-800"
+                  >
+                    <X size={13} />
+                    Clear
+                  </button>
+                )}
+              </div>
 
               {search && (
                 <button
