@@ -825,50 +825,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className={`px-4 sm:px-6 lg:px-8 ${pageBg ? "py-5 sm:py-8" : "py-12 sm:py-16"}`}>
-        <div className="mx-auto max-w-7xl">
-          <SectionHeading
-            light={Boolean(pageBg)}
-            eyebrow={customKeepsakesEnabled ? "Simple and personal" : "Simple and easy"}
-            title="From Little Idea to Keepsake"
-            description={customKeepsakesEnabled ? "A simple path from discovering something you love to making it yours." : "A simple path from discovering something you love to having it at your door."}
-          />
-          <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-            {[
-              {
-                number: "01",
-                title: "Find your favourite",
-                description: customKeepsakesEnabled
-                  ? "Explore ready-to-buy collectibles or choose the personalized figurine that suits your occasion."
-                  : "Explore our ready-to-buy 3D-printed collectibles and pick the one that makes you smile.",
-              },
-              ...(customKeepsakesEnabled
-                ? [{
-                    number: "02",
-                    title: "Make it yours",
-                    description: "For custom figurines, share your reference photo and select from the options available.",
-                  }]
-                : []),
-              {
-                number: "03",
-                title: "We prepare your order",
-                description: "Your selected item is prepared and packed for delivery. Check the product page for current timelines.",
-              },
-            ].map((step, i) => ({ ...step, number: String(i + 1).padStart(2, "0") })).map((step) => (
-              <div
-                key={step.number}
-                className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"
-              >
-                <span className="font-mono text-sm font-bold text-ribbon-600">{step.number}</span>
-                <h3 className="mt-3 font-display text-lg font-bold text-stone-900">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-stone-600">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* FINAL CTA */}
       <section className={`px-4 sm:px-6 lg:px-8 ${pageBg ? "pb-8 pt-2 sm:pb-12" : "pb-12 sm:pb-16"}`}>
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 rounded-3xl bg-[#F0E3D8] p-6 sm:p-8 md:flex-row md:items-center md:p-10">
