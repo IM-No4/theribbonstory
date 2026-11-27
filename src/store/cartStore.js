@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
+import { piecesInLine, piecesInCart } from "../utils/packSize";
 
 const STORAGE_KEY = "trs_cart";
 const COUPON_KEY = "trs_applied_coupon";
@@ -134,38 +135,28 @@ export const useCartStore = create((set, get) => ({
       }
     }
 
-    // If stock limit is provided, ensure total does not exceed available stock
+    // Stock is counted in pieces and shared by every pack size of the product
     const availableStock = typeof finalItem.stock === "number" ? finalItem.stock : (existingIndex > -1 && typeof items[existingIndex].stock === "number" ? items[existingIndex].stock : undefined);
 
-    if (existingIndex > -1) {
-      const currentQty = items[existingIndex].quantity;
-      const targetQty = currentQty + finalItem.quantity;
-      if (typeof availableStock === "number") {
-        if (availableStock <= 0) {
-          toast.error(`Sorry, "${finalItem.name}" is out of stock`);
-          return false;
-        }
-        if (targetQty > availableStock) {
-          toast.error(`Sorry, only ${availableStock} left in stock for "${finalItem.name}"`);
-          return false;
-        }
+    if (typeof availableStock === "number" && !isCustomKeepsakeItem(finalItem)) {
+      if (availableStock <= 0) {
+        toast.error(`Sorry, "${finalItem.name}" is out of stock`);
+        return false;
       }
+      if (piecesInCart(items, finalItem.productId) + piecesInLine(finalItem) > availableStock) {
+        toast.error(`Sorry, only ${availableStock} piece(s) of "${finalItem.name}" in stock`);
+        return false;
+      }
+    }
+
+    if (existingIndex > -1) {
+      const targetQty = items[existingIndex].quantity + finalItem.quantity;
       items[existingIndex] = {
         ...items[existingIndex],
         quantity: targetQty,
         ...(typeof availableStock === "number" ? { stock: availableStock } : {}),
       };
     } else {
-      if (typeof availableStock === "number") {
-        if (availableStock <= 0) {
-          toast.error(`Sorry, "${finalItem.name}" is out of stock`);
-          return false;
-        }
-        if (finalItem.quantity > availableStock) {
-          toast.error(`Sorry, only ${availableStock} left in stock for "${finalItem.name}"`);
-          return false;
-        }
-      }
       items.push({
         ...finalItem,
         id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
@@ -182,9 +173,12 @@ export const useCartStore = create((set, get) => ({
     if (!existing) return;
 
     if (quantity > existing.quantity) {
-      if (typeof existing.stock === "number" && quantity > existing.stock) {
-        toast.error(`Only ${existing.stock} available in stock`);
-        return;
+      if (typeof existing.stock === "number" && !isCustomKeepsakeItem(existing)) {
+        const others = piecesInCart(get().items.filter((i) => i.id !== id), existing.productId);
+        if (others + piecesInLine({ ...existing, quantity }) > existing.stock) {
+          toast.error(`Only ${existing.stock} piece(s) available in stock`);
+          return;
+        }
       }
 
       // Check weekly threshold for custom keepsakes

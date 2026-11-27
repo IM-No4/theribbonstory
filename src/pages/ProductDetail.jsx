@@ -29,7 +29,7 @@ import QuickViewModal from "../components/QuickViewModal";
 import VirtualUnboxingModal from "../components/VirtualUnboxingModal";
 import ShareProduct from "../components/ShareProduct";
 import { useSeo, absoluteUrl, SITE_NAME, SITE_URL } from "../utils/seo";
-import { hasSetOption, setSaving } from "../utils/packSize";
+import { hasSetOption, setSaving, piecesPerUnit, piecesInCart } from "../utils/packSize";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -315,6 +315,10 @@ export default function ProductDetail() {
   const chosenOptions = Object.entries(selectedOptions).map(([name, opt]) => ({ name, value: opt.label }));
   const cartItem = findProductLine(items, product, chosenOptions);
   const cartQuantity = cartItem ? cartItem.quantity : 0;
+  // Pieces still available for the selected pack, counting every pack size already in the cart
+  const piecesLeft = typeof product.stock === "number" ? product.stock - piecesInCart(items, productId) : Infinity;
+  const outOfStock = typeof product.stock === "number" && product.stock <= 0;
+  const notEnoughStock = !outOfStock && piecesLeft < piecesPerUnit(chosenOptions);
   const chosenLabel = chosenOptions.map((o) => o.value).join(" · ");
 
   const quantityInCart = (groupName, label) =>
@@ -725,10 +729,6 @@ export default function ProductDetail() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (typeof product.stock === "number" && cartQuantity >= product.stock) {
-                            toast.error(`Only ${product.stock} available in stock`);
-                            return;
-                          }
                           updateQuantity(cartItem.id, cartQuantity + 1);
                         }}
                         aria-label="Increase quantity"
@@ -742,18 +742,20 @@ export default function ProductDetail() {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    disabled={typeof product.stock === "number" && product.stock <= 0}
+                    disabled={outOfStock || notEnoughStock}
                     className={`flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold uppercase tracking-wide shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 ${
-                      typeof product.stock === "number" && product.stock <= 0
+                      outOfStock || notEnoughStock
                         ? "bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-200"
                         : "btn-primary hover:shadow-md cursor-pointer"
                     }`}
                   >
-                    <Sparkles size={15} className={`shrink-0 ${typeof product.stock === "number" && product.stock <= 0 ? "text-stone-400" : "text-amber-300"}`} />
+                    <Sparkles size={15} className={`shrink-0 ${outOfStock || notEnoughStock ? "text-stone-400" : "text-amber-300"}`} />
                     <span className="truncate">
-                      {typeof product.stock === "number" && product.stock <= 0
+                      {outOfStock
                         ? "Out of Stock"
-                        : `Add to Cart — ${formatPrice(unitPrice)}`}
+                        : notEnoughStock
+                          ? piecesLeft > 0 ? `Only ${piecesLeft} piece${piecesLeft === 1 ? "" : "s"} left` : "All stock is in your cart"
+                          : `Add to Cart — ${formatPrice(unitPrice)}`}
                     </span>
                   </button>
                 )}

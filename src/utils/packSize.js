@@ -4,6 +4,15 @@ export const packCount = (label) => {
   return match ? Number(match[1]) : 0;
 };
 
+// Stock is counted in pieces; a "Set of 4" line uses 4 per unit
+export const piecesPerUnit = (selectedOptions) =>
+  Math.max(1, ...(selectedOptions || []).map((o) => packCount(o?.value ?? o?.label) || 1));
+
+export const piecesInLine = (line) => (Number(line?.quantity) || 0) * piecesPerUnit(line?.selectedOptions);
+
+export const piecesInCart = (items, productId) =>
+  (items || []).filter((i) => i.productId === productId).reduce((sum, i) => sum + piecesInLine(i), 0);
+
 export const hasSetOption = (product) =>
   (product?.optionGroups || []).some((group) => group.values?.some((v) => packCount(v.label) > 1));
 
