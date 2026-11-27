@@ -7,6 +7,8 @@ import { api, assetUrl } from "../api/client";
 import toast from "react-hot-toast";
 import { useSeo } from "../utils/seo";
 import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
+import { useCouponSync } from "../hooks/useCouponSync";
+import { couponLabel, isCouponOffered } from "../utils/coupons";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -37,6 +39,8 @@ export default function Cart() {
   // null = charges unavailable; the server works them out at checkout
   const shipping = !charges ? null : subtotal === 0 || subtotal >= freeShippingThreshold ? 0 : charges.standardFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
+  useCouponSync(subtotal, "standard", charges);
+  const offeredCoupons = availableCoupons.filter((cp) => isCouponOffered(cp, { subtotal, charges }));
   const total = Math.max(0, subtotal + (shipping || 0) - discount);
 
   const freeShippingProgress = freeShippingThreshold ? Math.min(100, (subtotal / freeShippingThreshold) * 100) : 100;
@@ -49,6 +53,7 @@ export default function Cart() {
       const { data } = await api.post("/coupons/apply", {
         code: cleanCode,
         subtotal,
+        deliverySlot: "standard",
       });
       setCoupon(data);
       toast.success(data.message || "Coupon applied!");
@@ -302,13 +307,13 @@ export default function Cart() {
                 </form>
               )}
 
-              {!appliedCoupon && availableCoupons.length > 0 && (
+              {!appliedCoupon && offeredCoupons.length > 0 && (
                 <div className="pt-2 space-y-1.5">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-espresso-400">
                     Available Offers:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {availableCoupons.slice(0, 3).map((cp) => (
+                    {offeredCoupons.slice(0, 3).map((cp) => (
                       <button
                         key={cp.code}
                         type="button"
@@ -318,7 +323,7 @@ export default function Cart() {
                       >
                         <span>{cp.code}</span>
                         <span className="text-[10px] font-sans font-normal text-burgundy-700">
-                          ({cp.discountType === "percentage" ? `${cp.discountAmount}% off` : `₹${cp.discountAmount} off`})
+                          ({couponLabel(cp)})
                         </span>
                       </button>
                     ))}

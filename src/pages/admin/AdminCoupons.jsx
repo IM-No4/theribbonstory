@@ -27,6 +27,8 @@ export default function AdminCoupons() {
     usageLimit: 1000,
     validUntil: "",
     isActive: true,
+    coversExpress: false,
+    coversMidnight: false,
   });
 
   const fetchCoupons = async () => {
@@ -57,6 +59,8 @@ export default function AdminCoupons() {
       usageLimit: 1000,
       validUntil: "",
       isActive: true,
+      coversExpress: false,
+      coversMidnight: false,
     });
     setIsModalOpen(true);
   };
@@ -73,13 +77,16 @@ export default function AdminCoupons() {
       usageLimit: coupon.usageLimit || 1000,
       validUntil: coupon.validUntil ? coupon.validUntil.split("T")[0] : "",
       isActive: coupon.isActive !== undefined ? coupon.isActive : true,
+      coversExpress: Boolean(coupon.coversExpress),
+      coversMidnight: Boolean(coupon.coversMidnight),
     });
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.code || formData.discountAmount === "") {
+    const freeDelivery = formData.discountType === "free_shipping";
+    if (!formData.code || (!freeDelivery && !formData.discountAmount)) {
       toast.error("Code and discount amount are required.");
       return;
     }
@@ -88,7 +95,7 @@ export default function AdminCoupons() {
     const payload = {
       ...formData,
       code: formData.code.trim().toUpperCase(),
-      discountAmount: Number(formData.discountAmount),
+      discountAmount: freeDelivery ? 0 : Number(formData.discountAmount),
       minOrderAmount: formData.minOrderAmount ? Number(formData.minOrderAmount) : 0,
       maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : 0,
       usageLimit: Number(formData.usageLimit) || 1000,
@@ -197,7 +204,9 @@ export default function AdminCoupons() {
                       <div className="text-[11px] text-slate-400 mt-0.5">{c.description || "No description"}</div>
                     </td>
                     <td className="py-3 px-4 font-bold text-rose-300">
-                      {c.discountType === "percentage" ? `${c.discountAmount}% OFF` : `₹${c.discountAmount} Flat OFF`}
+                      {c.discountType === "free_shipping"
+                        ? ["Free delivery", c.coversExpress && "+ express", c.coversMidnight && "+ midnight"].filter(Boolean).join(" ")
+                        : c.discountType === "percentage" ? `${c.discountAmount}% OFF` : `₹${c.discountAmount} Flat OFF`}
                     </td>
                     <td className="py-3 px-4 text-slate-300">
                       {c.minOrderAmount > 0 ? `Min spend ₹${c.minOrderAmount}` : "No min spend"}
@@ -293,11 +302,13 @@ export default function AdminCoupons() {
                   >
                     <option value="fixed">Flat ₹ Amount OFF</option>
                     <option value="percentage">% Percentage OFF</option>
+                    <option value="free_shipping">Free Delivery</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {formData.discountType !== "free_shipping" && (
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
                     Discount Value ({formData.discountType === "percentage" ? "%" : "₹"}) *
@@ -312,6 +323,7 @@ export default function AdminCoupons() {
                     className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold focus:outline-hidden focus:border-rose-500 text-xs"
                   />
                 </div>
+                )}
 
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1 uppercase tracking-wider text-[11px]">
@@ -327,6 +339,28 @@ export default function AdminCoupons() {
                   />
                 </div>
               </div>
+
+              {formData.discountType === "free_shipping" && (
+                <div className="space-y-2 p-4 rounded-2xl bg-slate-900/40 border border-slate-800">
+                  <p className="text-slate-400">
+                    Removes the standard delivery charge due on the order. It isn't offered when delivery is already free.
+                  </p>
+                  {[
+                    { key: "coversExpress", label: "Also waive the express delivery charge" },
+                    { key: "coversMidnight", label: "Also waive the midnight delivery charge" },
+                  ].map((option) => (
+                    <label key={option.key} className="flex items-center gap-2 cursor-pointer text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={formData[option.key]}
+                        onChange={(e) => setFormData({ ...formData, [option.key]: e.target.checked })}
+                        className="rounded-md border-slate-700 text-rose-600 focus:ring-rose-500"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
               {formData.discountType === "percentage" && (
                 <div>

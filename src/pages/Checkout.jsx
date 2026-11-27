@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
+import { useCouponSync } from "../hooks/useCouponSync";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -157,6 +158,7 @@ export default function Checkout() {
   const expressPriorityFee = selectedDeliveryTier === "express" ? charges?.expressFee || 0 : 0;
   const shippingFee = baseShippingFee + expressPriorityFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
+  useCouponSync(subtotal, selectedDeliveryTier, charges);
   const total = Math.max(0, subtotal + shippingFee - discount);
 
   // Fetch Shiprocket Serviceability, Printer Queue & Delivery Options
@@ -393,6 +395,7 @@ export default function Checkout() {
       const { data } = await api.post("/coupons/apply", {
         code: cleanCode,
         subtotal,
+        deliverySlot: selectedDeliveryTier,
       });
       setCoupon(data);
       toast.success(data.message || "Coupon applied successfully!");
