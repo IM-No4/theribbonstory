@@ -1341,7 +1341,7 @@ export default function Checkout() {
                       <span>{savingAddress ? "Saving..." : "Checking PIN..."}</span>
                     </>
                   ) : (
-                    <span>{user && isEnteringAddress ? "Save & Deliver to this Address" : "Deliver to this Address"}</span>
+                    <span>{user && isEnteringAddress ? "Save & Deliver" : "Deliver Here"}</span>
                   )}
                 </button>
               </div>
