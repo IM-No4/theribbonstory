@@ -7,6 +7,7 @@ import { useCartStore, productToCartItem } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
 import { useConfigStore } from "../store/configStore";
+import { hasSetOption } from "../utils/packSize";
 
 const formatPrice = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -17,7 +18,8 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
 
   const isLiked = isInWishlist(product._id || product.id);
 
-  const discount = product.compareAtPrice
+  const showCompareAt = Boolean(product.compareAtPrice) && !hasSetOption(product);
+  const discount = showCompareAt
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
@@ -277,7 +279,7 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
             <span className="font-display font-extrabold text-sm sm:text-base text-slate-900">
               {formatPrice(product.price)}
             </span>
-            {product.compareAtPrice && (
+            {showCompareAt && (
               <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                 {formatPrice(product.compareAtPrice)}
               </span>

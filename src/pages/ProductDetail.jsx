@@ -29,6 +29,7 @@ import QuickViewModal from "../components/QuickViewModal";
 import VirtualUnboxingModal from "../components/VirtualUnboxingModal";
 import ShareProduct from "../components/ShareProduct";
 import { useSeo, absoluteUrl, SITE_NAME, SITE_URL } from "../utils/seo";
+import { hasSetOption, setSaving } from "../utils/packSize";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -297,6 +298,7 @@ export default function ProductDetail() {
     0
   );
   const unitPrice = product.price + optionsDelta;
+  const saving = setSaving(selectedOptions, unitPrice);
 
   const galleryImages = (Array.isArray(product.images) && product.images.length > 0)
     ? product.images
@@ -553,13 +555,20 @@ export default function ProductDetail() {
 
             {/* Price Box & Stock Indicator - Sleek & Compact */}
             <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <div className="flex items-baseline gap-2">
+              <div className="flex flex-wrap items-baseline gap-2">
                 <span className="font-display text-2xl font-extrabold text-stone-900">
                   {formatPrice(unitPrice)}
                 </span>
-                {product.compareAtPrice && (
+                {/* Products sold in sets show the real set saving instead of a crossed-out price */}
+                {product.compareAtPrice && !hasSetOption(product) && (
                   <span className="text-xs text-stone-400 line-through font-mono">
                     {formatPrice(product.compareAtPrice)}
+                  </span>
+                )}
+                {saving && (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                    Save {formatPrice(saving.amount)}
+                    {saving.percent >= 10 ? ` (${saving.percent}%)` : ""} vs {saving.count} singles
                   </span>
                 )}
               </div>

@@ -5,6 +5,7 @@ import { useCartStore } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
 import { useConfigStore } from "../store/configStore";
+import { hasSetOption } from "../utils/packSize";
 
 export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomizer }) {
   const { addItem } = useCartStore();
@@ -106,7 +107,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
                 <span className="font-display text-xl sm:text-2xl font-extrabold text-burgundy-900">
                   ₹{product.price.toLocaleString("en-IN")}
                 </span>
-                {product.compareAtPrice && (
+                {product.compareAtPrice && !hasSetOption(product) && (
                   <span className="text-xs sm:text-sm text-espresso-300 line-through">
                     ₹{product.compareAtPrice.toLocaleString("en-IN")}
                   </span>
