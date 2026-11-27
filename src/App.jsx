@@ -48,6 +48,7 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminKeepsakes = lazy(() => import("./pages/admin/AdminKeepsakes"));
 const AdminHeroTheme = lazy(() => import("./pages/admin/AdminHeroTheme"));
+const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
 const AdminPrintColors = lazy(() => import("./pages/admin/AdminPrintColors"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const Admin3DStudio = lazy(() => import("./pages/admin/Admin3DStudio"));
@@ -209,6 +210,7 @@ function App() {
                   <Route path="collections" element={<AdminCollections />} />
                   <Route path="keepsakes" element={<AdminKeepsakes />} />
                   <Route path="hero-theme" element={<AdminHeroTheme />} />
+                  <Route path="delivery-charges" element={<AdminShipping />} />
                   <Route path="print-colors" element={<AdminPrintColors />} />
                   <Route path="notifications" element={<AdminNotifications />} />
                   <Route path="orders" element={<AdminOrders />} />

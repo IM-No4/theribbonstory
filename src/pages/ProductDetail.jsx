@@ -145,7 +145,7 @@ export default function ProductDetail() {
           pincode: clean,
           dateFormatted: standardInfo.formattedEDD || data.formattedEDD,
           courier: standardInfo.courierName || data.recommendedCourier?.courier_name || "BlueDart Express",
-          rate: standardInfo.fee || 99,
+          rate: standardInfo.fee,
           message: `Estimated delivery by ${standardInfo.formattedEDD || data.formattedEDD} (${standardInfo.breakdown || "includes 3D printing & transit"})`,
           availableCouriers: data.availableCouriers || [],
           isMetro: Boolean(data.isMetro || data.express?.serviceable),

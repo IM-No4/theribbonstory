@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -150,9 +151,10 @@ export default function Checkout() {
 
   // Dynamic Shipping Calculation & Single Printer Queue Option
   const [selectedDeliveryTier, setSelectedDeliveryTier] = useState("standard"); // "standard" | "express"
-  const isFreeDeliveryQualified = subtotal >= 999;
-  const baseShippingFee = isFreeDeliveryQualified ? 0 : 99;
-  const expressPriorityFee = selectedDeliveryTier === "express" ? 199 : 0;
+  const charges = useDeliveryCharges();
+  const isFreeDeliveryQualified = Boolean(charges) && subtotal >= charges.freeShippingThreshold;
+  const baseShippingFee = !charges || isFreeDeliveryQualified ? 0 : charges.standardFee;
+  const expressPriorityFee = selectedDeliveryTier === "express" ? charges?.expressFee || 0 : 0;
   const shippingFee = baseShippingFee + expressPriorityFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
   const total = Math.max(0, subtotal + shippingFee - discount);
@@ -190,7 +192,7 @@ export default function Checkout() {
         }),
         recommendedCourier: {
           courier_name: "Express Air Delivery",
-          rate: isFreeDeliveryQualified ? 0 : 65,
+          rate: baseShippingFee,
         },
       });
     } finally {
@@ -937,7 +939,9 @@ export default function Checkout() {
                       )}
                     </div>
                     <span className="font-mono font-medium">
-                      {shippingFee === 0 ? (
+                      {!charges ? (
+                        "Added at payment"
+                      ) : shippingFee === 0 ? (
                         <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                           FREE
                         </span>
@@ -1258,7 +1262,7 @@ export default function Checkout() {
                                 FREE
                               </span>
                             ) : (
-                              "₹99"
+                              formatPrice(baseShippingFee)
                             )}
                           </span>
                         </div>
@@ -1279,7 +1283,7 @@ export default function Checkout() {
                         <div className="flex items-center justify-between text-xs font-bold text-amber-950">
                           <span>Express Priority ⚡</span>
                           <span className="font-mono">
-                            {isFreeDeliveryQualified ? "+₹199" : "₹278"}
+                            {isFreeDeliveryQualified ? `+${formatPrice(charges?.expressFee || 0)}` : formatPrice(baseShippingFee + (charges?.expressFee || 0))}
                           </span>
                         </div>
                         <div className="text-[11px] font-semibold text-emerald-700 mt-1 flex items-center gap-1">

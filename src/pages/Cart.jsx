@@ -6,6 +6,7 @@ import { useCartStore, isCustomKeepsakeItem, WEEKLY_KEEPSAKE_THRESHOLD } from ".
 import { api, assetUrl } from "../api/client";
 import toast from "react-hot-toast";
 import { useSeo } from "../utils/seo";
+import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -31,12 +32,14 @@ export default function Cart() {
       .catch(() => {});
   }, []);
 
-  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 99;
+  const charges = useDeliveryCharges();
+  const freeShippingThreshold = charges?.freeShippingThreshold;
+  // null = charges unavailable; the server works them out at checkout
+  const shipping = !charges ? null : subtotal === 0 || subtotal >= freeShippingThreshold ? 0 : charges.standardFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
-  const total = Math.max(0, subtotal + shipping - discount);
+  const total = Math.max(0, subtotal + (shipping || 0) - discount);
 
-  const freeShippingThreshold = 999;
-  const freeShippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+  const freeShippingProgress = freeShippingThreshold ? Math.min(100, (subtotal / freeShippingThreshold) * 100) : 100;
 
   const handleApplyCouponCode = async (codeToApply) => {
     const cleanCode = (codeToApply || "").trim().toUpperCase();
@@ -101,12 +104,13 @@ export default function Cart() {
       </div>
 
       {/* Free Shipping Meter */}
+      {charges && (
       <div className="p-4 rounded-2xl bg-white border border-blush-200 mb-8 space-y-2">
         <div className="flex items-center justify-between text-xs font-semibold">
           <span className="flex items-center gap-1.5 text-burgundy-900">
             <Truck size={15} className="text-ribbon-500" />
             {subtotal >= freeShippingThreshold ? (
-              <span className="text-emerald-700">🎉 Congratulations! You have unlocked FREE Express Delivery</span>
+              <span className="text-emerald-700">🎉 Congratulations! You have unlocked FREE Delivery</span>
             ) : (
               <span>Add {formatPrice(freeShippingThreshold - subtotal)} more for FREE Delivery</span>
             )}
@@ -120,6 +124,7 @@ export default function Cart() {
           />
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 lg:gap-10">
         {/* Items List */}
@@ -339,7 +344,7 @@ export default function Cart() {
               <div className="flex justify-between">
                 <span>Estimated Shipping</span>
                 <span className="font-medium">
-                  {shipping === 0 ? <span className="text-emerald-600 font-bold">FREE</span> : formatPrice(shipping)}
+                  {shipping === null ? "Calculated at checkout" : shipping === 0 ? <span className="text-emerald-600 font-bold">FREE</span> : formatPrice(shipping)}
                 </span>
               </div>
 
