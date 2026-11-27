@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { piecesInLine, piecesInCart } from "../utils/packSize";
+import { trackCart } from "../utils/analytics";
 
 const STORAGE_KEY = "trs_cart";
 const COUPON_KEY = "trs_applied_coupon";
@@ -165,6 +166,7 @@ export const useCartStore = create((set, get) => ({
     }
     persist(items);
     set({ items, ...(openDrawer ? { isCartOpen: true } : {}) });
+    trackCart("add_to_cart", finalItem, Number(finalItem.quantity) || 1);
     return true;
   },
 
@@ -200,12 +202,16 @@ export const useCartStore = create((set, get) => ({
     items = items.filter((i) => i.quantity > 0);
     persist(items);
     set({ items });
+    const change = Math.max(0, quantity) - existing.quantity;
+    if (change) trackCart(change > 0 ? "add_to_cart" : "remove_from_cart", existing, Math.abs(change));
   },
 
   removeItem: (id) => {
+    const removed = get().items.find((i) => i.id === id);
     const items = get().items.filter((i) => i.id !== id);
     persist(items);
     set({ items });
+    if (removed) trackCart("remove_from_cart", removed, removed.quantity);
   },
 
   clearCart: () => {

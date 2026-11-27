@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star, ShieldCheck, Truck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { trackProductView } from "../utils/analytics";
 import { useCartStore, defaultOptions } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
@@ -11,6 +12,11 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
   const { addItem } = useCartStore();
   const [selectedImage, setSelectedImage] = useState(0);
   const customKeepsakesEnabled = useConfigStore((s) => s.config.customKeepsakesEnabled !== false);
+
+  const viewedId = isOpen ? product?._id || product?.slug : null;
+  useEffect(() => {
+    if (viewedId) trackProductView(product);
+  }, [viewedId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen || !product) return null;
 

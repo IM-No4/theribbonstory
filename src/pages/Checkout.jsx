@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
+import { track } from "../utils/analytics";
 import { useCouponSync } from "../hooks/useCouponSync";
 import { isDeliveryWaived } from "../utils/coupons";
 import { useNavigate } from "react-router-dom";
@@ -279,6 +280,13 @@ export default function Checkout() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const checkoutTrackedRef = useRef(false);
+  useEffect(() => {
+    if (checkoutTrackedRef.current || !isAuthenticated() || items.length === 0) return;
+    checkoutTrackedRef.current = true;
+    track("begin_checkout", { value: subtotal });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Leave checkout as soon as the bag is empty (removing the last item, "Remove all", etc.)
   useEffect(() => {
     if (items.length === 0 && !orderPlacedRef.current) {
@@ -471,6 +479,7 @@ export default function Checkout() {
 
   const completeOrder = (orderId) => {
     orderPlacedRef.current = true;
+    track("purchase", { orderId });
     clearCart();
     toast.success("Order placed successfully! We're crafting your keepsakes.");
     navigate(`/order-success/${orderId}`);

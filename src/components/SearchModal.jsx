@@ -4,6 +4,7 @@ import { Search, X, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api, assetUrl } from "../api/client";
 import { useConfigStore } from "../store/configStore";
+import { track } from "../utils/analytics";
 
 export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
   const [query, setQuery] = useState("");
@@ -27,6 +28,14 @@ export default function SearchModal({ isOpen, onClose, onOpenCustomizer }) {
 
     return () => clearTimeout(timer);
   }, [query, customKeepsakesEnabled]);
+
+  // Record a search once typing has clearly stopped, not every keystroke
+  useEffect(() => {
+    const term = query.trim();
+    if (!isOpen || term.length < 3) return undefined;
+    const timer = setTimeout(() => track("search", { label: term }), 1500);
+    return () => clearTimeout(timer);
+  }, [query, isOpen]);
 
   if (!isOpen) return null;
 

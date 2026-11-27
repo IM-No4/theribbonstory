@@ -11,6 +11,7 @@ import FloatingHelp from "./components/FloatingHelp";
 import { useAuthStore } from "./store/authStore";
 import { useConfigStore } from "./store/configStore";
 import { useCartStore } from "./store/cartStore";
+import { startTracking, track } from "./utils/analytics";
 
 // Lazy-Loaded Storefront Pages (High-Speed Code Splitting)
 const Home = lazy(() => import("./pages/Home"));
@@ -49,6 +50,7 @@ const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminKeepsakes = lazy(() => import("./pages/admin/AdminKeepsakes"));
 const AdminHeroTheme = lazy(() => import("./pages/admin/AdminHeroTheme"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminPrintColors = lazy(() => import("./pages/admin/AdminPrintColors"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const Admin3DStudio = lazy(() => import("./pages/admin/Admin3DStudio"));
@@ -78,6 +80,16 @@ function ScrollToTop() {
 
 function App() {
   const { pathname, search } = useLocation();
+
+  // Storefront analytics: clicks, one page view per page, and shop searches
+  useEffect(() => {
+    startTracking();
+    track("page_view");
+  }, [pathname]);
+  const searchTerm = pathname === "/shop" ? new URLSearchParams(search).get("search") : null;
+  useEffect(() => {
+    if (searchTerm) track("search", { label: searchTerm });
+  }, [searchTerm]);
   const restoreSession = useAuthStore((s) => s.restoreSession);
   const fetchConfig = useConfigStore((s) => s.fetchConfig);
   const config = useConfigStore((s) => s.config);
@@ -205,6 +217,7 @@ function App() {
               <Route path="/admin" element={<AdminRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="3d-studio" element={<Navigate to="/admin/orders" replace />} />
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="collections" element={<AdminCollections />} />

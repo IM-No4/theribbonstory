@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Palette,
   Mail,
+  BarChart3,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useAdminThemeStore } from "../../store/adminThemeStore";
@@ -36,6 +37,7 @@ export default function AdminLayout() {
 
   const navItems = [
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+    { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
     { to: "/admin/orders", label: "Customer Orders", icon: ShoppingBag },
     { to: "/admin/products", label: "Products & Pricing", icon: Package },
     { to: "/admin/collections", label: "Collections", icon: Layers },

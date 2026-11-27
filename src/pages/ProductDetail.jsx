@@ -20,6 +20,7 @@ import {
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
 import { useCartStore, findProductLine, defaultOptions } from "../store/cartStore";
+import { trackProductView } from "../utils/analytics";
 import { useAuthStore } from "../store/authStore";
 import { useLocationStore } from "../store/locationStore";
 import ProductCard from "../components/ProductCard";
@@ -202,6 +203,7 @@ export default function ProductDetail() {
       .get(`/products/${slug}`)
       .then(({ data }) => {
         setProduct(data.product);
+        trackProductView(data.product);
 
         // Set default options
         const defaults = {};
