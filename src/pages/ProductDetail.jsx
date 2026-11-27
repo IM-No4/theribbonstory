@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api, assetUrl } from "../api/client";
-import { useCartStore } from "../store/cartStore";
+import { useCartStore, findProductLine, defaultOptions } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
 import { useLocationStore } from "../store/locationStore";
 import ProductCard from "../components/ProductCard";
@@ -311,10 +311,21 @@ export default function ProductDetail() {
     reviewsData.averageRating > 0;
 
   const productId = product?._id || product?.slug;
-  const cartItem = (items || []).find(
-    (i) => i.productId === productId && !i.customization?.photoUrl && !i.customization?.cuteImageUrl
-  );
+  // The quantity controls belong to the selected options only (single and set are separate lines)
+  const chosenOptions = Object.entries(selectedOptions).map(([name, opt]) => ({ name, value: opt.label }));
+  const cartItem = findProductLine(items, product, chosenOptions);
   const cartQuantity = cartItem ? cartItem.quantity : 0;
+  const chosenLabel = chosenOptions.map((o) => o.value).join(" · ");
+
+  const quantityInCart = (groupName, label) =>
+    (items || [])
+      .filter((i) => i.productId === productId && !i.customization?.photoUrl && !i.customization?.cuteImageUrl)
+      .filter((i) =>
+        (i.selectedOptions?.length ? i.selectedOptions : defaultOptions(product)).some(
+          (o) => o.name === groupName && o.value === label
+        )
+      )
+      .reduce((sum, i) => sum + i.quantity, 0);
 
   const handleOptionChange = (groupName, val) => {
     setSelectedOptions((prev) => ({ ...prev, [groupName]: val }));
@@ -633,6 +644,12 @@ export default function ProductDetail() {
                             +₹{val.priceDelta}
                           </div>
                         )}
+                        {quantityInCart(group.name, val.label) > 0 && (
+                          <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-emerald-700">
+                            <Check size={11} strokeWidth={3} />
+                            {quantityInCart(group.name, val.label)} in cart
+                          </div>
+                        )}
                       </button>
                     );
                   })}
@@ -642,6 +659,12 @@ export default function ProductDetail() {
 
             {/* Responsive product actions */}
             <div className="border-t border-stone-100 pt-3 sm:pt-4">
+              {chosenLabel && !product.isCustomizable && cartQuantity > 0 && (
+                <p className="mb-2 text-xs text-stone-600">
+                  <span className="font-bold text-stone-900">{cartQuantity} × {chosenLabel}</span> in your cart.{" "}
+                  <Link to="/cart" className="font-semibold text-rose-700 hover:underline">View cart</Link>
+                </p>
+              )}
               <div className="flex w-full min-w-0 items-center gap-2 sm:gap-3">
                 {product.isCustomizable && !customKeepsakesEnabled ? (
                   <button

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, Eye, ArrowRight, Heart, Star, Plus, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useWishlistStore } from "../store/wishlistStore";
-import { useCartStore, productToCartItem } from "../store/cartStore";
+import { useCartStore, productToCartItem, findProductLine } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
 import { useConfigStore } from "../store/configStore";
@@ -24,9 +24,7 @@ export default function ProductCard({ product, index = 0, onQuickView, onPersona
     : 0;
 
   const productId = product._id || product.id;
-  const cartItem = items.find(
-    (i) => i.productId === productId && !i.customization?.photoUrl && !i.customization?.cuteImageUrl
-  );
+  const cartItem = findProductLine(items, product);
   const quantity = cartItem ? cartItem.quantity : 0;
 
   const handleAddToCart = (e) => {

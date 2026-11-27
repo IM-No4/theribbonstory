@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star, ShieldCheck, Truck } from "lucide-react";
 import { useState } from "react";
-import { useCartStore } from "../store/cartStore";
+import { useCartStore, defaultOptions } from "../store/cartStore";
 import toast from "react-hot-toast";
 import { assetUrl } from "../api/client";
 import { useConfigStore } from "../store/configStore";
@@ -26,7 +26,7 @@ export default function QuickViewModal({ product, isOpen, onClose, onOpenCustomi
       price: product.price,
       quantity: 1,
       stock: typeof product.stock === "number" ? product.stock : undefined,
-      selectedOptions: [],
+      selectedOptions: defaultOptions(product),
       customization: {},
     });
     if (added !== false) {

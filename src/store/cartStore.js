@@ -41,6 +41,28 @@ const lineKey = (item) => {
     .join("|");
 };
 
+// The first value of each option group is what a product is sold as unless the customer picks another
+export const defaultOptions = (product) =>
+  (product?.optionGroups || [])
+    .filter((group) => group.values?.length)
+    .map((group) => ({ name: group.name, value: group.values[0].label, priceDelta: group.values[0].priceDelta || 0 }));
+
+const optionsKey = (options) => options.map((o) => `${o.name}:${o.value}`).sort().join("|");
+
+/** The ready-made cart line for this product with exactly these options (e.g. single vs set) */
+export const findProductLine = (items, product, options = defaultOptions(product)) => {
+  const productId = product?._id || product?.id || product?.slug;
+  const wanted = optionsKey(options);
+  return (items || []).find(
+    (i) =>
+      i.productId === productId &&
+      !i.customization?.photoUrl &&
+      !i.customization?.cuteImageUrl &&
+      // lines saved without options are the default choice
+      optionsKey(i.selectedOptions?.length ? i.selectedOptions : defaultOptions(product)) === wanted
+  );
+};
+
 // Plain catalog product -> cart line (prices are re-checked by the server at checkout)
 export const productToCartItem = (product, quantity = 1) => ({
   productId: product._id || product.id,
@@ -49,7 +71,7 @@ export const productToCartItem = (product, quantity = 1) => ({
   price: product.price,
   quantity,
   stock: typeof product.stock === "number" ? product.stock : undefined,
-  selectedOptions: [],
+  selectedOptions: defaultOptions(product),
   customization: {},
 });
 
