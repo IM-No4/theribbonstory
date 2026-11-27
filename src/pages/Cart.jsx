@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { useSeo } from "../utils/seo";
 import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
 import { useCouponSync } from "../hooks/useCouponSync";
-import { couponLabel, isCouponOffered } from "../utils/coupons";
+import { couponLabel, isCouponOffered, isDeliveryWaived } from "../utils/coupons";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -40,6 +40,7 @@ export default function Cart() {
   const shipping = !charges ? null : subtotal === 0 || subtotal >= freeShippingThreshold ? 0 : charges.standardFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
   useCouponSync(subtotal, "standard", charges);
+  const deliveryWaived = isDeliveryWaived(appliedCoupon, shipping);
   const offeredCoupons = availableCoupons.filter((cp) => isCouponOffered(cp, { subtotal, charges }));
   const total = Math.max(0, subtotal + (shipping || 0) - discount);
 
@@ -114,20 +115,24 @@ export default function Cart() {
         <div className="flex items-center justify-between text-xs font-semibold">
           <span className="flex items-center gap-1.5 text-burgundy-900">
             <Truck size={15} className="text-ribbon-500" />
-            {subtotal >= freeShippingThreshold ? (
+            {deliveryWaived ? (
+              <span className="text-emerald-700">🎉 Free delivery applied with {appliedCoupon.code}</span>
+            ) : subtotal >= freeShippingThreshold ? (
               <span className="text-emerald-700">🎉 Congratulations! You have unlocked FREE Delivery</span>
             ) : (
               <span>Add {formatPrice(freeShippingThreshold - subtotal)} more for FREE Delivery</span>
             )}
           </span>
-          <span className="text-espresso-400 font-mono">{Math.round(freeShippingProgress)}%</span>
+          {!deliveryWaived && <span className="text-espresso-400 font-mono">{Math.round(freeShippingProgress)}%</span>}
         </div>
-        <div className="h-2 rounded-full bg-cream-100 overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-ribbon-400 to-emerald-500 rounded-full transition-all duration-300"
-            style={{ width: `${freeShippingProgress}%` }}
-          />
-        </div>
+        {!deliveryWaived && (
+          <div className="h-2 rounded-full bg-cream-100 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-ribbon-400 to-emerald-500 rounded-full transition-all duration-300"
+              style={{ width: `${freeShippingProgress}%` }}
+            />
+          </div>
+        )}
       </div>
       )}
 
@@ -339,7 +344,7 @@ export default function Cart() {
                 <span className="font-medium text-burgundy-900">{formatPrice(subtotal)}</span>
               </div>
 
-              {discount > 0 && (
+              {discount > 0 && !deliveryWaived && (
                 <div className="flex justify-between text-emerald-700 font-semibold">
                   <span>Coupon Discount ({appliedCoupon.code})</span>
                   <span>- {formatPrice(discount)}</span>
@@ -349,7 +354,12 @@ export default function Cart() {
               <div className="flex justify-between">
                 <span>Estimated Shipping</span>
                 <span className="font-medium">
-                  {shipping === null ? "Calculated at checkout" : shipping === 0 ? <span className="text-emerald-600 font-bold">FREE</span> : formatPrice(shipping)}
+                  {deliveryWaived ? (
+                    <>
+                      <span className="mr-1.5 font-normal text-espresso-400 line-through">{formatPrice(shipping)}</span>
+                      <span className="text-emerald-600 font-bold">FREE</span>
+                    </>
+                  ) : shipping === null ? "Calculated at checkout" : shipping === 0 ? <span className="text-emerald-600 font-bold">FREE</span> : formatPrice(shipping)}
                 </span>
               </div>
 

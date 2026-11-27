@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
 import { useCouponSync } from "../hooks/useCouponSync";
+import { isDeliveryWaived } from "../utils/coupons";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -159,6 +160,7 @@ export default function Checkout() {
   const shippingFee = baseShippingFee + expressPriorityFee;
   const discount = appliedCoupon ? appliedCoupon.calculatedDiscount || 0 : 0;
   useCouponSync(subtotal, selectedDeliveryTier, charges);
+  const deliveryWaived = isDeliveryWaived(appliedCoupon, shippingFee);
   const total = Math.max(0, subtotal + shippingFee - discount);
 
   // Fetch Shiprocket Serviceability, Printer Queue & Delivery Options
@@ -925,7 +927,7 @@ export default function Checkout() {
                     <span className="font-mono font-medium text-slate-900">{formatPrice(subtotal)}</span>
                   </div>
 
-                  {discount > 0 && (
+                  {discount > 0 && !deliveryWaived && (
                     <div className="flex justify-between text-emerald-700 font-semibold">
                       <span>Coupon Discount</span>
                       <span className="font-mono">- {formatPrice(discount)}</span>
@@ -944,6 +946,13 @@ export default function Checkout() {
                     <span className="font-mono font-medium">
                       {!charges ? (
                         "Added at payment"
+                      ) : deliveryWaived ? (
+                        <>
+                          <span className="mr-1.5 text-espresso-400 line-through">{formatPrice(shippingFee)}</span>
+                          <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                            FREE
+                          </span>
+                        </>
                       ) : shippingFee === 0 ? (
                         <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                           FREE

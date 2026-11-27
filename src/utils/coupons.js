@@ -1,5 +1,9 @@
 export const isFreeDeliveryCoupon = (coupon) => coupon?.discountType === "free_shipping";
 
+/** True when a free delivery coupon removes the whole delivery charge */
+export const isDeliveryWaived = (coupon, shippingFee) =>
+  isFreeDeliveryCoupon(coupon) && shippingFee > 0 && (coupon.calculatedDiscount || 0) >= shippingFee;
+
 export const couponLabel = (coupon) => {
   if (isFreeDeliveryCoupon(coupon)) return "free delivery";
   return coupon.discountType === "percentage" ? `${coupon.discountAmount}% off` : `₹${coupon.discountAmount} off`;
