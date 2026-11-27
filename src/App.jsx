@@ -12,6 +12,7 @@ import { useAuthStore } from "./store/authStore";
 import { useConfigStore } from "./store/configStore";
 import { useCartStore } from "./store/cartStore";
 import { startTracking, track } from "./utils/analytics";
+import { useCartSync } from "./hooks/useCartSync";
 
 // Lazy-Loaded Storefront Pages (High-Speed Code Splitting)
 const Home = lazy(() => import("./pages/Home"));
@@ -51,6 +52,7 @@ const AdminKeepsakes = lazy(() => import("./pages/admin/AdminKeepsakes"));
 const AdminHeroTheme = lazy(() => import("./pages/admin/AdminHeroTheme"));
 const AdminShipping = lazy(() => import("./pages/admin/AdminShipping"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminAbandonedCarts = lazy(() => import("./pages/admin/AdminAbandonedCarts"));
 const AdminPrintColors = lazy(() => import("./pages/admin/AdminPrintColors"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const Admin3DStudio = lazy(() => import("./pages/admin/Admin3DStudio"));
@@ -80,6 +82,8 @@ function ScrollToTop() {
 
 function App() {
   const { pathname, search } = useLocation();
+
+  useCartSync();
 
   // Storefront analytics: clicks, one page view per page, and shop searches
   useEffect(() => {
@@ -218,6 +222,7 @@ function App() {
                 <Route element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="abandoned-carts" element={<AdminAbandonedCarts />} />
                   <Route path="3d-studio" element={<Navigate to="/admin/orders" replace />} />
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="collections" element={<AdminCollections />} />

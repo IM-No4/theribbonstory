@@ -206,6 +206,13 @@ export const useCartStore = create((set, get) => ({
     if (change) trackCart(change > 0 ? "add_to_cart" : "remove_from_cart", existing, Math.abs(change));
   },
 
+  // Bring back a bag saved on the server (not counted as newly added)
+  restoreItems: (saved) => {
+    const items = saved.map((item, i) => ({ ...item, id: `${Date.now()}-${i}` }));
+    persist(items);
+    set({ items });
+  },
+
   removeItem: (id) => {
     const removed = get().items.find((i) => i.id === id);
     const items = get().items.filter((i) => i.id !== id);

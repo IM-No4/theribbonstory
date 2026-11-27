@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useSeo } from "../utils/seo";
 import { useDeliveryCharges } from "../hooks/useDeliveryCharges";
 import { useCouponSync } from "../hooks/useCouponSync";
+import { useAuthStore } from "../store/authStore";
 import { couponLabel, isCouponOffered, isDeliveryWaived } from "../utils/coupons";
 
 const formatPrice = (n) => `₹${n.toLocaleString("en-IN")}`;
@@ -17,6 +18,16 @@ export default function Cart() {
   const { items, updateQuantity, removeItem, appliedCoupon, setCoupon, removeCoupon } = useCartStore();
   const subtotal = useCartStore((s) => s.subtotal());
   const navigate = useNavigate();
+
+  // A reminder email opened on a signed-out device: sign in to get the saved bag back
+  const signedIn = useAuthStore((s) => Boolean(s.user));
+  useEffect(() => {
+    const fromReminder = new URLSearchParams(window.location.search).get("utm_medium") === "reminder";
+    if (fromReminder && !signedIn && items.length === 0) {
+      toast("Sign in to see the items waiting in your cart", { icon: "🛍️" });
+      navigate("/login", { state: { from: "/cart" }, replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalKeepsakesInCart = items
     .filter(isCustomKeepsakeItem)
