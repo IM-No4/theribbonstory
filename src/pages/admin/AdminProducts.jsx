@@ -299,6 +299,25 @@ export default function AdminProducts() {
     }
   };
 
+  // Switch a product on or off from the list; only this field is sent
+  const [togglingIds, setTogglingIds] = useState([]);
+  const handleToggleActive = async (product) => {
+    const next = product.isActive === false;
+    const setActive = (value) =>
+      setProducts((prev) => prev.map((p) => (p._id === product._id ? { ...p, isActive: value } : p)));
+    setTogglingIds((ids) => [...ids, product._id]);
+    setActive(next);
+    try {
+      await api.put(`/products/${product._id}`, { isActive: next });
+      toast.success(`"${product.name}" is now ${next ? "active" : "inactive"}`);
+    } catch (err) {
+      setActive(!next);
+      toast.error(err.response?.data?.message || "Failed to update product status");
+    } finally {
+      setTogglingIds((ids) => ids.filter((id) => id !== product._id));
+    }
+  };
+
   const handleDelete = async (product) => {
     if (!window.confirm(`Are you sure you want to delete "${product.name}"?`)) return;
     try {
@@ -393,6 +412,7 @@ export default function AdminProducts() {
                   <th className="py-3.5 px-4">Selling Price</th>
                   <th className="py-3.5 px-4">Stock</th>
                   <th className="py-3.5 px-4">Badges</th>
+                  <th className="py-3.5 px-4">Active</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -467,6 +487,31 @@ export default function AdminProducts() {
                               STL attached
                             </span>
                           )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={prod.isActive !== false}
+                            aria-label={`${prod.name}: ${prod.isActive !== false ? "active" : "inactive"}`}
+                            onClick={() => handleToggleActive(prod)}
+                            disabled={togglingIds.includes(prod._id)}
+                            title={prod.isActive !== false ? "Visible in the store. Click to hide." : "Hidden from the store. Click to show."}
+                            className={`relative h-6 w-11 shrink-0 rounded-full transition cursor-pointer disabled:opacity-50 disabled:cursor-wait ${
+                              prod.isActive !== false ? "bg-emerald-500" : "bg-slate-600"
+                            }`}
+                          >
+                            <span
+                              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                                prod.isActive !== false ? "left-[22px]" : "left-0.5"
+                              }`}
+                            />
+                          </button>
+                          <span className={`text-[11px] font-semibold ${prod.isActive !== false ? "text-emerald-400" : "text-slate-500"}`}>
+                            {prod.isActive !== false ? "Active" : "Inactive"}
+                          </span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-right">
