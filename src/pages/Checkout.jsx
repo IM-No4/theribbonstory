@@ -103,7 +103,7 @@ export default function Checkout() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedSavedIdx, setSelectedSavedIdx] = useState(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [savingAddressToProfile, setSavingAddressToProfile] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
 
   const isAddressValid = Boolean(
     address.name?.trim() &&
@@ -237,10 +237,11 @@ export default function Checkout() {
         const addrs = data.user?.addresses || [];
         setSavedAddresses(addrs);
         if (addrs.length > 0) {
-          setSelectedSavedIdx(0);
-          const first = addrs[0];
+          // start with the most recently added address
+          setSelectedSavedIdx(addrs.length - 1);
+          const first = addrs[addrs.length - 1];
           const newAddr = {
-            name: user.name || "",
+            name: first.name || user.name || "",
             line1: first.line1 || "",
             line2: first.line2 || "",
             city: first.city || "",
@@ -289,7 +290,7 @@ export default function Checkout() {
     setSelectedSavedIdx(idx);
     setIsAddingNew(false);
     const newAddr = {
-      name: user?.name || address.name,
+      name: addr.name || user?.name || address.name,
       line1: addr.line1 || "",
       line2: addr.line2 || "",
       city: addr.city || "",
@@ -321,8 +322,12 @@ export default function Checkout() {
     }
   };
 
+  // The form is showing (as opposed to the list of saved addresses)
+  const isEnteringAddress = savedAddresses.length === 0 || isAddingNew;
+
   const handleConfirmAddress = async (e) => {
     e?.preventDefault();
+    if (savingAddress) return;
     if (!address.name?.trim()) {
       toast.error("Please enter recipient name");
       return;
@@ -363,10 +368,13 @@ export default function Checkout() {
       }
     }
 
-    if (savingAddressToProfile && isAddingNew) {
+    // A typed address is saved to the account straight away, whether or not an order follows
+    if (user && isEnteringAddress) {
+      setSavingAddress(true);
       try {
-        await api.post("/auth/addresses", {
-          label: "Home / Office",
+        const { data } = await api.post("/auth/address", {
+          label: "Home",
+          name: address.name,
           line1: address.line1,
           line2: address.line2,
           city: address.city,
@@ -375,9 +383,15 @@ export default function Checkout() {
           country: address.country,
           phone: address.phone,
         });
-        toast.success("Address saved to your profile!");
-      } catch {
-        // ignore
+        const saved = data.addresses || [];
+        setSavedAddresses(saved);
+        setSelectedSavedIdx(saved.findIndex((a) => a._id === data.address?._id));
+        setIsAddingNew(false);
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Could not save the address. Please try again.");
+        return;
+      } finally {
+        setSavingAddress(false);
       }
     }
 
@@ -386,7 +400,7 @@ export default function Checkout() {
     }
 
     setIsAddressModalOpen(false);
-    toast.success("Delivery address updated!");
+    toast.success(isEnteringAddress && user ? "Address saved!" : "Delivery address updated!");
   };
 
   const handleApplyCouponCode = async (codeToApply) => {
@@ -1109,7 +1123,7 @@ export default function Checkout() {
                 )}
 
                 {/* Form to enter / edit address */}
-                {(savedAddresses.length === 0 || isAddingNew) && (
+                {isEnteringAddress && (
                   <div className="space-y-4">
                     {savedAddresses.length > 0 && (
                       <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -1231,17 +1245,6 @@ export default function Checkout() {
                       />
                     </div>
 
-                    {isAddingNew && (
-                      <label className="flex items-center gap-2 text-xs text-espresso-600 pt-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={savingAddressToProfile}
-                          onChange={(e) => setSavingAddressToProfile(e.target.checked)}
-                          className="rounded text-burgundy-900 focus:ring-burgundy-900 h-4 w-4"
-                        />
-                        <span>Save this address to profile for 1-click checkout in future</span>
-                      </label>
-                    )}
                   </div>
                 )}
 
@@ -1320,16 +1323,16 @@ export default function Checkout() {
                 <button
                   type="button"
                   onClick={handleConfirmAddress}
-                  disabled={loadingShiprocket}
+                  disabled={loadingShiprocket || savingAddress}
                   className="btn-primary py-2.5 px-6 text-xs font-bold uppercase tracking-wider rounded-xl shadow-md cursor-pointer flex items-center gap-2"
                 >
-                  {loadingShiprocket ? (
+                  {loadingShiprocket || savingAddress ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
-                      <span>Checking PIN...</span>
+                      <span>{savingAddress ? "Saving..." : "Checking PIN..."}</span>
                     </>
                   ) : (
-                    <span>Deliver to this Address</span>
+                    <span>{user && isEnteringAddress ? "Save & Deliver to this Address" : "Deliver to this Address"}</span>
                   )}
                 </button>
               </div>
