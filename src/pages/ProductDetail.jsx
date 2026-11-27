@@ -565,10 +565,9 @@ export default function ProductDetail() {
                     {formatPrice(product.compareAtPrice)}
                   </span>
                 )}
-                {saving && (
+                {saving?.percent > 0 && (
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
-                    Save {formatPrice(saving.amount)}
-                    {saving.percent >= 10 ? ` (${saving.percent}%)` : ""} vs {saving.count} singles
+                    Save {saving.percent}%
                   </span>
                 )}
               </div>
