@@ -623,13 +623,13 @@ export default function ProductDetail() {
                         onClick={() => handleOptionChange(group.name, val)}
                         className={`p-2 rounded-lg border text-left text-xs transition cursor-pointer ${
                           isSelected
-                            ? "border-stone-900 bg-stone-900 text-white shadow-xs font-semibold"
+                            ? "border-rose-500 bg-rose-50/70 text-rose-800 ring-1 ring-rose-500 font-semibold"
                             : "border-stone-200 bg-white text-stone-700 hover:border-rose-300"
                         }`}
                       >
                         <div className="truncate font-medium text-[11px]">{val.label}</div>
                         {val.priceDelta > 0 && (
-                          <div className={`text-[9.5px] ${isSelected ? "text-rose-200" : "text-rose-600 font-bold"}`}>
+                          <div className={`text-[9.5px] ${isSelected ? "text-rose-700 font-bold" : "text-rose-600 font-bold"}`}>
                             +₹{val.priceDelta}
                           </div>
                         )}
